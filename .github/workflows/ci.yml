@@ -4,7 +4,7 @@ on:
   pull_request: {}
   push:
     branches:
-      - second-edition
+      - main
 
 jobs:
   build:
@@ -13,8 +13,7 @@ jobs:
     strategy:
       matrix:
         java:
-          - jdk11
-          - jdk15
+          - jdk16
     steps:
       - uses: actions/checkout@v2.3.2
 
