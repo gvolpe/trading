@@ -1,15 +1,15 @@
 package trading
 
-import cats.effect._
-import cats.effect.std.Queue
-import trading.events.TradeEvent
-import trading.core.Consumer
-import trading.core.Producer
-import fs2.Stream
-import trading.core.Time
 import trading.commands.TradeCommand
+import trading.core.inject._
+import trading.core.{ AppTopic, Producer, Time }
 import trading.domain.TradeAction
+import trading.events.TradeEvent
 import trading.state.TradeState
+
+import cats.effect._
+import cr.pulsar.{Config, Pulsar}
+import fs2.Stream
 
 object Main extends IOApp.Simple {
 
@@ -18,13 +18,24 @@ object Main extends IOApp.Simple {
       TradeCommand.Create("EURPLN", TradeAction.Ask, 1, 4.57484, 10, "test", ts)
     }
 
-  val run: IO[Unit] =
-    Queue.bounded[IO, Option[TradeEvent]](500).flatMap { queue =>
-      val eventsConsumer = Consumer.from(queue)
-      val eventsProducer = Producer.from(queue)
-      val engine         = Engine.make(eventsProducer)
+  def run: IO[Unit] =
+    Stream
+      .resource(resources)
+      .evalMap { engine =>
+        engine.run(TradeState.empty)(commands).flatMap(IO.println)
+      }
+      .compile
+      .drain
 
-      engine.run(TradeState.empty)(commands).flatMap(IO.println)
-    }
+  val config = Config.Builder.default
+
+  val topic = AppTopic.TradingEvents.make(config)
+
+  def resources =
+    for {
+      pulsar   <- Pulsar.make[IO](config.url)
+      producer <- Producer.pulsar[IO, TradeEvent](pulsar, topic)
+      //consumer <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
+    } yield Engine.make(producer) // -> consumer
 
 }

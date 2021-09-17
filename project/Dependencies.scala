@@ -8,6 +8,7 @@ object Dependencies {
     val derevo     = "0.12.5"
     val fs2        = "3.0.4"
     val monocle    = "3.0.0-RC2"
+    val neutron    = "0.0.8"
     val newtype    = "0.4.4"
     val refined    = "0.9.26"
 
@@ -30,6 +31,9 @@ object Dependencies {
 
     val refinedCore = "eu.timepit" %% "refined"      % V.refined
     val refinedCats = "eu.timepit" %% "refined-cats" % V.refined
+
+    val neutronCore  = "com.chatroulette" %% "neutron-core"  % V.neutron
+    val neutronCirce = "com.chatroulette" %% "neutron-circe" % V.neutron
 
     val newtype = "io.estatico" %% "newtype" % V.newtype
 

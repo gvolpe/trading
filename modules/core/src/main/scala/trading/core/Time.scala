@@ -1,8 +1,10 @@
 package trading.core
 
-import trading.domain.Timestamp
-import cats.effect.kernel.Sync
 import java.time.Instant
+
+import trading.domain.Timestamp
+
+import cats.effect.kernel.Sync
 
 trait Time[F[_]] {
   def timestamp: F[Timestamp]

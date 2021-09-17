@@ -1,15 +1,14 @@
 package trading
 
-import trading.core.Time
 import trading.commands.TradeCommand
-import trading.state.TradeState
-import fs2.Stream
-import cats.syntax.all._
-import cats.effect.kernel.Concurrent
-import trading.core.Producer
-import trading.events.TradeEvent
+import trading.core.{ Producer, Time }
 import trading.domain.TradeAction
-import trading.state.Prices
+import trading.events.TradeEvent
+import trading.state.{ Prices, TradeState }
+
+import cats.effect.kernel.Concurrent
+import cats.syntax.all._
+import fs2.Stream
 
 trait Engine[F[_]] {
   def run(state: TradeState)(commands: Stream[F, TradeCommand]): F[TradeState]

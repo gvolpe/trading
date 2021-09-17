@@ -3,6 +3,10 @@ package trading.events
 import trading.commands.TradeCommand
 import trading.domain._
 
+import derevo.circe.magnolia.{ decoder, encoder }
+import derevo.derive
+
+@derive(decoder, encoder)
 sealed trait TradeEvent {
   def command: TradeCommand
   def timestamp: Timestamp

@@ -1,0 +1,8 @@
+pulsar:
+  restart: always
+  image: apachepulsar/pulsar:2.8.1
+  ports:
+    - "6650:6650"
+    - "8080:8080"
+  command: >
+    /bin/bash -c "bin/pulsar standalone"

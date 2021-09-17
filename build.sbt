@@ -27,6 +27,8 @@ val commonSettings = List(
     Libraries.fs2,
     Libraries.monocleCore,
     Libraries.monocleMacro,
+    Libraries.neutronCore,
+    Libraries.neutronCirce,
     Libraries.newtype,
     Libraries.refinedCore,
     Libraries.refinedCats
