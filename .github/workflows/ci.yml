@@ -1,0 +1,33 @@
+name: Scala
+
+on:
+  pull_request: {}
+  push:
+    branches:
+      - second-edition
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        java:
+          - jdk11
+          - jdk15
+    steps:
+      - uses: actions/checkout@v2.3.2
+
+      - name: "Cache for sbt & coursier ♨️"
+        uses: coursier/cache-action@v4.1
+
+      - name: "Install Nix ❄️"
+        uses: cachix/install-nix-action@v12
+
+      - name: "Install Cachix ❄️"
+        uses: cachix/cachix-action@v8
+        with:
+          name: neutron
+
+      - name: "Run with ${{ matrix.java }} 🚀"
+        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt compile"
