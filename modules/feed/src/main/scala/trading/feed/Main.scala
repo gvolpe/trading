@@ -1,8 +1,9 @@
 package trading.feed
 
 import trading.commands.TradeCommand
+import trading.core.AppTopic
 import trading.core.inject._
-import trading.core.{ AppTopic, Producer, Time }
+import trading.core.lib.Producer
 
 import cats.effect._
 import cr.pulsar.{ Config, Pulsar }

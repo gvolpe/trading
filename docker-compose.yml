@@ -6,3 +6,11 @@ pulsar:
     - "8080:8080"
   command: >
     /bin/bash -c "bin/pulsar standalone"
+
+redis:
+  restart: always
+  image: redis:6.0.8
+  ports:
+    - "6379:6379"
+  environment:
+    - DEBUG=false

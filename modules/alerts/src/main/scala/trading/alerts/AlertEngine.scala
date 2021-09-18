@@ -1,7 +1,7 @@
 package trading.alerts
 
 import trading.commands.TradeCommand
-import trading.core.Producer
+import trading.core.lib.Producer
 import trading.domain.{ Alert, TradeAction }
 import trading.events.TradeEvent
 import trading.events.TradeEvent.CommandExecuted

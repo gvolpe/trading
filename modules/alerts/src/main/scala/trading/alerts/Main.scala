@@ -1,7 +1,8 @@
 package trading.alerts
 
+import trading.core.AppTopic
 import trading.core.inject._
-import trading.core.{ AppTopic, Consumer, Producer }
+import trading.core.lib.{ Consumer, Producer }
 import trading.domain.Alert
 import trading.events.TradeEvent
 

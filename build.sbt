@@ -30,6 +30,7 @@ val commonSettings = List(
     Libraries.neutronCore,
     Libraries.neutronCirce,
     Libraries.newtype,
+    Libraries.redis4catsEffects,
     Libraries.refinedCore,
     Libraries.refinedCats
   )

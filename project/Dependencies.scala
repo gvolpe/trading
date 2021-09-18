@@ -11,6 +11,7 @@ object Dependencies {
     val neutron    = "0.0.8"
     val newtype    = "0.4.4"
     val refined    = "0.9.26"
+    val redis4cats = "1.0.0"
 
     val betterMonadicFor = "0.3.1"
     val kindProjector    = "0.13.0"
@@ -39,6 +40,8 @@ object Dependencies {
 
     val monocleCore  = "dev.optics" %% "monocle-core"  % V.monocle
     val monocleMacro = "dev.optics" %% "monocle-macro" % V.monocle
+
+    val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
     // Scalafix rules
     val organizeImports = "com.github.liancheng" %% "organize-imports" % V.organizeImports

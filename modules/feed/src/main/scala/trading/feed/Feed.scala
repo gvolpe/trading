@@ -1,12 +1,13 @@
 package trading.feed
 
 import trading.commands.TradeCommand
-import trading.core.{ Producer, Time }
+import trading.core.Time
+import trading.core.lib.Producer
 import trading.domain.TradeAction
 
-import fs2.Stream
 import cats.FlatMap
 import cats.syntax.all._
+import fs2.Stream
 
 trait Feed[F[_]] {
   def run: Stream[F, Unit]

@@ -2,15 +2,16 @@ package trading
 
 import trading.commands.TradeCommand
 import trading.core.inject._
-import trading.core.{ AppTopic, Producer, Time }
+import trading.core.lib.Producer
+import trading.core.snapshots.SnapshotReader
+import trading.core.{AppTopic, Time}
 import trading.domain.TradeAction
 import trading.events.TradeEvent
-import trading.state.TradeState
 
 import cats.effect._
 import cr.pulsar.{ Config, Pulsar }
+import dev.profunktor.redis4cats.effect.Log.Stdout._
 import fs2.Stream
-import trading.core.StateCache
 
 object Main extends IOApp.Simple {
 
@@ -22,8 +23,10 @@ object Main extends IOApp.Simple {
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      // TODO: Read snapshots?
-      .evalMap(_.run(TradeState.empty)(commands))
+      .flatMap { case (producer, snapshots) =>
+        val engine = Engine.make(producer, snapshots)
+        commands.through(engine.run)
+      }
       .compile
       .drain
 
@@ -33,11 +36,11 @@ object Main extends IOApp.Simple {
 
   def resources =
     for {
-      pulsar   <- Pulsar.make[IO](config.url)
-      _        <- Resource.eval(IO.println(">>> Initializing trading service <<<"))
-      producer <- Producer.pulsar[IO, TradeEvent](pulsar, topic)
-      cache    <- Resource.eval(StateCache.make[IO])
-      //consumer <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
-    } yield Engine.make(producer, cache) // -> consumer
+      pulsar    <- Pulsar.make[IO](config.url)
+      _         <- Resource.eval(IO.println(">>> Initializing trading service <<<"))
+      producer  <- Producer.pulsar[IO, TradeEvent](pulsar, topic)
+      snapshots <- SnapshotReader.make[IO]
+      //commands <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub).map(_.receive)
+    } yield producer -> snapshots
 
 }
