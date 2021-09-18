@@ -39,7 +39,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "trading-app"
   )
-  .aggregate(core, domain, alerts, snapshots, trading)
+  .aggregate(core, domain, alerts, feed, snapshots, trading, wsClient)
 
 lazy val domain = (project in file("modules/domain"))
   .settings(commonSettings: _*)
@@ -52,11 +52,19 @@ lazy val alerts = (project in file("modules/alerts"))
   .settings(commonSettings: _*)
   .dependsOn(core)
 
+lazy val feed = (project in file("modules/feed"))
+  .settings(commonSettings: _*)
+  .dependsOn(core)
+
 lazy val snapshots = (project in file("modules/snapshots"))
   .settings(commonSettings: _*)
   .dependsOn(core)
 
 lazy val trading = (project in file("modules/trading"))
+  .settings(commonSettings: _*)
+  .dependsOn(core)
+
+lazy val wsClient = (project in file("modules/ws-client"))
   .settings(commonSettings: _*)
   .dependsOn(core)
 

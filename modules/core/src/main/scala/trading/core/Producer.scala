@@ -1,8 +1,8 @@
 package trading.core
 
 import cats.effect.kernel.{ Async, Resource }
-import cats.effect.std.{Console, Queue}
-import cats.{Parallel, Show}
+import cats.effect.std.{ Console, Queue }
+import cats.{ Parallel, Show }
 import cr.pulsar.schema.Schema
 import cr.pulsar.{ Producer => PulsarProducer, _ }
 

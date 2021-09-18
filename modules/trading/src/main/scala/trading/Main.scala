@@ -8,22 +8,22 @@ import trading.events.TradeEvent
 import trading.state.TradeState
 
 import cats.effect._
-import cr.pulsar.{Config, Pulsar}
+import cr.pulsar.{ Config, Pulsar }
 import fs2.Stream
+import trading.core.StateCache
 
 object Main extends IOApp.Simple {
 
   val commands: Stream[IO, TradeCommand] =
     Stream.eval(Time[IO].timestamp).map { ts =>
-      TradeCommand.Create("EURPLN", TradeAction.Ask, 1, 4.57484, 10, "test", ts)
+      TradeCommand.Create("EURPLN", TradeAction.Ask, 4.57484, 10, "test", ts)
     }
 
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .evalMap { engine =>
-        engine.run(TradeState.empty)(commands).flatMap(IO.println)
-      }
+      // TODO: Read snapshots?
+      .evalMap(_.run(TradeState.empty)(commands))
       .compile
       .drain
 
@@ -34,8 +34,10 @@ object Main extends IOApp.Simple {
   def resources =
     for {
       pulsar   <- Pulsar.make[IO](config.url)
+      _        <- Resource.eval(IO.println(">>> Initializing trading service <<<"))
       producer <- Producer.pulsar[IO, TradeEvent](pulsar, topic)
+      cache    <- Resource.eval(StateCache.make[IO])
       //consumer <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
-    } yield Engine.make(producer) // -> consumer
+    } yield Engine.make(producer, cache) // -> consumer
 
 }

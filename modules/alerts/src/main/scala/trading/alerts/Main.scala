@@ -33,7 +33,7 @@ object Main extends IOApp.Simple {
   def resources =
     for {
       pulsar <- Pulsar.make[IO](config.url)
-      _      <- Resource.eval(IO.println(">>> Init alerts..."))
+      _      <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
       producer = Producer.stdout[IO, Alert]
       engine   = AlertEngine.make[IO](producer)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
