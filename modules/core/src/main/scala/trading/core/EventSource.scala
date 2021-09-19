@@ -8,20 +8,15 @@ import trading.state.TradeState
 object EventSource {
   def run(st: TradeState)(command: TradeCommand): (TradeState, List[Timestamp => TradeEvent]) =
     command match {
-      case cmd @ TradeCommand.Create(symbol, TradeAction.Ask, price, _, _, _) =>
-        //TODO: use lenses
-        val prices = st.prices.updatedWith(symbol) {
-          case Some((_, bp)) => Some(price -> bp)
-          case None          => Some(price -> BigDecimal(0.0))
-        }
-        val newSt = TradeState(prices)
+      case cmd @ TradeCommand.Add(symbol, TradeAction.Ask, price, _, _, _) =>
+        val newSt = st.modifyAsk(symbol)(price)
         newSt -> List(ts => TradeEvent.CommandExecuted(cmd, ts))
-      case TradeCommand.Create(symbol, TradeAction.Bid, price, _, _, _) =>
-        st -> List.empty
-      case (cmd: TradeCommand.Update) =>
-        st -> List.empty
-      case (cmd: TradeCommand.Delete) =>
-        st -> List.empty
+      case cmd @ TradeCommand.Add(symbol, TradeAction.Bid, price, _, _, _) =>
+        val newSt = st.modifyBid(symbol)(price)
+        newSt -> List(ts => TradeEvent.CommandExecuted(cmd, ts))
+      case cmd @ TradeCommand.Delete(symbol, action, price, _, _) =>
+        val newSt = st.removePrice(symbol)(action, price)
+        newSt -> List(ts => TradeEvent.CommandExecuted(cmd, ts))
     }
 
   def runS(st: TradeState)(command: TradeCommand): TradeState =

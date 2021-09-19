@@ -20,6 +20,7 @@ object SnapshotWriter {
     Redis[F].utf8("redis://localhost").map { redis =>
       new SnapshotWriter[F] {
         def save(state: TradeState): F[Unit] =
+          // FIXME: ask and bids are now lists
           state.prices.toList.traverse_ { case (symbol, (ask, bid)) =>
             redis.hSet(s"snapshot-$symbol", "ask", ask.toString) *>
               redis.hSet(s"snapshot-$symbol", "bid", bid.toString)

@@ -9,7 +9,7 @@ import trading.state.TradeState
 
 import cats.effect._
 import cats.syntax.all._
-import cr.pulsar.{Config, Pulsar, Subscription}
+import cr.pulsar.{ Config, Pulsar, Subscription }
 import dev.profunktor.redis4cats.effect.Log.Stdout._
 import fs2.Stream
 
@@ -26,7 +26,9 @@ object Main extends IOApp.Simple {
           .map(_._1)
           .chunkN(5) // persist snapshots every 5th event
           .evalMap {
-            _.last.traverse_(snapshots.save)
+            _.last.traverse_ { st =>
+              IO.println(s"Saving snapshot: $st") >> snapshots.save(st)
+            }
           }
       }
       .compile

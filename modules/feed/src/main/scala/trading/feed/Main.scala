@@ -7,16 +7,11 @@ import trading.core.lib.Producer
 
 import cats.effect._
 import cr.pulsar.{ Config, Pulsar }
-import fs2.Stream
 
 object Main extends IOApp.Simple {
 
   def run: IO[Unit] =
-    Stream
-      .resource(resources)
-      .flatMap(_.run)
-      .compile
-      .drain
+    resources.use(_.run)
 
   val config = Config.Builder.default
 

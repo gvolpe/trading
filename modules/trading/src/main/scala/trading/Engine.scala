@@ -8,6 +8,7 @@ import trading.events.TradeEvent
 import trading.state.TradeState
 
 import cats.Monad
+import cats.effect.std.Console
 import cats.syntax.all._
 import fs2.{ Pipe, Stream }
 
@@ -16,7 +17,7 @@ trait Engine[F[_]] {
 }
 
 object Engine {
-  def make[F[_]: Monad: Time](
+  def make[F[_]: Console: Monad: Time](
       producer: Producer[F, TradeEvent],
       snapshots: SnapshotReader[F]
   ): Engine[F] =
@@ -27,17 +28,18 @@ object Engine {
           // we need to shard per symbol, for example.
           Stream
             .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
-            .flatMap {
-              commands
-                .evalMapAccumulate(_) { case (st, cmd) =>
-                  val (newSt, events) = EventSource.run(st)(cmd)
-                  events
-                    .traverse_ { f =>
-                      Time[F].timestamp.map(f) >>= producer.send
-                    }
-                    .tupleLeft(newSt)
-                }
-                .void
+            .flatMap { latest =>
+              Stream.eval(Console[F].println(s">>> SNAPSHOTS: $latest")) >>
+                commands
+                  .evalMapAccumulate(latest) { case (st, cmd) =>
+                    val (newSt, events) = EventSource.run(st)(cmd)
+                    events
+                      .traverse_ { f =>
+                        Time[F].timestamp.map(f) >>= producer.send
+                      }
+                      .tupleLeft(newSt)
+                  }
+                  .void
             }
     }
 }

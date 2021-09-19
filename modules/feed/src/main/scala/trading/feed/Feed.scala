@@ -1,30 +1,26 @@
 package trading.feed
 
-import trading.commands.TradeCommand
-import trading.core.Time
-import trading.core.lib.Producer
-import trading.domain.TradeAction
+import scala.concurrent.duration._
 
-import cats.FlatMap
+import trading.commands.TradeCommand
+import trading.core.lib.Producer
+import trading.feed.generators._
+
+import cats.effect.kernel.Temporal
 import cats.syntax.all._
-import fs2.Stream
 
 trait Feed[F[_]] {
-  def run: Stream[F, Unit]
+  def run: F[Unit]
 }
 
 object Feed {
-  def random[F[_]: FlatMap: Time](
+  def random[F[_]: Temporal](
       producer: Producer[F, TradeCommand]
   ): Feed[F] =
     new Feed[F] {
-      // TODO: Emit random commands every sec and stop after 10 secs or so
-      def run: Stream[F, Unit] =
-        Stream.eval {
-          Time[F].timestamp.flatMap { ts =>
-            val cmd = TradeCommand.Create("EURPLN", TradeAction.Ask, 4.57484, 10, "test", ts)
-            producer.send(cmd)
-          }
+      def run: F[Unit] =
+        commandsGen.replicateA(2).flatten.traverse_ {
+          producer.send(_) >> Temporal[F].sleep(100.millis)
         }
     }
 }

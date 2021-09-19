@@ -55,6 +55,9 @@ lazy val alerts = (project in file("modules/alerts"))
 
 lazy val feed = (project in file("modules/feed"))
   .settings(commonSettings: _*)
+  .settings(
+    libraryDependencies += Libraries.scalacheck
+  )
   .dependsOn(core)
 
 lazy val snapshots = (project in file("modules/snapshots"))
