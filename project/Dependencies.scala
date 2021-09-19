@@ -7,6 +7,7 @@ object Dependencies {
     val catsEffect = "3.1.1"
     val derevo     = "0.12.5"
     val fs2        = "3.0.4"
+    val fs2Kafka   = "2.2.0"
     val monocle    = "3.0.0-RC2"
     val neutron    = "0.0.8"
     val newtype    = "0.4.4"
@@ -34,8 +35,10 @@ object Dependencies {
     val refinedCore = "eu.timepit" %% "refined"      % V.refined
     val refinedCats = "eu.timepit" %% "refined-cats" % V.refined
 
+    // brokers
     val neutronCore  = "com.chatroulette" %% "neutron-core"  % V.neutron
     val neutronCirce = "com.chatroulette" %% "neutron-circe" % V.neutron
+    val fs2Kafka     = "com.github.fd4s"  %% "fs2-kafka"     % V.fs2Kafka
 
     val newtype = "io.estatico" %% "newtype" % V.newtype
 

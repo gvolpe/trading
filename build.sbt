@@ -25,6 +25,7 @@ val commonSettings = List(
     Libraries.derevoCirceMagnolia,
     Libraries.derevoTagless,
     Libraries.fs2,
+    Libraries.fs2Kafka,
     Libraries.monocleCore,
     Libraries.monocleMacro,
     Libraries.neutronCore,
