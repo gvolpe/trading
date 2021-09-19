@@ -1,12 +1,14 @@
 package trading.core.snapshots
 
-import trading.state.TradeState
+import trading.domain._
+import trading.state.{ Prices, TradeState }
 
 import cats.MonadThrow
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.effect.MkRedis
+import io.circe.parser.{ decode => jsonDecode }
 
 trait SnapshotReader[F[_]] {
   def latest: F[Option[TradeState]]
@@ -22,11 +24,10 @@ object SnapshotReader {
           redis.keys("snapshot*").flatMap {
             _.traverse { key =>
               redis.hGetAll(key).map { kv =>
-                val ask    = kv.get("ask").map(BigDecimal.apply).getOrElse(BigDecimal(0.0))
-                val bid    = kv.get("bid").map(BigDecimal.apply).getOrElse(BigDecimal(0.0))
+                val ask    = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
+                val bid    = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
                 val symbol = key.split("-").apply(1) // FIXME: potentially unsafe
-                // FIXME: ask and bids are now lists
-                symbol -> (List(ask) -> List(bid))
+                symbol -> Prices(ask.toMap, bid.toMap)
               }
             }
               .map {

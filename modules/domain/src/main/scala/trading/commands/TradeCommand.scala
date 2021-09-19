@@ -14,7 +14,16 @@ sealed trait TradeCommand {
 }
 
 object TradeCommand {
-  final case class Add(
+  final case class Create(
+      symbol: Symbol,
+      tradeAction: TradeAction,
+      price: Price,
+      quantity: Quantity,
+      source: Source,
+      timestamp: Timestamp
+  ) extends TradeCommand
+
+  final case class Update(
       symbol: Symbol,
       tradeAction: TradeAction,
       price: Price,

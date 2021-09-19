@@ -1,21 +1,21 @@
 package trading.core
 
 import trading.commands.TradeCommand
-import trading.domain.{ Timestamp, TradeAction }
+import trading.domain.Timestamp
 import trading.events.TradeEvent
 import trading.state.TradeState
 
 object EventSource {
   def run(st: TradeState)(command: TradeCommand): (TradeState, List[Timestamp => TradeEvent]) =
     command match {
-      case cmd @ TradeCommand.Add(symbol, TradeAction.Ask, price, _, _, _) =>
-        val newSt = st.modifyAsk(symbol)(price)
+      case cmd @ TradeCommand.Create(symbol, action, price, quantity, _, _) =>
+        val newSt = st.modify(symbol)(action, price, quantity)
         newSt -> List(ts => TradeEvent.CommandExecuted(cmd, ts))
-      case cmd @ TradeCommand.Add(symbol, TradeAction.Bid, price, _, _, _) =>
-        val newSt = st.modifyBid(symbol)(price)
+      case cmd @ TradeCommand.Update(symbol, action, price, quantity, _, _) =>
+        val newSt = st.modify(symbol)(action, price, quantity)
         newSt -> List(ts => TradeEvent.CommandExecuted(cmd, ts))
       case cmd @ TradeCommand.Delete(symbol, action, price, _, _) =>
-        val newSt = st.removePrice(symbol)(action, price)
+        val newSt = st.remove(symbol)(action, price)
         newSt -> List(ts => TradeEvent.CommandExecuted(cmd, ts))
     }
 

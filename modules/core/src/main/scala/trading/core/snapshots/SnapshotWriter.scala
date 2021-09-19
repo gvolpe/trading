@@ -7,6 +7,7 @@ import cats.effect.kernel.Resource
 import cats.syntax.all._
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.effect.MkRedis
+import io.circe.syntax._
 
 trait SnapshotWriter[F[_]] {
   def save(state: TradeState): F[Unit]
@@ -20,10 +21,9 @@ object SnapshotWriter {
     Redis[F].utf8("redis://localhost").map { redis =>
       new SnapshotWriter[F] {
         def save(state: TradeState): F[Unit] =
-          // FIXME: ask and bids are now lists
-          state.prices.toList.traverse_ { case (symbol, (ask, bid)) =>
-            redis.hSet(s"snapshot-$symbol", "ask", ask.toString) *>
-              redis.hSet(s"snapshot-$symbol", "bid", bid.toString)
+          state.prices.toList.traverse_ { case (symbol, prices) =>
+            redis.hSet(s"snapshot-$symbol", "ask", prices.ask.toList.asJson.noSpaces) *>
+              redis.hSet(s"snapshot-$symbol", "bid", prices.bid.toList.asJson.noSpaces)
           }
       }
     }

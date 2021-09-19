@@ -20,7 +20,7 @@ object AlertEngine {
     new AlertEngine[F] {
       val run: TradeEvent => F[Unit] = {
         // TODO: add logic based on some alert state
-        case CommandExecuted(TradeCommand.Add(symbol, TradeAction.Ask, price, _, _, _), _) =>
+        case CommandExecuted(TradeCommand.Create(symbol, TradeAction.Ask, price, _, _, _), _) =>
           producer.send(Alert.StrongBuy(symbol, price))
         case _ => ().pure[F]
       }

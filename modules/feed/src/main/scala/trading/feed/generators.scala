@@ -27,7 +27,7 @@ object generators {
   val timestampGen: Gen[Timestamp] =
     Instant.parse("2021-09-16T14:00:00.00Z")
 
-  val addCommandGen: Gen[TradeCommand.Add] =
+  val createCommandGen: Gen[TradeCommand.Create] =
     for {
       s <- symbolGen
       a <- tradeActionGen
@@ -35,7 +35,17 @@ object generators {
       q <- quantityGen
       c <- sourceGen
       t <- timestampGen
-    } yield TradeCommand.Add(s, a, p, q, c, t)
+    } yield TradeCommand.Create(s, a, p, q, c, t)
+
+  val updateCommandGen: Gen[TradeCommand.Update] =
+    for {
+      s <- symbolGen
+      a <- tradeActionGen
+      p <- priceGen
+      q <- quantityGen
+      c <- sourceGen
+      t <- timestampGen
+    } yield TradeCommand.Update(s, a, p, q, c, t)
 
   val deleteCommandGen: Gen[TradeCommand.Delete] =
     for {
@@ -47,7 +57,7 @@ object generators {
     } yield TradeCommand.Delete(s, a, p, c, t)
 
   val tradeCommandGen: Gen[TradeCommand] =
-    Gen.oneOf(addCommandGen, deleteCommandGen)
+    Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
 
   def commandsGen: List[TradeCommand] =
     Gen.listOfN(10, tradeCommandGen).sample.toList.flatten
