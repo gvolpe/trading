@@ -41,7 +41,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "trading-app"
   )
-  .aggregate(lib, domain, core, alerts, feed, processor, snapshots, wsClient)
+  .aggregate(lib, domain, core, alerts, feed, processor, snapshots, wsClient, wsServer, kafkaDemo)
 
 lazy val domain = (project in file("modules/domain"))
   .settings(commonSettings: _*)
@@ -76,5 +76,14 @@ lazy val processor = (project in file("modules/processor"))
 lazy val wsClient = (project in file("modules/ws-client"))
   .settings(commonSettings: _*)
   .dependsOn(core)
+
+lazy val wsServer = (project in file("modules/ws-server"))
+  .settings(commonSettings: _*)
+  .dependsOn(core)
+
+// Kafka demo
+lazy val kafkaDemo = (project in file("modules/zoo-kafka-demo"))
+  .settings(commonSettings: _*)
+  .dependsOn(feed)
 
 addCommandAlias("runLinter", ";scalafixAll --rules OrganizeImports")

@@ -1,28 +1,30 @@
-package trading.feed
+package demo
 
 import scala.concurrent.duration._
 
 import trading.events.TradeEvent
+import trading.feed.generators._
 import trading.lib.{ Consumer, Producer }
 
 import cats.effect._
+import cats.syntax.all._
 import fs2.Stream
 import fs2.kafka._
 import io.circe.syntax._
 
 object KafkaDemo extends IOApp.Simple {
 
-  val event: TradeEvent = TradeEvent.CommandExecuted(
-    command = generators.createCommandGen.sample.get,
-    timestamp = generators.timestampGen.sample.get
-  )
+  val event: Option[TradeEvent] =
+    (createCommandGen.sample, timestampGen.sample).mapN { case (cmd, ts) =>
+      TradeEvent.CommandExecuted(cmd, ts)
+    }
 
   def run: IO[Unit] =
     Stream
       .resource(resources)
       .flatMap { case (consumer, producer) =>
         Stream(
-          Stream.awakeEvery[IO](1.second).as(event).evalMap(producer.send),
+          Stream.awakeEvery[IO](1.second).as(event).evalMap(_.traverse_(producer.send)),
           consumer.receive.evalMap(e => IO.println(s">>> KAFKA: $e"))
         ).parJoin(2)
       }

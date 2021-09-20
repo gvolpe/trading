@@ -23,7 +23,7 @@ object AppTopic {
       .build
 
   case object Alerts extends AppTopic {
-    val name: String                    = "alerts"
+    val name: String                    = "trading-alerts"
     def make(cfg: Config): Topic.Single = mkNonPersistent(cfg, name)
   }
 
