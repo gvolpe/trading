@@ -1,4 +1,4 @@
-package trading.core.lib
+package trading.lib
 
 import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.{ Console, Queue }

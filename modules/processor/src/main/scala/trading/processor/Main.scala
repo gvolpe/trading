@@ -1,11 +1,11 @@
-package trading
+package trading.processor
 
 import trading.commands.TradeCommand
 import trading.core.AppTopic
-import trading.core.inject._
-import trading.core.lib.{ Consumer, Producer }
 import trading.core.snapshots.SnapshotReader
 import trading.events.TradeEvent
+import trading.lib.inject._
+import trading.lib.{ Consumer, Producer }
 
 import cats.effect._
 import cr.pulsar.{ Config, Pulsar, Subscription }

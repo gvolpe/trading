@@ -1,10 +1,10 @@
-package trading
+package trading.processor
 
 import trading.commands.TradeCommand
-import trading.core.lib.Producer
+import trading.core.EventSource
 import trading.core.snapshots.SnapshotReader
-import trading.core.{ EventSource, Time }
 import trading.events.TradeEvent
+import trading.lib.{ Producer, Time }
 import trading.state.TradeState
 
 import cats.Monad

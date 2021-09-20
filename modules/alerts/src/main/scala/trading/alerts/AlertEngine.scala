@@ -1,10 +1,10 @@
 package trading.alerts
 
 import trading.commands.TradeCommand
-import trading.core.lib.Producer
 import trading.domain.{ Alert, TradeAction }
 import trading.events.TradeEvent
 import trading.events.TradeEvent.CommandExecuted
+import trading.lib.Producer
 
 import cats.Applicative
 import cats.syntax.all._

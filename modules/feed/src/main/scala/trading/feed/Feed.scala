@@ -3,8 +3,8 @@ package trading.feed
 import scala.concurrent.duration._
 
 import trading.commands.TradeCommand
-import trading.core.lib.Producer
 import trading.feed.generators._
+import trading.lib.Producer
 
 import cats.effect.kernel.Temporal
 import cats.syntax.all._

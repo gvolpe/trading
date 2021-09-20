@@ -1,4 +1,4 @@
-package trading.core.lib
+package trading.lib
 
 import cats.Functor
 import cats.effect.kernel.{ Async, Resource }

@@ -1,4 +1,4 @@
-package trading.core
+package trading.lib
 
 import java.time.Instant
 

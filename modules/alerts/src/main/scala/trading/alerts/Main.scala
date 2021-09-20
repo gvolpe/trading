@@ -1,10 +1,10 @@
 package trading.alerts
 
 import trading.core.AppTopic
-import trading.core.inject._
-import trading.core.lib.{ Consumer, Producer }
 import trading.domain.Alert
 import trading.events.TradeEvent
+import trading.lib.inject._
+import trading.lib.{ Consumer, Producer }
 
 import cats.effect._
 import cr.pulsar.{ Config, Pulsar, Subscription }

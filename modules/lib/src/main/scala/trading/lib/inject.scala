@@ -1,4 +1,4 @@
-package trading.core
+package trading.lib
 
 import java.nio.charset.StandardCharsets.UTF_8
 

@@ -2,8 +2,8 @@ package trading.feed
 
 import scala.concurrent.duration._
 
-import trading.core.lib.{ Consumer, Producer }
 import trading.events.TradeEvent
+import trading.lib.{ Consumer, Producer }
 
 import cats.effect._
 import fs2.Stream

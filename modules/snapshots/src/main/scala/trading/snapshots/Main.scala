@@ -1,10 +1,10 @@
 package trading.snapshots
 
-import trading.core.inject._
-import trading.core.lib.Consumer
 import trading.core.snapshots.SnapshotWriter
 import trading.core.{ AppTopic, EventSource }
 import trading.events.TradeEvent
+import trading.lib.Consumer
+import trading.lib.inject._
 import trading.state.TradeState
 
 import cats.effect._
