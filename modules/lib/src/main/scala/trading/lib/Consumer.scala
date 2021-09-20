@@ -13,8 +13,7 @@ trait Consumer[F[_], A] {
 }
 
 object Consumer {
-  /* for local testing of consumer and producer in a single app */
-  def from[F[_]: Functor, A](queue: Queue[F, Option[A]]): Consumer[F, A] =
+  def local[F[_]: Functor, A](queue: Queue[F, Option[A]]): Consumer[F, A] =
     new Consumer[F, A] {
       def receive: Stream[F, A] = Stream.fromQueueNoneTerminated(queue)
     }

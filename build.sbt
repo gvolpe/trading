@@ -41,7 +41,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "trading-app"
   )
-  .aggregate(lib, domain, core, alerts, feed, processor, snapshots, wsClient, wsServer, kafkaDemo)
+  .aggregate(lib, domain, core, alerts, feed, processor, snapshots, wsClient, wsServer, demo)
 
 lazy val domain = (project in file("modules/domain"))
   .settings(commonSettings: _*)
@@ -81,8 +81,8 @@ lazy val wsServer = (project in file("modules/ws-server"))
   .settings(commonSettings: _*)
   .dependsOn(core)
 
-// Kafka demo
-lazy val kafkaDemo = (project in file("modules/zoo-kafka-demo"))
+// extension demo
+lazy val demo = (project in file("modules/x-demo"))
   .settings(commonSettings: _*)
   .dependsOn(feed)
 

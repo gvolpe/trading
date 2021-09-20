@@ -33,7 +33,7 @@ $ docker-compose -f kafka.yml up
 ├── snapshots
 ├── ws-client
 ├── ws-server
-└── zoo-kafka-demo
+└── x-demo
 ```
 
 #### Lib
@@ -72,6 +72,6 @@ Allows you to follow symbols such as `EURUSD` and subscribe to alerts.
 
 It consumes `Alert` messages and sends them over Web Sockets whenever there's an active subscription for the alert.
 
-#### Zoo Kafka Demo
+#### X Demo
 
-It showcases a `KafkaDemo` program that uses the same `Consumer` and `Producer` abstractions defined in the `lib` module.
+It showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
