@@ -16,7 +16,7 @@ object Main extends IOApp.Simple {
     Stream
       .resource(resources)
       .flatMap { case (engine, consumer) =>
-        consumer.receive.evalMap(engine.run)
+        consumer.receive.through(engine.run)
       }
       .compile
       .drain

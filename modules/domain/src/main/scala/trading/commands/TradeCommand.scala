@@ -9,6 +9,7 @@ import derevo.derive
 sealed trait TradeCommand {
   def symbol: Symbol
   def tradeAction: TradeAction
+  def price: Price
   def source: Source
   def timestamp: Timestamp
 }

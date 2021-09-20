@@ -2,7 +2,7 @@ package demo
 
 import scala.concurrent.duration._
 
-import trading.lib.{Consumer, Producer}
+import trading.lib.{ Consumer, Producer }
 
 import cats.effect._
 import cats.effect.std.Queue
