@@ -33,4 +33,4 @@ jobs:
           name: neutron
 
       - name: "Run with ${{ matrix.java }} 🚀"
-        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt compile"
+        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt test"
