@@ -15,6 +15,8 @@ object Dependencies {
     val redis4cats = "1.0.0"
     val scalacheck = "1.15.4"
 
+    val weaver = "0.7.6"
+
     val betterMonadicFor = "0.3.1"
     val betterToString   = "0.3.8"
     val kindProjector    = "0.13.0"
@@ -48,7 +50,12 @@ object Dependencies {
 
     val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
-    val scalacheck = "org.scalacheck" %% "scalacheck" % V.scalacheck
+    // test
+    val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle
+    val scalacheck       = "org.scalacheck"      %% "scalacheck"        % V.scalacheck
+    val weaverCats       = "com.disneystreaming" %% "weaver-cats"       % V.weaver
+    val weaverDiscipline = "com.disneystreaming" %% "weaver-discipline" % V.weaver
+    val weaverScalaCheck = "com.disneystreaming" %% "weaver-scalacheck" % V.weaver
 
     // Scalafix rules
     val organizeImports = "com.github.liancheng" %% "organize-imports" % V.organizeImports

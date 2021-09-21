@@ -1,11 +1,30 @@
-package trading.feed
+package trading.domain
 
 import java.time.Instant
 
 import trading.commands.TradeCommand
 import trading.domain._
+import trading.state._
 
-import org.scalacheck.Gen
+import org.scalacheck.{ Cogen, Gen }
+
+object cogen {
+  // TODO: When introducing newtypes we'll need this
+  //implicit val askPricesCogen: Cogen[Prices.Ask] =
+  //Cogen.cogenMap[AskPrice, Quantity]
+
+  //implicit val bidPricesCogen: Cogen[Prices.Bid] =
+  //Cogen.cogenMap[BidPrice, Quantity]
+
+  //Cogen((seed, t) =>
+  //c2.perturb(c1.perturb(seed, t._1), t._2)
+  //)
+
+  implicit val pricesCogen: Cogen[Prices] =
+    Cogen.tuple2[Prices.Ask, Prices.Bid].contramap[Prices] { p =>
+      p.ask -> p.bid
+    }
+}
 
 object generators {
 
@@ -61,5 +80,39 @@ object generators {
 
   def commandsGen: List[TradeCommand] =
     Gen.listOfN(10, tradeCommandGen).sample.toList.flatten
+
+  // ------ TradeState ------
+
+  val askPricesGen: Gen[Prices.Ask] =
+    Gen.mapOf[AskPrice, Quantity] {
+      for {
+        p <- Gen.choose[AskPrice](0.78346, 4.78341)
+        q <- quantityGen
+      } yield p -> q
+    }
+
+  val bidPricesGen: Gen[Prices.Bid] =
+    Gen.mapOf[BidPrice, Quantity] {
+      for {
+        p <- Gen.choose[BidPrice](0.78346, 4.78341)
+        q <- quantityGen
+      } yield p -> q
+    }
+
+  val pricesGen: Gen[Prices] =
+    for {
+      a <- askPricesGen
+      b <- bidPricesGen
+    } yield Prices(a, b)
+
+  val tradeStateGen: Gen[TradeState] =
+    Gen
+      .mapOf[Symbol, Prices] {
+        for {
+          s <- symbolGen
+          p <- pricesGen
+        } yield s -> p
+      }
+      .map(TradeState.apply)
 
 }

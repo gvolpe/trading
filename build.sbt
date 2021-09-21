@@ -15,6 +15,7 @@ Global / semanticdbEnabled := true
 val commonSettings = List(
   scalacOptions ++= List("-Ymacro-annotations", "-Yrangepos", "-Wconf:cat=unused:info"),
   scalafmtOnCompile := true,
+  testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
   libraryDependencies ++= Seq(
     CompilerPlugins.betterMonadicFor,
     CompilerPlugins.betterToString,
@@ -34,7 +35,11 @@ val commonSettings = List(
     Libraries.newtype,
     Libraries.redis4catsEffects,
     Libraries.refinedCore,
-    Libraries.refinedCats
+    Libraries.refinedCats,
+    Libraries.monocleLaw       % Test,
+    Libraries.weaverCats       % Test,
+    Libraries.weaverDiscipline % Test,
+    Libraries.weaverScalaCheck % Test
   )
 )
 
@@ -65,6 +70,7 @@ lazy val feed = (project in file("modules/feed"))
     libraryDependencies += Libraries.scalacheck
   )
   .dependsOn(core)
+  .dependsOn(domain % "compile->compile;compile->test")
 
 lazy val snapshots = (project in file("modules/snapshots"))
   .settings(commonSettings: _*)
@@ -85,6 +91,7 @@ lazy val wsServer = (project in file("modules/ws-server"))
 // extension demo
 lazy val demo = (project in file("modules/x-demo"))
   .settings(commonSettings: _*)
-  .dependsOn(feed)
+  .dependsOn(core)
+  .dependsOn(domain % "compile->compile;compile->test")
 
 addCommandAlias("runLinter", ";scalafixAll --rules OrganizeImports")

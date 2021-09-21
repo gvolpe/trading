@@ -2,8 +2,8 @@ package demo
 
 import scala.concurrent.duration._
 
+import trading.domain.generators._
 import trading.events.TradeEvent
-import trading.feed.generators._
 import trading.lib.{ Consumer, Producer }
 
 import cats.effect._

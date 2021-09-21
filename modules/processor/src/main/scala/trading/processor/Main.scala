@@ -37,7 +37,7 @@ object Main extends IOApp.Simple {
   def resources =
     for {
       pulsar    <- Pulsar.make[IO](config.url)
-      _         <- Resource.eval(IO.println(">>> Initializing trading service <<<"))
+      _         <- Resource.eval(IO.println(">>> Initializing processor service <<<"))
       producer  <- Producer.pulsar[IO, TradeEvent](pulsar, eventsTopic)
       snapshots <- SnapshotReader.make[IO]
       engine = Engine.make(producer, snapshots)

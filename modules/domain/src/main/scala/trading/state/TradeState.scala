@@ -3,10 +3,13 @@ package trading.state
 import trading.domain._
 
 import cats.syntax.all._
+import derevo.cats._
+import derevo.derive
 import monocle.Optional
 import monocle.function.{ At, Index }
 import monocle.macros.GenLens
 
+@derive(eqv, show)
 final case class TradeState(
     prices: TradeState.SymbolPrices
 ) {
@@ -35,6 +38,7 @@ final case class TradeState(
     }
 }
 
+@derive(eqv, show)
 final case class Prices(
     ask: Prices.Ask,
     bid: Prices.Bid
