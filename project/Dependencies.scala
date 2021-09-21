@@ -16,9 +16,10 @@ object Dependencies {
     val scalacheck = "1.15.4"
 
     val betterMonadicFor = "0.3.1"
+    val betterToString   = "0.3.8"
     val kindProjector    = "0.13.0"
     val organizeImports  = "0.5.0"
-    val semanticDB       = "4.4.20"
+    val semanticDB       = "4.4.28"
   }
 
   object Libraries {
@@ -55,7 +56,9 @@ object Dependencies {
 
   object CompilerPlugins {
     val betterMonadicFor = compilerPlugin("com.olegpy" %% "better-monadic-for" % V.betterMonadicFor)
-    val betterToString   = compilerPlugin("com.kubukoz" % "better-tostring" % "0.3.6" cross CrossVersion.full)
+    val betterToString = compilerPlugin(
+      "org.polyvariant" % "better-tostring" % V.betterToString cross CrossVersion.full
+    )
     val kindProjector = compilerPlugin(
       "org.typelevel" %% "kind-projector" % V.kindProjector cross CrossVersion.full
     )

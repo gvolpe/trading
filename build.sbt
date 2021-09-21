@@ -10,6 +10,7 @@ ThisBuild / scalafixDependencies += Libraries.organizeImports
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 Compile / run / fork := true
+Global / semanticdbEnabled := true
 
 val commonSettings = List(
   scalacOptions ++= List("-Ymacro-annotations", "-Yrangepos", "-Wconf:cat=unused:info"),
