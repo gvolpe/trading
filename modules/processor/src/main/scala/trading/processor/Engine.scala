@@ -32,12 +32,12 @@ object Engine {
               Stream.eval(Console[F].println(s">>> SNAPSHOTS: $latest")) >>
                 commands
                   .evalMapAccumulate(latest) { case (st, cmd) =>
-                    val (newSt, events) = EventSource.run(st)(cmd)
+                    val (nst, events) = EventSource.run(st)(cmd)
                     events
                       .traverse_ { f =>
                         Time[F].timestamp.map(f) >>= producer.send
                       }
-                      .tupleLeft(newSt)
+                      .tupleLeft(nst)
                   }
                   .void
             }

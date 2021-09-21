@@ -54,7 +54,7 @@ lazy val domain = (project in file("modules/domain"))
 
 lazy val lib = (project in file("modules/lib"))
   .settings(commonSettings: _*)
-  .dependsOn(domain)
+  .dependsOn(domain % "compile->compile;test->test")
 
 lazy val core = (project in file("modules/core"))
   .settings(commonSettings: _*)

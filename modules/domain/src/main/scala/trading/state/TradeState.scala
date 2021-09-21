@@ -6,7 +6,7 @@ import cats.syntax.all._
 import derevo.cats._
 import derevo.derive
 import monocle.Optional
-import monocle.function.{ At, Index }
+import monocle.function.At
 import monocle.macros.GenLens
 
 @derive(eqv, show)
@@ -16,13 +16,11 @@ final case class TradeState(
   def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState =
     action match {
       case TradeAction.Ask =>
-        TradeState
-          .__AskQuantity(symbol, price)
-          .modify(_.fold(quantity)(_ + quantity).some)(this)
+        val f = Prices._Ask.modify(_.updated(price, quantity))(_)
+        TradeState.__Prices(symbol).modify(_.fold(f(Prices.empty))(f).some)(this)
       case TradeAction.Bid =>
-        TradeState
-          .__BidQuantity(symbol, price)
-          .modify(_.fold(quantity)(_ + quantity).some)(this)
+        val f = Prices._Bid.modify(_.updated(price, quantity))(_)
+        TradeState.__Prices(symbol).modify(_.fold(f(Prices.empty))(f).some)(this)
     }
 
   def remove(symbol: Symbol)(action: TradeAction, price: Price): TradeState =
@@ -45,6 +43,8 @@ final case class Prices(
 )
 
 object Prices {
+  def empty: Prices = Prices(Map.empty, Map.empty)
+
   type Ask = Map[AskPrice, Quantity]
   type Bid = Map[BidPrice, Quantity]
 
@@ -70,27 +70,27 @@ object TradeState {
   val _Prices = GenLens[TradeState](_.prices)
 
   object __Prices {
-    def apply(s: Symbol): Optional[TradeState, Prices] =
-      _Prices.andThen(Index.mapIndex[Symbol, Prices].index(s))
+    def apply(s: Symbol): Optional[TradeState, Option[Prices]] =
+      _Prices.andThen(At.atMap[Symbol, Prices].at(s))
   }
 
   object __AskPrices {
     def apply(s: Symbol): Optional[TradeState, Prices.Ask] =
-      __Prices(s).andThen(Prices._Ask)
+      __Prices(s).andThen(monocle.std.option.some[Prices]).andThen(Prices._Ask)
   }
 
   object __BidPrices {
     def apply(s: Symbol): Optional[TradeState, Prices.Bid] =
-      __Prices(s).andThen(Prices._Bid)
+      __Prices(s).andThen(monocle.std.option.some[Prices]).andThen(Prices._Bid)
   }
 
   object __AskQuantity {
     def apply(s: Symbol, p: Price): Optional[TradeState, Option[Quantity]] =
-      __Prices(s).andThen(Prices.__AtAsk(p))
+      __Prices(s).andThen(monocle.std.option.some[Prices]).andThen(Prices.__AtAsk(p))
   }
 
   object __BidQuantity {
     def apply(s: Symbol, p: Price): Optional[TradeState, Option[Quantity]] =
-      __Prices(s).andThen(Prices.__AtBid(p))
+      __Prices(s).andThen(monocle.std.option.some[Prices]).andThen(Prices.__AtBid(p))
   }
 }
