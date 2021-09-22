@@ -9,6 +9,8 @@ package object domain {
   type TickSize  = Double
   type Timestamp = java.time.Instant
 
+  type SocketId = String
+
   type AskPrice = Price
   type BidPrice = Price
 }

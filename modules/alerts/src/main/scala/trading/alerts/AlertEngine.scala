@@ -31,9 +31,6 @@ object AlertEngine {
                 val p   = st.prices.get(cmd.symbol)
                 val c   = nst.prices.get(cmd.symbol)
 
-                //println(s">>> ST: $st")
-                //println(s">>> NST: $nst \n")
-
                 val previousAskMax: AskPrice = p.flatMap(_.ask.keySet.maxOption).getOrElse(0.0)
                 val previousBidMax: BidPrice = p.flatMap(_.bid.keySet.maxOption).getOrElse(0.0)
                 val currentAskMax: AskPrice  = c.flatMap(_.ask.keySet.maxOption).getOrElse(0.0)

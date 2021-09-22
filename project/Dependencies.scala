@@ -8,6 +8,7 @@ object Dependencies {
     val derevo     = "0.12.5"
     val fs2        = "3.0.4"
     val fs2Kafka   = "2.2.0"
+    val http4s     = "0.23.3"
     val monocle    = "3.0.0-RC2"
     val neutron    = "0.0.8"
     val newtype    = "0.4.4"
@@ -25,7 +26,8 @@ object Dependencies {
   }
 
   object Libraries {
-    def derevo(artifact: String): ModuleID = "tf.tofu" %% s"derevo-$artifact" % V.derevo
+    def derevo(artifact: String): ModuleID = "tf.tofu"    %% s"derevo-$artifact" % V.derevo
+    def http4s(artifact: String): ModuleID = "org.http4s" %% s"http4s-$artifact" % V.http4s
 
     val cats       = "org.typelevel" %% "cats-core"   % V.cats
     val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
@@ -34,6 +36,11 @@ object Dependencies {
     val derevoCats          = derevo("cats")
     val derevoCirceMagnolia = derevo("circe-magnolia")
     val derevoTagless       = derevo("cats-tagless")
+
+    val http4sDsl    = http4s("dsl")
+    val http4sServer = http4s("ember-server")
+    val http4sClient = http4s("ember-client")
+    val http4sCirce  = http4s("circe")
 
     val refinedCore = "eu.timepit" %% "refined"      % V.refined
     val refinedCats = "eu.timepit" %% "refined-cats" % V.refined

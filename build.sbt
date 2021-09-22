@@ -86,6 +86,13 @@ lazy val wsClient = (project in file("modules/ws-client"))
 
 lazy val wsServer = (project in file("modules/ws-server"))
   .settings(commonSettings: _*)
+  .settings(
+    libraryDependencies ++= List(
+      Libraries.http4sDsl,
+      Libraries.http4sCirce,
+      Libraries.http4sServer
+    )
+  )
   .dependsOn(core)
 
 // extension demo
