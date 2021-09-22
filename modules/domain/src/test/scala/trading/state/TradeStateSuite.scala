@@ -22,9 +22,8 @@ object TradeStateSuite extends FunSuite with Discipline {
 
   checkAll("__AtAsk Optional", OptionalTests(__AtAsk(askPrice)))
   checkAll("__AtBid Optional", OptionalTests(__AtBid(bidPrice)))
-  checkAll("__Prices Optional", OptionalTests(__Prices(symbol)))
+  checkAll("__Prices At Optional", OptionalTests(__Prices.at(symbol)))
+  checkAll("__Prices Index Optional", OptionalTests(__Prices.index(symbol)))
   checkAll("__AskPrices Optional", OptionalTests(__AskPrices(symbol)))
-  checkAll("__AskQuantity Optional", OptionalTests(__AskQuantity(symbol, price)))
   checkAll("__BidPrices Optional", OptionalTests(__BidPrices(symbol)))
-  checkAll("__BidQuantity Optional", OptionalTests(__BidQuantity(symbol, price)))
 }
