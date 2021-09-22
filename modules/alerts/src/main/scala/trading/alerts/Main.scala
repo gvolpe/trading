@@ -1,6 +1,7 @@
 package trading.alerts
 
 import trading.core.AppTopic
+import trading.core.snapshots.SnapshotReader
 import trading.domain.Alert
 import trading.events.TradeEvent
 import trading.lib.inject._
@@ -8,6 +9,7 @@ import trading.lib.{ Consumer, Producer }
 
 import cats.effect._
 import cr.pulsar.{ Config, Pulsar, Subscription }
+import dev.profunktor.redis4cats.effect.Log.Stdout._
 import fs2.Stream
 
 object Main extends IOApp.Simple {
@@ -33,10 +35,11 @@ object Main extends IOApp.Simple {
 
   def resources =
     for {
-      pulsar <- Pulsar.make[IO](config.url)
-      _      <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
+      pulsar    <- Pulsar.make[IO](config.url)
+      _         <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
+      snapshots <- SnapshotReader.make[IO]
       producer = Producer.stdout[IO, Alert]
-      engine   = AlertEngine.make[IO](producer)
+      engine   = AlertEngine.make[IO](producer, snapshots)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
     } yield engine -> consumer
 
