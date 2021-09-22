@@ -10,7 +10,7 @@ import derevo.derive
 sealed trait Alert {
   def symbol: Symbol
   def price: Price
-  def wsOut: WsOut = WsOut.Alert(symbol, price)
+  def wsOut: WsOut = WsOut.Notification(this)
 }
 
 object Alert {

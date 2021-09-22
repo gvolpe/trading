@@ -9,6 +9,7 @@ import cats.effect._
 import com.comcast.ip4s._
 import cr.pulsar.{ Config, Pulsar, Subscription }
 import fs2.Stream
+import fs2.concurrent.Topic
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 
@@ -17,7 +18,13 @@ object Main extends IOApp.Simple {
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .evalMap(_.useForever)
+      .flatMap { case (alerts, topic, server) =>
+        Stream(
+          Stream.eval(server.useForever),
+          topic.subscribers.evalMap(n => IO.println(s">>> WS connections: $n")),
+          alerts.through(topic.publish)
+        ).parJoin(3)
+      }
       .compile
       .drain
 
@@ -36,7 +43,8 @@ object Main extends IOApp.Simple {
       pulsar <- Pulsar.make[IO](config.url)
       _      <- Resource.eval(IO.println(">>> Initializing ws-server service <<<"))
       alerts <- Consumer.pulsar[IO, Alert](pulsar, topic, sub).map(_.receive)
-      api = Routes[IO](alerts).routes.orNotFound
+      topic  <- Resource.eval(Topic[IO, Alert])
+      api = Routes[IO](topic).routes.orNotFound
       server = EmberServerBuilder
         .default[IO]
         .withHost(host"0.0.0.0")
@@ -44,6 +52,6 @@ object Main extends IOApp.Simple {
         .withHttpApp(api)
         .build
         .evalMap(Ember.showBanner[IO])
-    } yield server
+    } yield (alerts, topic, server)
 
 }

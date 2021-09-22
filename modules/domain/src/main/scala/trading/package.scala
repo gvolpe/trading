@@ -9,7 +9,7 @@ package object domain {
   type TickSize  = Double
   type Timestamp = java.time.Instant
 
-  type SocketId = String
+  type SocketId = java.util.UUID
 
   type AskPrice = Price
   type BidPrice = Price

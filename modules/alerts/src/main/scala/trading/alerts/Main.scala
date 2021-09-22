@@ -31,17 +31,17 @@ object Main extends IOApp.Simple {
       .withType(Subscription.Type.Shared)
       .build
 
-  val topic = AppTopic.TradingEvents.make(config)
+  val alertsTopic = AppTopic.Alerts.make(config)
+  val eventsTopic = AppTopic.TradingEvents.make(config)
 
   def resources =
     for {
       pulsar    <- Pulsar.make[IO](config.url)
       _         <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
       snapshots <- SnapshotReader.make[IO]
-      // TODO: Use pulsar producer when WS alerts are implemented
-      producer = Producer.stdout[IO, Alert]
-      engine   = AlertEngine.make[IO](producer, snapshots)
-      consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
+      producer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic)
+      engine = AlertEngine.make[IO](producer, snapshots)
+      consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
     } yield engine -> consumer
 
 }
