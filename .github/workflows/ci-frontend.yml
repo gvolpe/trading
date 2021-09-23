@@ -1,0 +1,23 @@
+name: Elm
+
+on:
+  pull_request: {}
+  push:
+    branches:
+      - main
+    paths:
+      - 'web-app/**'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2.3.2
+
+      - name: "Install Nix ❄️"
+        uses: cachix/install-nix-action@v12
+
+      - name: "Build web-app 🚀"
+        run: cd web-app && nix-build
