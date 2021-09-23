@@ -28,3 +28,5 @@ project/metals.sbt
 .bloop/
 .metals/
 project/.bloop/
+elm-stuff/
+*elm.js
