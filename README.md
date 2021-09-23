@@ -1,14 +1,15 @@
 trading
 =======
 
-[![CI Status](https://github.com/gvolpe/trading/workflows/Build/badge.svg)](https://github.com/gvolpe/trading/actions)
+[![CI Elm](https://github.com/gvolpe/trading/workflows/Elm/badge.svg)](https://github.com/gvolpe/trading/actions)
+[![CI Scala](https://github.com/gvolpe/trading/workflows/Scala/badge.svg)](https://github.com/gvolpe/trading/actions)
 [![MergifyStatus](https://img.shields.io/endpoint.svg?url=https://gh.mergify.io/badges/gvolpe/trading&style=flat)](https://mergify.io)
 
 Examples corresponding to the [Event Driven Architecture meets Functional Programming in Scala](https://leanpub.com/eda-fp-scala) book.
 
-### Requirements
+## Requirements
 
-The application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
+The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
 
 ```shell
 $ docker-compose up
@@ -20,10 +21,12 @@ To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
 $ docker-compose -f kafka.yml up
 ```
 
-### Structure
+## Structure
+
+The back-end application consists of 8 modules, from which 5 are deployable applications, and 3 are just shared modules. There's also a demo module and a web application.
 
 ```
-.
+modules
 ├── alerts
 ├── core
 ├── domain
@@ -31,42 +34,38 @@ $ docker-compose -f kafka.yml up
 ├── lib
 ├── processor
 ├── snapshots
-├── ws-client
 ├── ws-server
 └── x-demo
+web-app
 ```
 
-#### Lib
+### Lib
 
 Capability traits such as `Time` and potential library abstractions such as `Consumer` and `Producer`, which abstract over different implementations such as Kafka and Pulsar. Also generic typeclass instances such as `cats.Inject` based on Circe.
 
-#### Domain
+### Domain
 
 Commands, events, state, and all business-related data modeling.
 
-#### Core
+### Core
 
 Core functionality that needs to be shared across different modules such as snapshots, `AppTopic`, and `EventSource`.
 
-#### Feed
+### Feed
 
 Generates random `TradeCommand`s such as `Create` or `Delete` and publishes them to the `trading-commands` topic.
 
-#### Processor
+### Processor
 
 The brain of the trading application. It consumes `TradeCommand`s, processes them to generate a `TradeState` and emitting `TradeEvent`s via the `trading-events` topic.
 
-#### Snapshots
+### Snapshots
 
 It consumes `TradeEvent`s and recreates the `TradeState` that is persisted as a snapshot every configurable amount of events.
 
-#### Alerts
+### Alerts
 
 The alerts engine consumes `TradeEvent`s and emits `Alert` messages such as `Buy`, `StrongBuy` or `Sell` via the `trading-alerts` topic, according to the configured parameters.
-
-#### WS Client
-
-Allows you to follow symbols such as `EURUSD` and subscribe to alerts.
 
 #### WS Server
 
@@ -75,3 +74,19 @@ It consumes `Alert` messages and sends them over Web Sockets whenever there's an
 #### X Demo
 
 It showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
+
+## Web App
+
+The web application allows users to (un)subscribe to alerts from symbols such as `EURUSD`, which are emitted in real-time via Web Sockets. It is written in [Elm](https://elm-lang.org/) and can be built as follows.
+
+```shell
+$ cd web-app && nix-build
+$ xdg-open result/index.html # or specify browser
+```
+
+There's also a `shell.nix` handy for local development.
+
+```shell
+$ cd web-app && nix-shell
+$ elm make src/Main.elm --output=Main.js
+```
