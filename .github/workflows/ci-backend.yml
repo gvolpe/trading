@@ -6,6 +6,7 @@ on:
     branches:
       - main
     paths-ignore:
+      - 'web-app/**'
       - 'README.md'
       - 'docker-compose.yml'
       - 'kafka.yml'
