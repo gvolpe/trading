@@ -67,11 +67,11 @@ It consumes `TradeEvent`s and recreates the `TradeState` that is persisted as a 
 
 The alerts engine consumes `TradeEvent`s and emits `Alert` messages such as `Buy`, `StrongBuy` or `Sell` via the `trading-alerts` topic, according to the configured parameters.
 
-#### WS Server
+### WS Server
 
 It consumes `Alert` messages and sends them over Web Sockets whenever there's an active subscription for the alert.
 
-#### X Demo
+### X Demo
 
 It showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
 
