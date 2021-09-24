@@ -14,5 +14,7 @@ pkgs.mkShell {
     elm
     elm-format
     elm-language-server
+    elm-review
+    elm-test
   ];
 }

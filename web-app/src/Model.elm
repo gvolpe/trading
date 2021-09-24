@@ -1,17 +1,36 @@
 module Model exposing (..)
 
+
+type AlertType
+    = Buy
+    | Sell
+    | Neutral
+    | StrongBuy
+    | StrongSell
+
+
+type alias Alert =
+    { alertType : AlertType
+    , symbol : String
+    , price : Float
+    }
+
+
 type Msg
-  = DraftChanged String
-  | Send
-  | Recv String
+    = SymbolChanged String
+    | Subscribe
+    | Unsubscribe
+    | Recv String
+
 
 type alias Model =
-  { draft : String
-  , messages : List String
-  }
+    { symbol : String
+    , alerts : List Alert
+    }
+
 
 init : () -> ( Model, Cmd Msg )
-init flags =
-  ( { draft = "", messages = [] }
-  , Cmd.none
-  )
+init _ =
+    ( { symbol = "", alerts = [] }
+    , Cmd.none
+    )
