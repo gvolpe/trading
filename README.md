@@ -93,6 +93,7 @@ There's also a `shell.nix` handy for local development.
 ```shell
 $ cd web-app && nix-shell
 $ elm make src/Main.elm --output=Main.js
+$ xdg-open index.html # or specify browser
 ```
 
 If Nix is not your jam, you can install Elm by following the [official instructions](https://guide.elm-lang.org/install/elm.html) and then compile as usual.
@@ -100,4 +101,5 @@ If Nix is not your jam, you can install Elm by following the [official instructi
 ```shell
 $ cd web-app
 $ elm make src/Main.elm --output=Main.js
+$ xdg-open index.html # or specify browser
 ```
