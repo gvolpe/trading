@@ -11,6 +11,7 @@ import Ports exposing (messageReceiver)
 --
 
 
+-- TODO: Move Model decoders here
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     messageReceiver Recv

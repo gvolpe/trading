@@ -1,5 +1,7 @@
 module Model exposing (..)
 
+import Dict exposing (Dict)
+
 
 type AlertType
     = Buy
@@ -17,20 +19,32 @@ type alias Alert =
 
 
 type Msg
-    = SymbolChanged String
+    = CloseAlerts
+    | SymbolChanged Symbol
     | Subscribe
-    | Unsubscribe
+    | Unsubscribe Symbol
     | Recv String
 
 
+type alias SocketId =
+    String
+
+
+type alias Symbol =
+    String
+
+
 type alias Model =
-    { symbol : String
-    , alerts : List Alert
+    { symbol : Symbol
+    , socketId : Maybe SocketId
+    , alerts : Dict Symbol Alert
+    , sub : Maybe Symbol
+    , unsub : Maybe Symbol
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { symbol = "", alerts = [] }
+    ( { symbol = "", socketId = Nothing, alerts = Dict.fromList [], sub = Nothing, unsub = Nothing }
     , Cmd.none
     )

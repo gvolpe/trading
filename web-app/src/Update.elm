@@ -1,15 +1,10 @@
 module Update exposing (..)
 
+import Dict exposing (Dict)
 import Json.Decode exposing (Decoder, decodeString, field, map, map2, oneOf)
 import Json.Encode exposing (encode, object, string)
 import Model exposing (..)
 import Ports exposing (sendMessage)
-
-
-
--- Use the `sendMessage` port when someone presses ENTER or clicks
--- the "Send" button. Check out index.html to see the corresponding
--- JS where this is piped into a WebSocket.
 
 
 encodeSymbol : String -> Json.Encode.Value
@@ -55,39 +50,70 @@ alertDecoder =
         )
 
 
+attachedDecoder : Decoder (Maybe SocketId)
+attachedDecoder =
+    field "Attached" (Json.Decode.maybe (field "sid" Json.Decode.string))
 
---{"Notification":{"alert":{"Neutral":{"symbol":"EURUSD","price":4.5273707507049124919333666092838607}}}}
 
-
-parseAlert : String -> List Alert
-parseAlert msg =
-    case decodeString alertDecoder msg of
+parseAlert : String -> Maybe Alert
+parseAlert json =
+    case decodeString alertDecoder json of
         Ok alert ->
-            [ alert ]
+            Just alert
 
         Err _ ->
-            []
+            Nothing
+
+
+parseSocketId : Maybe SocketId -> String -> Maybe SocketId
+parseSocketId currentSid json =
+    case currentSid of
+        Just sid ->
+            Just sid
+
+        Nothing ->
+            case decodeString attachedDecoder json of
+                Ok sid ->
+                    sid
+
+                Err _ ->
+                    Nothing
+
+
+updateAlerts : Dict Symbol Alert -> Maybe Alert -> Dict Symbol Alert
+updateAlerts kvs optAlert =
+    case optAlert of
+        Just alert ->
+            Dict.insert alert.symbol alert kvs
+
+        Nothing ->
+            kvs
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        CloseAlerts ->
+            ( { model | sub = Nothing, unsub = Nothing }
+            , Cmd.none
+            )
+
         SymbolChanged symbol ->
             ( { model | symbol = symbol }
             , Cmd.none
             )
 
         Subscribe ->
-            ( { model | symbol = "" }
+            ( { model | sub = Just model.symbol, symbol = "" }
             , sendMessage (encodeSubscribe model.symbol)
             )
 
-        Unsubscribe ->
-            ( { model | symbol = "" }
-            , sendMessage (encodeUnsubscribe model.symbol)
+        Unsubscribe symbol ->
+            ( { model | unsub = Just symbol, alerts = Dict.remove symbol model.alerts }
+            , sendMessage (encodeUnsubscribe symbol)
             )
 
         Recv message ->
-            ( { model | alerts = model.alerts ++ parseAlert message }
+            ( { model | alerts = updateAlerts model.alerts (parseAlert message), socketId = parseSocketId model.socketId message }
             , Cmd.none
             )
