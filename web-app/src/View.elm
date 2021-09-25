@@ -1,7 +1,7 @@
 module View exposing (..)
 
 import Debug exposing (toString)
-import Dict exposing (Dict)
+import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -10,41 +10,53 @@ import Model exposing (..)
 import Utils exposing (emptyMaybe)
 
 
-subscriptionSuccess : Model -> Html Msg
-subscriptionSuccess model =
-    div [ hidden (emptyMaybe model.sub), id "subscription-success", class "alert alert-success fade show" ]
+type alias DivId =
+    String
+
+
+type alias AlertStatus =
+    String
+
+
+mkAlert : Maybe String -> DivId -> AlertStatus -> String -> Html Msg
+mkAlert property divId status message =
+    div [ hidden (emptyMaybe property), id divId, class ("alert alert-" ++ status ++ " fade show") ]
         [ button
             [ class "close"
             , attribute "aria-label" "Close"
             , onClick CloseAlerts
             ]
             [ text "x" ]
-        , text ("Subscribed to " ++ Maybe.withDefault "X" model.sub)
+        , text (message ++ Maybe.withDefault "X" property)
         ]
+
+
+genericErrorAlert : Model -> Html Msg
+genericErrorAlert model =
+    mkAlert model.error "generic-error" "danger" "Something went wrong: "
+
+
+subscriptionSuccess : Model -> Html Msg
+subscriptionSuccess model =
+    mkAlert model.sub "subscription-success" "success" "Subscribed to "
 
 
 unsubscriptionSuccess : Model -> Html Msg
 unsubscriptionSuccess model =
-    div [ hidden (emptyMaybe model.unsub), id "unsubscription-success", class "alert alert-warning fade show" ]
-        [ button
-            [ class "close"
-            , attribute "aria-label" "Close"
-            , onClick CloseAlerts
-            ]
-            [ text "x" ]
-        , text ("Unsubscribed from " ++ Maybe.withDefault "X" model.unsub)
-        ]
+    mkAlert model.unsub "unsubscription-success" "warning" "Unsubscribed from "
 
 
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
-        [ subscriptionSuccess model
+        [ genericErrorAlert model
+        , subscriptionSuccess model
         , unsubscriptionSuccess model
         , h1 [] [ text "Trading WS" ]
         , div [ class "input-group mb-3" ]
             [ input
                 [ type_ "text"
+                , id "symbol-input"
                 , class "form-control"
                 , autofocus True
                 , placeholder "Symbol (e.g. EURUSD)"

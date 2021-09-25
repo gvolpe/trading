@@ -77,7 +77,11 @@ It showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer
 
 ## Web App
 
-The web application allows users to (un)subscribe to alerts from symbols such as `EURUSD`, which are emitted in real-time via Web Sockets. It is written in [Elm](https://elm-lang.org/) and can be built as follows.
+The web application allows users to subscribe/unsubscribe to/from symbol alerts such as `EURUSD`, which are emitted in real-time via Web Sockets.
+
+![client](./web-app/client.png)
+
+It is written in [Elm](https://elm-lang.org/) and can be built as follows.
 
 ```shell
 $ cd web-app && nix-build
@@ -88,5 +92,12 @@ There's also a `shell.nix` handy for local development.
 
 ```shell
 $ cd web-app && nix-shell
+$ elm make src/Main.elm --output=Main.js
+```
+
+If Nix is not your jam, you can install Elm by following the [official instructions](https://guide.elm-lang.org/install/elm.html) and then compile as usual.
+
+```shell
+$ cd web-app
 $ elm make src/Main.elm --output=Main.js
 ```
