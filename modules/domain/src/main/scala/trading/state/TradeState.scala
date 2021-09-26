@@ -17,10 +17,16 @@ final case class TradeState(
     action match {
       case TradeAction.Ask =>
         val f = Prices._Ask.modify(_.updated(price, quantity))(_)
-        TradeState.__Prices.at(symbol).modify(_.fold(f(Prices.empty))(f).some)(this)
+        val g = Prices._HighAsk.modify(p => if (p < price) price else p)(_)
+        val h = Prices._LowAsk.modify(p => if (p > price) price else p)(_)
+        val t = f.andThen(g).andThen(h)
+        TradeState.__Prices.at(symbol).modify(_.fold(t(Prices.empty))(t).some)(this)
       case TradeAction.Bid =>
         val f = Prices._Bid.modify(_.updated(price, quantity))(_)
-        TradeState.__Prices.at(symbol).modify(_.fold(f(Prices.empty))(f).some)(this)
+        val g = Prices._HighBid.modify(p => if (p < price) price else p)(_)
+        val h = Prices._LowBid.modify(p => if (p > price) price else p)(_)
+        val t = f.andThen(g).andThen(h)
+        TradeState.__Prices.at(symbol).modify(_.fold(t(Prices.empty))(t).some)(this)
     }
 
   def remove(symbol: Symbol)(action: TradeAction, price: Price): TradeState =
@@ -39,17 +45,25 @@ final case class TradeState(
 @derive(eqv, show)
 final case class Prices(
     ask: Prices.Ask,
-    bid: Prices.Bid
+    bid: Prices.Bid,
+    highAsk: AskPrice,
+    lowAsk: AskPrice,
+    highBid: BidPrice,
+    lowBid: BidPrice
 )
 
 object Prices {
-  def empty: Prices = Prices(Map.empty, Map.empty)
+  def empty: Prices = Prices(Map.empty, Map.empty, 0.0, 0.0, 0.0, 0.0)
 
   type Ask = Map[AskPrice, Quantity]
   type Bid = Map[BidPrice, Quantity]
 
-  val _Ask = GenLens[Prices](_.ask)
-  val _Bid = GenLens[Prices](_.bid)
+  val _Ask     = GenLens[Prices](_.ask)
+  val _Bid     = GenLens[Prices](_.bid)
+  val _HighAsk = GenLens[Prices](_.highAsk)
+  val _LowAsk  = GenLens[Prices](_.lowAsk)
+  val _HighBid = GenLens[Prices](_.highBid)
+  val _LowBid  = GenLens[Prices](_.lowBid)
 
   object __AtAsk {
     def apply(p: AskPrice): Optional[Prices, Option[Quantity]] =

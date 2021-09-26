@@ -3,7 +3,7 @@ package trading.ws
 import trading.domain._
 import trading.lib.GenUUID
 
-import cats.effect.kernel.{ Concurrent, Deferred }
+import cats.effect.kernel.{Concurrent, Deferred, Ref}
 import cats.effect.std.Console
 import cats.syntax.all._
 import fs2.concurrent.Topic
@@ -12,7 +12,6 @@ import io.circe.parser.{ decode => jsonDecode }
 import io.circe.syntax._
 import org.http4s.websocket.WebSocketFrame
 import org.http4s.websocket.WebSocketFrame.{ Close, Text }
-import cats.effect.kernel.Ref
 
 trait Handler[F[_]] {
   def send: Stream[F, WebSocketFrame]

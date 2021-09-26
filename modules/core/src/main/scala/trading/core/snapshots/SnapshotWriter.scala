@@ -23,7 +23,11 @@ object SnapshotWriter {
         def save(state: TradeState): F[Unit] =
           state.prices.toList.traverse_ { case (symbol, prices) =>
             redis.hSet(s"snapshot-$symbol", "ask", prices.ask.toList.asJson.noSpaces) *>
-              redis.hSet(s"snapshot-$symbol", "bid", prices.bid.toList.asJson.noSpaces)
+              redis.hSet(s"snapshot-$symbol", "bid", prices.bid.toList.asJson.noSpaces) *>
+              redis.hSet(s"snapshot-$symbol", "high-ask", prices.highAsk.toString) *>
+              redis.hSet(s"snapshot-$symbol", "high-bid", prices.highBid.toString) *>
+              redis.hSet(s"snapshot-$symbol", "low-ask", prices.lowAsk.toString) *>
+              redis.hSet(s"snapshot-$symbol", "low-bid", prices.lowBid.toString)
           }
       }
     }
