@@ -30,3 +30,4 @@ project/metals.sbt
 project/.bloop/
 elm-stuff/
 *elm.js
+*Main.js

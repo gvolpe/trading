@@ -44,8 +44,8 @@ view model =
             [ thead []
                 [ tr []
                     [ th [] [ text "Symbol" ]
-                    , th [] [ text "Ask" ]
                     , th [] [ text "Bid" ]
+                    , th [] [ text "Ask" ]
                     , th [] [ text "High" ]
                     , th [] [ text "Low" ]
                     , th [] [ text "Status" ]
@@ -71,12 +71,16 @@ renderAlertRow : ( Symbol, Alert ) -> Html Msg
 renderAlertRow ( symbol, alert ) =
     tr []
         [ th [] [ text symbol ]
-        , th [] [ alert.prices.askPrice |> toString |> text ]
         , th [] [ alert.prices.bidPrice |> toString |> text ]
+        , th [] [ alert.prices.askPrice |> toString |> text ]
         , th [] [ alert.prices.high |> toString |> text ]
         , th [] [ alert.prices.low |> toString |> text ]
         , th [] [ alert.alertType |> toString |> text ]
-        , th [] [ button [ class "btn btn-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ] [ text "X" ] ]
+        , th []
+            [ button
+                [ class "btn btn-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ]
+                [ img [ src "assets/icons/delete.png", width 24, height 24 ] [] ]
+            ]
         ]
 
 

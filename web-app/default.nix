@@ -39,6 +39,7 @@ let
           ''
             mkdir -p $out/share/doc
             cp ${src}/index.html $out/index.html
+            cp -r ${src}/assets $out/
             ${lib.concatStrings (
             map (
               module: ''
