@@ -3,7 +3,7 @@ package trading.ws
 import trading.domain._
 import trading.lib.GenUUID
 
-import cats.effect.kernel.{Concurrent, Deferred, Ref}
+import cats.effect.kernel.{ Concurrent, Deferred, Ref }
 import cats.effect.std.Console
 import cats.syntax.all._
 import fs2.concurrent.Topic

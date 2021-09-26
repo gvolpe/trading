@@ -13,21 +13,21 @@ import monocle.macros.GenLens
 final case class TradeState(
     prices: TradeState.SymbolPrices
 ) {
-  def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState =
+  def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState = {
+    val h = Prices._High.modify(p => if (p < price) price else p)(_)
+    val l = Prices._Low.modify(p => if (p > price) price else p)(_)
+
     action match {
       case TradeAction.Ask =>
         val f = Prices._Ask.modify(_.updated(price, quantity))(_)
-        val g = Prices._HighAsk.modify(p => if (p < price) price else p)(_)
-        val h = Prices._LowAsk.modify(p => if (p > price) price else p)(_)
-        val t = f.andThen(g).andThen(h)
-        TradeState.__Prices.at(symbol).modify(_.fold(t(Prices.empty))(t).some)(this)
+        val g = f.andThen(h).andThen(l)
+        TradeState.__Prices.at(symbol).modify(_.fold(g(Prices.empty))(g).some)(this)
       case TradeAction.Bid =>
         val f = Prices._Bid.modify(_.updated(price, quantity))(_)
-        val g = Prices._HighBid.modify(p => if (p < price) price else p)(_)
-        val h = Prices._LowBid.modify(p => if (p > price) price else p)(_)
-        val t = f.andThen(g).andThen(h)
-        TradeState.__Prices.at(symbol).modify(_.fold(t(Prices.empty))(t).some)(this)
+        val g = f.andThen(h).andThen(l)
+        TradeState.__Prices.at(symbol).modify(_.fold(g(Prices.empty))(g).some)(this)
     }
+  }
 
   def remove(symbol: Symbol)(action: TradeAction, price: Price): TradeState =
     action match {
@@ -46,24 +46,20 @@ final case class TradeState(
 final case class Prices(
     ask: Prices.Ask,
     bid: Prices.Bid,
-    highAsk: AskPrice,
-    lowAsk: AskPrice,
-    highBid: BidPrice,
-    lowBid: BidPrice
+    high: Price,
+    low: Price
 )
 
 object Prices {
-  def empty: Prices = Prices(Map.empty, Map.empty, 0.0, 0.0, 0.0, 0.0)
+  def empty: Prices = Prices(Map.empty, Map.empty, 0.0, 0.0)
 
   type Ask = Map[AskPrice, Quantity]
   type Bid = Map[BidPrice, Quantity]
 
-  val _Ask     = GenLens[Prices](_.ask)
-  val _Bid     = GenLens[Prices](_.bid)
-  val _HighAsk = GenLens[Prices](_.highAsk)
-  val _LowAsk  = GenLens[Prices](_.lowAsk)
-  val _HighBid = GenLens[Prices](_.highBid)
-  val _LowBid  = GenLens[Prices](_.lowBid)
+  val _Ask  = GenLens[Prices](_.ask)
+  val _Bid  = GenLens[Prices](_.bid)
+  val _High = GenLens[Prices](_.high)
+  val _Low  = GenLens[Prices](_.low)
 
   object __AtAsk {
     def apply(p: AskPrice): Optional[Prices, Option[Quantity]] =

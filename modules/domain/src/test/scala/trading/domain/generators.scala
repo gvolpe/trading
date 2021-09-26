@@ -101,13 +101,11 @@ object generators {
 
   val pricesGen: Gen[Prices] =
     for {
-      a  <- askPricesGen
-      b  <- bidPricesGen
-      ha <- priceGen
-      la <- priceGen
-      hb <- priceGen
-      lb <- priceGen
-    } yield Prices(a, b, ha, la, hb, lb)
+      a <- askPricesGen
+      b <- bidPricesGen
+      h <- priceGen
+      l <- priceGen
+    } yield Prices(a, b, h, l)
 
   val tradeStateGen: Gen[TradeState] =
     Gen

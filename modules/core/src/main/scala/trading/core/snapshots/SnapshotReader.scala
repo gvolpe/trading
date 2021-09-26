@@ -27,7 +27,7 @@ object SnapshotReader {
                 val ask    = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
                 val bid    = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
                 val symbol = key.split("-").apply(1) // FIXME: potentially unsafe
-                symbol -> Prices(ask.toMap, bid.toMap, 0.0, 0.0, 0.0, 0.0) // FIXME: Read lows and highs
+                symbol -> Prices(ask.toMap, bid.toMap, 0.0, 0.0) // FIXME: Read lows and highs
               }
             }
               .map {

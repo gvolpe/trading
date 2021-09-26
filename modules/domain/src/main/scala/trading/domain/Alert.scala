@@ -11,10 +11,8 @@ sealed trait Alert {
   def symbol: Symbol
   def askPrice: AskPrice
   def bidPrice: BidPrice
-  def highAsk: AskPrice
-  def highBid: BidPrice
-  def lowAsk: AskPrice
-  def lowBid: BidPrice
+  def high: Price
+  def low: Price
   def wsOut: WsOut = WsOut.Notification(this)
 }
 
@@ -23,49 +21,39 @@ object Alert {
       symbol: Symbol,
       askPrice: AskPrice,
       bidPrice: BidPrice,
-      highAsk: AskPrice,
-      highBid: BidPrice,
-      lowAsk: AskPrice,
-      lowBid: BidPrice
+      high: Price,
+      low: Price
   ) extends Alert
 
   final case class StrongSell(
       symbol: Symbol,
       askPrice: AskPrice,
       bidPrice: BidPrice,
-      highAsk: AskPrice,
-      highBid: BidPrice,
-      lowAsk: AskPrice,
-      lowBid: BidPrice
+      high: Price,
+      low: Price
   ) extends Alert
 
   final case class Neutral(
       symbol: Symbol,
       askPrice: AskPrice,
       bidPrice: BidPrice,
-      highAsk: AskPrice,
-      highBid: BidPrice,
-      lowAsk: AskPrice,
-      lowBid: BidPrice
+      high: Price,
+      low: Price
   ) extends Alert
 
   final case class Buy(
       symbol: Symbol,
       askPrice: AskPrice,
       bidPrice: BidPrice,
-      highAsk: AskPrice,
-      highBid: BidPrice,
-      lowAsk: AskPrice,
-      lowBid: BidPrice
+      high: Price,
+      low: Price
   ) extends Alert
 
   final case class Sell(
       symbol: Symbol,
       askPrice: AskPrice,
       bidPrice: BidPrice,
-      highAsk: AskPrice,
-      highBid: BidPrice,
-      lowAsk: AskPrice,
-      lowBid: BidPrice
+      high: Price,
+      low: Price
   ) extends Alert
 }

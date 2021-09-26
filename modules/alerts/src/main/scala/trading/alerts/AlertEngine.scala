@@ -36,21 +36,19 @@ object AlertEngine {
                 val currentAskMax: AskPrice  = c.flatMap(_.ask.keySet.maxOption).getOrElse(0.0)
                 val currentBidMax: BidPrice  = c.flatMap(_.bid.keySet.maxOption).getOrElse(0.0)
 
-                val highAsk: AskPrice = c.map(_.highAsk).getOrElse(0.0)
-                val lowAsk: AskPrice  = c.map(_.lowAsk).getOrElse(0.0)
-                val highBid: BidPrice = c.map(_.highBid).getOrElse(0.0)
-                val lowBid: BidPrice  = c.map(_.lowBid).getOrElse(0.0)
+                val high: Price = c.map(_.high).getOrElse(0.0)
+                val low: Price  = c.map(_.low).getOrElse(0.0)
 
                 // dummy logic to simulate the trading market
                 val alert: Option[Alert] =
                   if (previousAskMax - currentAskMax > 0.3)
-                    Alert.StrongBuy(cmd.symbol, currentAskMax, currentBidMax, highAsk, highBid, lowAsk, lowBid).some
+                    Alert.StrongBuy(cmd.symbol, currentAskMax, currentBidMax, high, low).some
                   else if (previousAskMax - currentAskMax > 0.2)
-                    Alert.Buy(cmd.symbol, currentAskMax, currentBidMax, highAsk, highBid, lowAsk, lowBid).some
+                    Alert.Buy(cmd.symbol, currentAskMax, currentBidMax, high, low).some
                   else if (currentBidMax - previousBidMax > 0.3)
-                    Alert.StrongSell(cmd.symbol, currentAskMax, currentBidMax, highAsk, highBid, lowAsk, lowBid).some
+                    Alert.StrongSell(cmd.symbol, currentAskMax, currentBidMax, high, low).some
                   else if (currentBidMax - previousBidMax > 0.2)
-                    Alert.Sell(cmd.symbol, currentAskMax, currentBidMax, highAsk, highBid, lowAsk, lowBid).some
+                    Alert.Sell(cmd.symbol, currentAskMax, currentBidMax, high, low).some
                   else
                     none[Alert]
                 //Alert.Neutral(cmd.symbol, currentAskMax, currentBidMax)
