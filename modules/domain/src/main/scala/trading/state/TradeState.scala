@@ -14,8 +14,8 @@ final case class TradeState(
     prices: TradeState.SymbolPrices
 ) {
   def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState = {
-    val h = Prices._High.modify(p => if (p < price) price else p)(_)
-    val l = Prices._Low.modify(p => if (p > price) price else p)(_)
+    val h = Prices._High.modify(p => if (price > p) price else p)(_)
+    val l = Prices._Low.modify(p => if (price < p || p === 0.0) price else p)(_)
 
     action match {
       case TradeAction.Ask =>

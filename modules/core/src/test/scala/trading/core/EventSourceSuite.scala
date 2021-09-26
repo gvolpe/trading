@@ -12,27 +12,26 @@ import weaver.scalacheck.Checkers
 
 object EventSourceSuite extends FunSuite with Checkers {
 
-  val symbol: Symbol     = "EURUSD"
-  val ts: Timestamp      = Instant.parse("2021-09-16T14:00:00.00Z")
-  val price: Price       = 1.1987
-  val quantity: Quantity = 10
+  val s: Symbol     = "EURUSD"
+  val ts: Timestamp = Instant.parse("2021-09-16T14:00:00.00Z")
+  val p1: Price     = 1.1987
+  val q1: Quantity  = 10
 
-  val price2: Price       = 3.5782
-  val quantity2: Quantity = 20
+  val p2: Price    = 3.5782
+  val q2: Quantity = 20
 
   test("Event source state track") {
-    val st0 = TradeState.empty
-    val st1 = EventSource.runS(st0)(TradeCommand.Create(symbol, TradeAction.Ask, price, quantity, "test", ts))
-    val ex1 = TradeState(Map(symbol -> Prices(ask = Map(price -> quantity), bid = Map.empty)))
+    val st1 = EventSource.runS(TradeState.empty)(TradeCommand.Create(s, TradeAction.Ask, p1, q1, "test", ts))
+    val ex1 = TradeState(Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
 
-    val st2 = EventSource.runS(st1)(TradeCommand.Update(symbol, TradeAction.Ask, price2, quantity2, "test", ts))
-    val ex2 = TradeState(Map(symbol -> Prices(ask = Map(price -> quantity, price2 -> quantity2), bid = Map.empty)))
+    val st2 = EventSource.runS(st1)(TradeCommand.Update(s, TradeAction.Ask, p2, q2, "test", ts))
+    val ex2 = TradeState(Map(s -> Prices(ask = Map(p1 -> q1, p2 -> q2), bid = Map.empty, p2, p1)))
 
-    val st3 = EventSource.runS(st2)(TradeCommand.Delete(symbol, TradeAction.Ask, price, "test", ts))
-    val ex3 = TradeState(Map(symbol -> Prices(ask = Map(price2 -> quantity2), bid = Map.empty)))
+    val st3 = EventSource.runS(st2)(TradeCommand.Delete(s, TradeAction.Ask, p1, "test", ts))
+    val ex3 = TradeState(Map(s -> Prices(ask = Map(p2 -> q2), bid = Map.empty, p2, p1)))
 
-    val st4 = EventSource.runS(st3)(TradeCommand.Create(symbol, TradeAction.Bid, price, quantity, "test", ts))
-    val ex4 = TradeState(Map(symbol -> Prices(ask = Map(price2 -> quantity2), bid = Map(price -> quantity))))
+    val st4 = EventSource.runS(st3)(TradeCommand.Create(s, TradeAction.Bid, p1, q1, "test", ts))
+    val ex4 = TradeState(Map(s -> Prices(ask = Map(p2 -> q2), bid = Map(p1 -> q1), p2, p1)))
 
     NonEmptyList
       .of(

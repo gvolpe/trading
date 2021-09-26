@@ -40,20 +40,19 @@ object AlertEngine {
                 val low: Price  = c.map(_.low).getOrElse(0.0)
 
                 // dummy logic to simulate the trading market
-                val alert: Option[Alert] =
+                val alert: Alert =
                   if (previousAskMax - currentAskMax > 0.3)
-                    Alert.StrongBuy(cmd.symbol, currentAskMax, currentBidMax, high, low).some
+                    Alert.StrongBuy(cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else if (previousAskMax - currentAskMax > 0.2)
-                    Alert.Buy(cmd.symbol, currentAskMax, currentBidMax, high, low).some
+                    Alert.Buy(cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else if (currentBidMax - previousBidMax > 0.3)
-                    Alert.StrongSell(cmd.symbol, currentAskMax, currentBidMax, high, low).some
+                    Alert.StrongSell(cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else if (currentBidMax - previousBidMax > 0.2)
-                    Alert.Sell(cmd.symbol, currentAskMax, currentBidMax, high, low).some
+                    Alert.Sell(cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else
-                    none[Alert]
-                //Alert.Neutral(cmd.symbol, currentAskMax, currentBidMax)
+                    Alert.Neutral(cmd.symbol, currentAskMax, currentBidMax, high, low)
 
-                alert.traverse_(producer.send).tupleLeft(nst)
+                producer.send(alert).tupleLeft(nst)
               }
               .void
           }
