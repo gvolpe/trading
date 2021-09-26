@@ -19,10 +19,18 @@ type AlertType
     | StrongSell
 
 
+type alias AlertValue =
+    { symbol : String
+    , askPrice : Float
+    , bidPrice : Float
+    , high : Float
+    , low : Float
+    }
+
+
 type alias Alert =
     { alertType : AlertType
-    , symbol : String
-    , price : Float
+    , prices : AlertValue
     }
 
 

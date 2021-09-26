@@ -1,6 +1,6 @@
 module Subscriptions exposing (..)
 
-import Json.Decode exposing (Decoder, decodeString, errorToString, field, map, map2, oneOf)
+import Json.Decode exposing (Decoder, decodeString, errorToString, field, map, map5, oneOf)
 import Model exposing (..)
 import Ports exposing (messageReceiver)
 
@@ -16,18 +16,21 @@ alertTypeDecoder f =
         ]
 
 
-alertValueDecoder : Decoder ( String, Float )
+alertValueDecoder : Decoder AlertValue
 alertValueDecoder =
-    map2 (\s1 p1 -> ( s1, p1 ))
+    map5 AlertValue
         (field "symbol" Json.Decode.string)
-        (field "price" Json.Decode.float)
+        (field "askPrice" Json.Decode.float)
+        (field "bidPrice" Json.Decode.float)
+        (field "high" Json.Decode.float)
+        (field "low" Json.Decode.float)
 
 
 notificationDecoder : Decoder Alert
 notificationDecoder =
     field "Notification"
         (field "alert"
-            (map (\( t, ( s, p ) ) -> Alert t s p)
+            (map (\( t, a ) -> Alert t a)
                 (alertTypeDecoder alertValueDecoder)
             )
         )
