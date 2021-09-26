@@ -11,6 +11,10 @@ type alias Symbol =
     String
 
 
+type alias Price =
+    Float
+
+
 type AlertType
     = Buy
     | Sell
@@ -20,11 +24,11 @@ type AlertType
 
 
 type alias AlertValue =
-    { symbol : String
-    , askPrice : Float
-    , bidPrice : Float
-    , high : Float
-    , low : Float
+    { symbol : Symbol
+    , askPrice : Price
+    , bidPrice : Price
+    , high : Price
+    , low : Price
     }
 
 

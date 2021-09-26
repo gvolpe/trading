@@ -7,43 +7,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
 import Model exposing (..)
-import Utils exposing (emptyMaybe)
-
-
-type alias DivId =
-    String
-
-
-type alias AlertStatus =
-    String
-
-
-mkAlert : Maybe String -> DivId -> AlertStatus -> String -> Html Msg
-mkAlert property divId status message =
-    div [ hidden (emptyMaybe property), id divId, class ("alert alert-" ++ status ++ " fade show") ]
-        [ button
-            [ class "close"
-            , attribute "aria-label" "Close"
-            , onClick CloseAlerts
-            ]
-            [ text "x" ]
-        , text (message ++ Maybe.withDefault "X" property)
-        ]
-
-
-genericErrorAlert : Model -> Html Msg
-genericErrorAlert model =
-    mkAlert model.error "generic-error" "danger" "Something went wrong: "
-
-
-subscriptionSuccess : Model -> Html Msg
-subscriptionSuccess model =
-    mkAlert model.sub "subscription-success" "success" "Subscribed to "
-
-
-unsubscriptionSuccess : Model -> Html Msg
-unsubscriptionSuccess model =
-    mkAlert model.unsub "unsubscription-success" "warning" "Unsubscribed from "
+import UI.Alerts exposing (..)
+import Utils.Maybe as M
 
 
 view : Model -> Html Msg
@@ -92,14 +57,14 @@ view model =
         ]
 
 
-renderSocketId : Maybe SocketId -> Html msg
-renderSocketId maybeSid =
-    case maybeSid of
-        Just sid ->
-            span [ id "socket-id", class "badge badge-pill badge-primary" ] [ text ("Socket ID: " ++ sid) ]
+socketIdSpan : String -> String -> Html msg
+socketIdSpan badgeClass sidText =
+    span [ id "socket-id", class ("badge badge-pill badge-" ++ badgeClass) ] [ text sidText ]
 
-        Nothing ->
-            span [ id "socket-id", class "badge badge-pill badge-danger" ] [ text "<Disconnected>" ]
+
+renderSocketId : Maybe SocketId -> Html msg
+renderSocketId ma =
+    M.fold ma (socketIdSpan "danger" "<Disconnected>") (\sid -> socketIdSpan "primary" ("Socket ID: " ++ sid))
 
 
 renderAlertRow : ( Symbol, Alert ) -> Html Msg
