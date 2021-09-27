@@ -70,6 +70,13 @@ type alias Model =
     }
 
 
+dummyAlerts : Dict Symbol Alert
+dummyAlerts =
+    Dict.fromList
+        [ ( "EURUSD", Alert Buy (AlertValue "EURUSD" 1.287434123 1.3567576891 1.4712312454 1.23545623114) )
+        ]
+
+
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { symbol = ""

@@ -81,7 +81,7 @@ renderAlertRow ( symbol, alert ) =
         , th [] [ alert.alertType |> toString |> text ]
         , th []
             [ button
-                [ class "btn btn-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ]
+                [ class "badge badge-pill badge-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ]
                 [ img [ src "assets/icons/delete.png", width 16, height 16 ] [] ]
             ]
         ]
