@@ -7,6 +7,19 @@ trading
 
 Examples corresponding to the [Event Driven Architecture meets Functional Programming in Scala](https://leanpub.com/eda-fp-scala) book.
 
+* [Requirements](#requirements)
+* [Back-end services](#back-end-services)
+   * [Lib](#lib)
+   * [Domain](#domain)
+   * [Core](#core)
+   * [Feed](#feed)
+   * [Processor](#processor)
+   * [Snapshots](#snapshots)
+   * [Alerts](#alerts)
+   * [WS Server](#ws-server)
+   * [X Demo](#x-demo)
+* [Web App](#web-app)
+
 ## Requirements
 
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
@@ -21,7 +34,7 @@ To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
 $ docker-compose -f kafka.yml up
 ```
 
-## Structure
+## Back-end services
 
 The back-end application consists of 8 modules, from which 5 are deployable applications, and 3 are just shared modules. There's also a demo module and a web application.
 
@@ -36,7 +49,6 @@ modules
 ├── snapshots
 ├── ws-server
 └── x-demo
-web-app
 ```
 
 ### Lib
