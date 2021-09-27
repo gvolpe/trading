@@ -79,7 +79,7 @@ It showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer
 
 The web application allows users to subscribe/unsubscribe to/from symbol alerts such as `EURUSD`, which are emitted in real-time via Web Sockets.
 
-![client](./web-app/client.png)
+![client](./web-app/forex.png)
 
 It is written in [Elm](https://elm-lang.org/) and can be built as follows.
 
