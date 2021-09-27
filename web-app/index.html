@@ -11,6 +11,7 @@
       crossorigin="anonymous"
     />
     <title>Trading WS</title>
+    <script type="text/javascript" src="js/WsPorts.js"></script>
     <script type="text/javascript" src="Main.js"></script>
   </head>
 
@@ -21,7 +22,7 @@
       </div>
     </nav>
 
-	  <div id="trading-ws"></div>
+    <div id="trading-ws"></div>
 
     <script
       src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
@@ -42,60 +43,11 @@
 
   <script type="text/javascript">
 
-  // Start the Elm application.
-  var app = Elm.Main.init({
-    node: document.getElementById('trading-ws')
-  });
-
-  app.ports.connect.subscribe(function(url) {
-    var socket = new WebSocket(url);
-    var timerId = 0;
-
-    function keepAlive() {
-      var timeout = 20000;
-      if (socket.readyState == socket.OPEN) {
-        console.log('[info] Sending heartbeat 💓');
-        socket.send('{ "Heartbeat": {} }');
-      }
-      timerId = setTimeout(keepAlive, timeout);
-    }
-
-    function cancelKeepAlive() {
-      if (timerId) {
-        clearTimeout(timerId);
-      }
-    }
-
-    app.ports.send.subscribe(function(message) {
-      console.log(`[info] sending message ${message}, ws status: ${socket.readyState}`);
-      socket.send(message);
+    var app = Elm.Main.init({
+      node: document.getElementById('trading-ws')
     });
 
-    socket.onmessage = function(event) {
-      console.log(`[info] receiving message ${event.data}, ws status: ${socket.readyState}`);
-      app.ports.receive.send(event.data);
-    };
-
-    socket.onopen = function(event) {
-      keepAlive();
-    };
-
-    socket.onclose = function(event) {
-      if (event.wasClean) {
-        console.log(`[close] Connection closed cleanly: code=${event.code}, reason=${event.reason}`);
-      } else {
-        console.log(`[close] Connection closed abrubtly: code=${event.code}, reason=${event.reason}`);
-      }
-
-      cancelKeepAlive();
-
-      app.ports.receive.send('{ "SocketClosed": {} }');
-    };
-
-    socket.onerror = function(error) {
-      console.log(`[error] ${error.message}`);
-    };
-  });
+    wsPortsHook(app);
 
   </script>
 
