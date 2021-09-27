@@ -15,6 +15,10 @@ type alias Price =
     Float
 
 
+type alias WSUrl =
+    String
+
+
 type AlertType
     = Buy
     | Sell
@@ -41,11 +45,13 @@ type alias Alert =
 type WsIn
     = Attached SocketId
     | Notification Alert
+    | SocketClosed
     | Unknown String
 
 
 type Msg
     = CloseAlerts
+    | Connect
     | SymbolChanged Symbol
     | Subscribe
     | Unsubscribe Symbol
@@ -55,6 +61,7 @@ type Msg
 
 type alias Model =
     { symbol : Symbol
+    , wsUrl : WSUrl
     , socketId : Maybe SocketId
     , alerts : Dict Symbol Alert
     , sub : Maybe Symbol
@@ -65,6 +72,13 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { symbol = "", socketId = Nothing, alerts = Dict.fromList [], sub = Nothing, unsub = Nothing, error = Nothing }
+    ( { symbol = ""
+      , wsUrl = "ws://localhost:9000/ws"
+      , socketId = Nothing
+      , alerts = Dict.fromList []
+      , sub = Nothing
+      , unsub = Nothing
+      , error = Nothing
+      }
     , Cmd.none
     )

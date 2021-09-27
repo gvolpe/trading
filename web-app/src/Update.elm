@@ -4,8 +4,8 @@ import Browser.Dom as Dom
 import Dict
 import Json.Encode exposing (encode, object, string)
 import Model exposing (..)
-import Ports exposing (sendMessage)
 import Task
+import WS
 
 
 encodeSymbol : String -> Json.Encode.Value
@@ -23,6 +23,18 @@ encodeUnsubscribe symbol =
     encode 2 (object [ ( "Unsubscribe", encodeSymbol symbol ) ])
 
 
+refocusInput : Cmd Msg
+refocusInput =
+    Task.attempt (\_ -> NoOp) (Dom.focus "symbol-input")
+
+
+disconnected : Model -> ( Model, Cmd Msg )
+disconnected model =
+    ( { model | error = Just "Disconnected from server, please click on Connect." }
+    , Cmd.none
+    )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -31,9 +43,14 @@ update msg model =
             , Cmd.none
             )
 
+        Connect ->
+            ( { model | error = Nothing }
+            , Cmd.batch [ WS.connect model.wsUrl, refocusInput ]
+            )
+
         CloseAlerts ->
             ( { model | sub = Nothing, unsub = Nothing }
-            , Task.attempt (\_ -> NoOp) (Dom.focus "symbol-input")
+            , refocusInput
             )
 
         SymbolChanged symbol ->
@@ -42,14 +59,24 @@ update msg model =
             )
 
         Subscribe ->
-            ( { model | sub = Just model.symbol, symbol = "" }
-            , sendMessage (encodeSubscribe model.symbol)
-            )
+            case model.socketId of
+                Just _ ->
+                    ( { model | sub = Just model.symbol, symbol = "" }
+                    , WS.send (encodeSubscribe model.symbol)
+                    )
+
+                Nothing ->
+                    disconnected model
 
         Unsubscribe symbol ->
-            ( { model | unsub = Just symbol, alerts = Dict.remove symbol model.alerts }
-            , sendMessage (encodeUnsubscribe symbol)
-            )
+            case model.socketId of
+                Just _ ->
+                    ( { model | unsub = Just symbol, alerts = Dict.remove symbol model.alerts }
+                    , Cmd.batch [ WS.send (encodeUnsubscribe symbol), refocusInput ]
+                    )
+
+                Nothing ->
+                    disconnected model
 
         Recv input ->
             case input of
@@ -60,6 +87,11 @@ update msg model =
 
                 Notification alert ->
                     ( { model | alerts = Dict.insert alert.prices.symbol alert model.alerts }
+                    , Cmd.none
+                    )
+
+                SocketClosed ->
+                    ( { model | socketId = Nothing }
                     , Cmd.none
                     )
 

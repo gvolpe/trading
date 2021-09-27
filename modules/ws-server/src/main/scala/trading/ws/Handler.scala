@@ -54,6 +54,8 @@ object Handler {
               decode(_) match {
                 case Left(e) =>
                   Console[F].errorln(e)
+                case Right(WsIn.Heartbeat) =>
+                  ().pure[F]
                 case Right(WsIn.Close) =>
                   Console[F].println(s"[$sid] - Closing WS connection") *>
                     topic.close *> switch.complete(().asRight).void

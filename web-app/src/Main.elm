@@ -1,11 +1,10 @@
 module Main exposing (..)
 
 import Browser
-import Model exposing (..)
-import Ports exposing (..)
-import Subscriptions exposing (..)
-import Update exposing (..)
-import View exposing (..)
+import Model exposing (Model, Msg, init)
+import Subscriptions exposing (subscriptions)
+import Update exposing (update)
+import View exposing (view)
 
 
 main : Program () Model Msg

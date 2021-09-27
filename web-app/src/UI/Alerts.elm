@@ -34,7 +34,7 @@ mkAlert property divId status message =
 
 genericErrorAlert : Model -> Html Msg
 genericErrorAlert model =
-    mkAlert model.error "generic-error" "danger" "Something went wrong: "
+    mkAlert model.error "generic-error" "danger" "Error: "
 
 
 subscriptionSuccess : Model -> Html Msg

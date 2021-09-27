@@ -9,6 +9,7 @@ import derevo.derive
 sealed trait WsIn
 object WsIn {
   case object Close                            extends WsIn
+  case object Heartbeat                        extends WsIn
   final case class Subscribe(symbol: Symbol)   extends WsIn
   final case class Unsubscribe(symbol: Symbol) extends WsIn
 }

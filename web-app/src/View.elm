@@ -8,7 +8,6 @@ import Html.Events exposing (..)
 import Json.Decode as D
 import Model exposing (..)
 import UI.Alerts exposing (..)
-import Utils.Maybe as M
 
 
 view : Model -> Html Msg
@@ -57,14 +56,18 @@ view model =
         ]
 
 
-socketIdSpan : String -> String -> Html msg
-socketIdSpan badgeClass sidText =
-    span [ id "socket-id", class ("badge badge-pill badge-" ++ badgeClass) ] [ text sidText ]
-
-
-renderSocketId : Maybe SocketId -> Html msg
+renderSocketId : Maybe SocketId -> Html Msg
 renderSocketId ma =
-    M.fold ma (socketIdSpan "danger" "<Disconnected>") (\sid -> socketIdSpan "primary" ("Socket ID: " ++ sid))
+    case ma of
+        Just sid ->
+            span [ id "socket-id", class "badge badge-pill badge-success" ] [ text ("Socket ID: " ++ sid) ]
+
+        Nothing ->
+            div []
+                [ span [ id "socket-id", class "badge badge-pill badge-secondary" ] [ text "<Disconnected>" ]
+                , span [] [ text " " ]
+                , button [ class "badge badge-pill badge-primary", onClick Connect ] [ text "Connect" ]
+                ]
 
 
 renderAlertRow : ( Symbol, Alert ) -> Html Msg
