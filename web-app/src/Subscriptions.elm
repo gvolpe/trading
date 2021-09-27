@@ -1,6 +1,6 @@
 module Subscriptions exposing (..)
 
-import Json.Decode exposing (Decoder, Value, decodeString, errorToString, field, map, map5, oneOf)
+import Json.Decode exposing (Decoder, decodeString, errorToString, field, map, map5, oneOf)
 import Model exposing (..)
 import WS
 
@@ -41,9 +41,9 @@ attachedDecoder =
     field "Attached" (field "sid" Json.Decode.string)
 
 
-socketClosedDecoder : Decoder Value
+socketClosedDecoder : Decoder WsIn
 socketClosedDecoder =
-    field "SocketClosed" Json.Decode.value
+    field "SocketClosed" (Json.Decode.succeed SocketClosed)
 
 
 wsInDecoder : Decoder WsIn
@@ -51,7 +51,7 @@ wsInDecoder =
     oneOf
         [ map Attached attachedDecoder
         , map Notification notificationDecoder
-        , map (\_ -> SocketClosed) socketClosedDecoder
+        , socketClosedDecoder
         ]
 
 
