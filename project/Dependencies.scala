@@ -4,12 +4,12 @@ object Dependencies {
 
   object V {
     val cats       = "2.6.1"
-    val catsEffect = "3.1.1"
+    val catsEffect = "3.2.9"
     val derevo     = "0.12.5"
-    val fs2        = "3.0.4"
+    val fs2        = "3.1.3"
     val fs2Kafka   = "2.2.0"
-    val http4s     = "0.23.3"
-    val monocle    = "3.0.0-RC2"
+    val http4s     = "0.23.4"
+    val monocle    = "3.1.0"
     val neutron    = "0.0.8"
     val newtype    = "0.4.4"
     val refined    = "0.9.26"
