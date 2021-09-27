@@ -17,7 +17,7 @@ view model =
         [ genericErrorAlert model
         , subscriptionSuccess model
         , unsubscriptionSuccess model
-        , h1 [] [ text "Trading WS" ]
+        , h2 [ align "center" ] [ text "Trading WS" ]
         , div [ class "input-group mb-3" ]
             [ input
                 [ type_ "text"
@@ -79,7 +79,7 @@ renderAlertRow ( symbol, alert ) =
         , th []
             [ button
                 [ class "btn btn-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ]
-                [ img [ src "assets/icons/delete.png", width 24, height 24 ] [] ]
+                [ img [ src "assets/icons/delete.png", width 16, height 16 ] [] ]
             ]
         ]
 
