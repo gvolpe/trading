@@ -2,6 +2,7 @@ package trading.alerts
 
 import trading.core.EventSource
 import trading.core.snapshots.SnapshotReader
+import trading.domain.AlertType._
 import trading.domain._
 import trading.events.TradeEvent
 import trading.events.TradeEvent.CommandExecuted
@@ -42,15 +43,15 @@ object AlertEngine {
                 // dummy logic to simulate the trading market
                 val alert: Alert =
                   if (previousAskMax - currentAskMax > 0.3)
-                    Alert.StrongBuy(cmd.symbol, currentAskMax, currentBidMax, high, low)
+                    Alert(StrongBuy, cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else if (previousAskMax - currentAskMax > 0.2)
-                    Alert.Buy(cmd.symbol, currentAskMax, currentBidMax, high, low)
+                    Alert(Buy, cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else if (currentBidMax - previousBidMax > 0.3)
-                    Alert.StrongSell(cmd.symbol, currentAskMax, currentBidMax, high, low)
+                    Alert(StrongSell, cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else if (currentBidMax - previousBidMax > 0.2)
-                    Alert.Sell(cmd.symbol, currentAskMax, currentBidMax, high, low)
+                    Alert(Sell, cmd.symbol, currentAskMax, currentBidMax, high, low)
                   else
-                    Alert.Neutral(cmd.symbol, currentAskMax, currentBidMax, high, low)
+                    Alert(Neutral, cmd.symbol, currentAskMax, currentBidMax, high, low)
 
                 producer.send(alert).tupleLeft(nst)
               }

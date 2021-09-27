@@ -5,6 +5,7 @@ object Dependencies {
   object V {
     val cats       = "2.6.1"
     val catsEffect = "3.2.9"
+    val circe      = "0.14.1"
     val derevo     = "0.12.5"
     val fs2        = "3.1.3"
     val fs2Kafka   = "2.2.0"
@@ -36,6 +37,8 @@ object Dependencies {
     val derevoCats          = derevo("cats")
     val derevoCirceMagnolia = derevo("circe-magnolia")
     val derevoTagless       = derevo("cats-tagless")
+
+    val circeGenericExtras = "io.circe" %% "circe-generic-extras" % V.circe
 
     val http4sDsl    = http4s("dsl")
     val http4sServer = http4s("ember-server")

@@ -23,6 +23,7 @@ val commonSettings = List(
     CompilerPlugins.semanticDB,
     Libraries.cats,
     Libraries.catsEffect,
+    Libraries.circeGenericExtras,
     Libraries.derevoCats,
     Libraries.derevoCirceMagnolia,
     Libraries.derevoTagless,
