@@ -1,56 +1,52 @@
 module Subscriptions exposing (..)
 
-import Json.Decode exposing (Decoder, decodeString, errorToString, field, map, map5, oneOf)
+import Json.Decode exposing (..)
 import Model exposing (..)
 import WS
 
 
-alertTypeDecoder : Decoder a -> Decoder ( AlertType, a )
-alertTypeDecoder f =
+alertTypeDecoder : Decoder AlertType
+alertTypeDecoder =
     oneOf
-        [ map (\c -> ( Buy, c )) (field "Buy" f)
-        , map (\c -> ( Sell, c )) (field "Sell" f)
-        , map (\c -> ( Neutral, c )) (field "Neutral" f)
-        , map (\c -> ( StrongBuy, c )) (field "StrongBuy" f)
-        , map (\c -> ( StrongSell, c )) (field "StrongSell" f)
+        [ field "Buy" (succeed Buy)
+        , field "Sell" (succeed Sell)
+        , field "Neutral" (succeed Neutral)
+        , field "StrongBuy" (succeed StrongBuy)
+        , field "StrongSell" (succeed StrongSell)
         ]
 
 
-alertValueDecoder : Decoder AlertValue
+alertValueDecoder : Decoder Alert
 alertValueDecoder =
-    map5 AlertValue
-        (field "symbol" Json.Decode.string)
-        (field "askPrice" Json.Decode.float)
-        (field "bidPrice" Json.Decode.float)
-        (field "high" Json.Decode.float)
-        (field "low" Json.Decode.float)
+    map6 Alert
+        (field "alertType" alertTypeDecoder)
+        (field "symbol" string)
+        (field "askPrice" float)
+        (field "bidPrice" float)
+        (field "high" float)
+        (field "low" float)
 
 
-notificationDecoder : Decoder Alert
+notificationDecoder : Decoder WsIn
 notificationDecoder =
-    field "Notification"
-        (field "alert"
-            (map (\( t, a ) -> Alert t a)
-                (alertTypeDecoder alertValueDecoder)
-            )
-        )
+    map Notification (field "Notification" (field "alert" alertValueDecoder))
 
 
-attachedDecoder : Decoder SocketId
+attachedDecoder : Decoder WsIn
 attachedDecoder =
-    field "Attached" (field "sid" Json.Decode.string)
+    map Attached (field "Attached" (field "sid" string))
 
 
 socketClosedDecoder : Decoder WsIn
 socketClosedDecoder =
-    field "SocketClosed" (Json.Decode.succeed SocketClosed)
+    field "SocketClosed" (succeed SocketClosed)
 
 
 wsInDecoder : Decoder WsIn
 wsInDecoder =
     oneOf
-        [ map Attached attachedDecoder
-        , map Notification notificationDecoder
+        [ attachedDecoder
+        , notificationDecoder
         , socketClosedDecoder
         ]
 

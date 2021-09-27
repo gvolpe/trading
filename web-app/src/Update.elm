@@ -86,7 +86,7 @@ update msg model =
                     )
 
                 Notification alert ->
-                    ( { model | alerts = Dict.insert alert.prices.symbol alert model.alerts }
+                    ( { model | alerts = Dict.insert alert.symbol alert model.alerts }
                     , Cmd.none
                     )
 

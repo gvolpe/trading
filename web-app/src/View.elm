@@ -70,15 +70,39 @@ renderSocketId ma =
                 ]
 
 
+alertTypeColumn : String -> String -> Html Msg
+alertTypeColumn imgName val =
+    th [] [ img [ src ("assets/icons/" ++ imgName ++ ".png"), width 28, height 28 ] [], text val ]
+
+
+renderAlertType : AlertType -> Html Msg
+renderAlertType at =
+    case at of
+        StrongBuy ->
+            alertTypeColumn "strong-buy" "Strong Buy"
+
+        StrongSell ->
+            alertTypeColumn "strong-sell" "Strong Sell"
+
+        Neutral ->
+            alertTypeColumn "neutral" "Neutral"
+
+        Sell ->
+            alertTypeColumn "sell" "Sell"
+
+        Buy ->
+            alertTypeColumn "buy" "Buy"
+
+
 renderAlertRow : ( Symbol, Alert ) -> Html Msg
 renderAlertRow ( symbol, alert ) =
     tr []
         [ th [] [ text symbol ]
-        , th [] [ alert.prices.bidPrice |> toString |> text ]
-        , th [] [ alert.prices.askPrice |> toString |> text ]
-        , th [] [ alert.prices.high |> toString |> text ]
-        , th [] [ alert.prices.low |> toString |> text ]
-        , th [] [ alert.alertType |> toString |> text ]
+        , th [] [ alert.bidPrice |> toString |> text ]
+        , th [] [ alert.askPrice |> toString |> text ]
+        , th [] [ alert.high |> toString |> text ]
+        , th [] [ alert.low |> toString |> text ]
+        , renderAlertType alert.alertType
         , th []
             [ button
                 [ class "badge badge-pill badge-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ]
