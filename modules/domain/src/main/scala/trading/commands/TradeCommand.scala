@@ -2,10 +2,11 @@ package trading.commands
 
 import trading.domain._
 
+import derevo.cats.show
 import derevo.circe.magnolia.{ decoder, encoder }
 import derevo.derive
 
-@derive(decoder, encoder)
+@derive(decoder, encoder, show)
 sealed trait TradeCommand {
   def symbol: Symbol
   def tradeAction: TradeAction

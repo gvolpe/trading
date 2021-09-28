@@ -1,10 +1,9 @@
 package trading.ws
 
 import trading.domain._
-import trading.lib.GenUUID
+import trading.lib.{ GenUUID, Logger }
 
 import cats.effect.kernel.{ Concurrent, Deferred, Ref }
-import cats.effect.std.Console
 import cats.syntax.all._
 import fs2.concurrent.Topic
 import fs2.{ Pipe, Stream }
@@ -19,7 +18,7 @@ trait Handler[F[_]] {
 }
 
 object Handler {
-  def make[F[_]: Concurrent: Console: GenUUID](
+  def make[F[_]: Concurrent: GenUUID: Logger](
       topic: Topic[F, Alert]
   ): F[Handler[F]] =
     (Deferred[F, Either[Throwable, Unit]], Ref.of[F, Set[Symbol]](Set.empty), GenUUID[F].random).mapN {
@@ -53,20 +52,20 @@ object Handler {
             _.evalMap {
               decode(_) match {
                 case Left(e) =>
-                  Console[F].errorln(e)
+                  Logger[F].error(e)
                 case Right(WsIn.Heartbeat) =>
                   ().pure[F]
                 case Right(WsIn.Close) =>
-                  Console[F].println(s"[$sid] - Closing WS connection") *>
+                  Logger[F].info(s"[$sid] - Closing WS connection") *>
                     topic.close *> switch.complete(().asRight).void
                 case Right(WsIn.Subscribe(symbol)) =>
-                  Console[F].println(s"[$sid] - Subscribing to $symbol alerts") *>
+                  Logger[F].info(s"[$sid] - Subscribing to $symbol alerts") *>
                     subs.update(_ + symbol)
                 case Right(WsIn.Unsubscribe(symbol)) =>
-                  Console[F].println(s"[$sid] - Unsubscribing from $symbol alerts") *>
+                  Logger[F].info(s"[$sid] - Unsubscribing from $symbol alerts") *>
                     subs.update(_ - symbol)
               }
-            }.onFinalize(Console[F].println(s"[$sid] - WS connection interrupted"))
+            }.onFinalize(Logger[F].info(s"[$sid] - WS connection terminated"))
         }
     }
 }

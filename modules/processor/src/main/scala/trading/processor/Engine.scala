@@ -4,11 +4,10 @@ import trading.commands.TradeCommand
 import trading.core.EventSource
 import trading.core.snapshots.SnapshotReader
 import trading.events.TradeEvent
-import trading.lib.{ Producer, Time }
+import trading.lib.{ Logger, Producer, Time }
 import trading.state.TradeState
 
 import cats.Monad
-import cats.effect.std.Console
 import cats.syntax.all._
 import fs2.{ Pipe, Stream }
 
@@ -17,7 +16,7 @@ trait Engine[F[_]] {
 }
 
 object Engine {
-  def make[F[_]: Console: Monad: Time](
+  def make[F[_]: Logger: Monad: Time](
       producer: Producer[F, TradeEvent],
       snapshots: SnapshotReader[F]
   ): Engine[F] =
@@ -29,7 +28,7 @@ object Engine {
           Stream
             .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
             .flatMap { latest =>
-              Stream.eval(Console[F].println(s">>> SNAPSHOTS: $latest")) >>
+              Stream.eval(Logger[F].info(s">>> SNAPSHOTS: $latest")) >>
                 commands
                   .evalMapAccumulate(latest) { case (st, cmd) =>
                     val (nst, events) = EventSource.run(st)(cmd)

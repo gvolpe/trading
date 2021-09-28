@@ -1,5 +1,7 @@
 package trading
 
+import cats.Show
+
 package object domain {
   type Symbol    = String
   type Price     = BigDecimal
@@ -13,4 +15,6 @@ package object domain {
 
   type AskPrice = Price
   type BidPrice = Price
+
+  implicit val timestampShow: Show[Timestamp] = Show.show(_.toString)
 }

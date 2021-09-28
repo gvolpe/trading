@@ -1,17 +1,16 @@
 package trading.ws
 
 import trading.domain.Alert
-import trading.lib.GenUUID
+import trading.lib.{ GenUUID, Logger }
 
 import cats.effect.kernel.Concurrent
-import cats.effect.std.Console
 import cats.syntax.all._
 import fs2.concurrent.Topic
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.websocket.WebSocketBuilder
 
-final case class Routes[F[_]: Concurrent: Console: GenUUID](
+final case class Routes[F[_]: Concurrent: GenUUID: Logger](
     topic: Topic[F, Alert]
 ) extends Http4sDsl[F] {
 
