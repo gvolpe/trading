@@ -10,8 +10,8 @@ Examples corresponding to the [Event Driven Architecture meets Functional Progra
 ## Table of contents
 
 * [Web App](#web-app)
-* [Back-end requirements](#back-end-requirements)
-* [Back-end services](#back-end-services)
+* [Requirements](#requirements)
+* [Services](#services)
    * [Lib](#lib)
    * [Domain](#domain)
    * [Core](#core)
@@ -51,7 +51,7 @@ $ elm make src/Main.elm --output=Main.js
 $ xdg-open index.html # or specify browser
 ```
 
-## Back-end requirements
+## Requirements
 
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
 
@@ -65,7 +65,7 @@ To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
 $ docker-compose -f kafka.yml up
 ```
 
-## Back-end services
+## Services
 
 The back-end application consists of 8 modules, from which 5 are deployable applications, and 3 are just shared modules. There's also a demo module and a web application.
 
