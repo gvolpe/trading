@@ -37,6 +37,11 @@ attachedDecoder =
     map Attached (field "Attached" (field "sid" string))
 
 
+connectionErrorDecoder : Decoder WsIn
+connectionErrorDecoder =
+    map ConnectionError (field "ConnectionError" (field "cause" string))
+
+
 socketClosedDecoder : Decoder WsIn
 socketClosedDecoder =
     field "SocketClosed" (succeed SocketClosed)
@@ -46,13 +51,14 @@ wsInDecoder : Decoder WsIn
 wsInDecoder =
     oneOf
         [ attachedDecoder
+        , connectionErrorDecoder
         , notificationDecoder
         , socketClosedDecoder
         ]
 
 
-subscriptions : Model -> Sub Msg
-subscriptions _ =
+wsSub : Sub Msg
+wsSub =
     WS.receive
         (\str ->
             case decodeString wsInDecoder str of
@@ -62,3 +68,16 @@ subscriptions _ =
                 Err error ->
                     Recv (Unknown (errorToString error))
         )
+
+
+errorSub : Sub Msg
+errorSub =
+    WS.connectionError
+        (\cause ->
+            Recv (ConnectionError cause)
+        )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.batch [ wsSub, errorSub ]

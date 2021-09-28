@@ -23,6 +23,11 @@ function wsPortsHook(app) {
       socket.send(message);
     });
 
+    app.ports.disconnect.subscribe(function() {
+      console.log('[info] ws disconnect');
+      socket.close(1000, "Done");
+    });
+
     socket.onmessage = function(event) {
       console.log(`[info] receiving message ${event.data}, ws status: ${socket.readyState}`);
       app.ports.receive.send(event.data);
@@ -36,7 +41,7 @@ function wsPortsHook(app) {
       if (event.wasClean) {
         console.log(`[close] Connection closed cleanly: code=${event.code}, reason=${event.reason}`);
       } else {
-        console.log(`[close] Connection closed abrubtly: code=${event.code}, reason=${event.reason}`);
+        console.log(`[close] Connection died: code=${event.code}, reason=${event.reason}`);
       }
 
       cancelKeepAlive();
@@ -45,7 +50,16 @@ function wsPortsHook(app) {
     };
 
     socket.onerror = function(error) {
-      console.log(`[error] ${error.message}`);
+      console.log(`[error] ${error.message}, ws status: ${socket.readyState}`);
+
+      if (socket.readyState == socket.CLOSED) {
+        if ( error != null && error.message != null) {
+          app.ports.connectionError.send(error.message);
+        } else {
+          app.ports.connectionError.send('unknown cause');
+        }
+      }
     };
+
   });
 }

@@ -85,6 +85,16 @@ update msg model =
                     , Cmd.none
                     )
 
+                CloseConnection ->
+                    ( model
+                    , WS.disconnect ()
+                    )
+
+                ConnectionError cause ->
+                    ( { model | error = Just ("Connection error: " ++ cause) }
+                    , Cmd.none
+                    )
+
                 Notification alert ->
                     ( { model | alerts = Dict.insert alert.symbol alert model.alerts }
                     , Cmd.none

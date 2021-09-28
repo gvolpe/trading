@@ -39,6 +39,8 @@ type alias Alert =
 
 type WsIn
     = Attached SocketId
+    | CloseConnection
+    | ConnectionError String
     | Notification Alert
     | SocketClosed
     | Unknown String
@@ -69,10 +71,11 @@ dummyAlerts : Dict Symbol Alert
 dummyAlerts =
     Dict.fromList
         [ ( "EURUSD", Alert Sell "EURUSD" 1.287434123 1.3567576891 1.4712312454 1.23545623114 )
-        , ( "CHFEUR", Alert Buy "CHFEUR" 4.691272348 4.4534524323 5.6509123454 3.65876653451 )
-        , ( "GBPUSD", Alert StrongSell "GBPUSD" 4.691272348 4.4534524323 5.6509123454 3.65876653451 )
-        , ( "EURPLN", Alert Neutral "EURPLN" 4.691272348 4.4534524323 5.6509123454 3.65876653451 )
-        , ( "AUDCAD", Alert StrongBuy "AUDCAD" 4.691272348 4.4534524323 5.6509123454 3.65876653451 )
+        , ( "CHFEUR", Alert Buy "CHFEUR" 1.301236451 1.4328765419 1.4789877536 1.27054836753 )
+        , ( "CHFGBP", Alert Buy "CHFEUR" 1.301236451 1.4328765419 1.4789877536 1.27054836753 )
+        , ( "GBPUSD", Alert StrongSell "GBPUSD" 2.487465452 2.7344545629 2.9983565471 2.21236312235 )
+        , ( "EURPLN", Alert Neutral "EURPLN" 4.691272348 4.4534524323 4.8347145275 3.83476129853 )
+        , ( "AUDCAD", Alert StrongBuy "AUDCAD" 10.209676347 10.3723136644 10.5430958726 10.01236543289 )
         ]
 
 

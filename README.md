@@ -7,7 +7,10 @@ trading
 
 Examples corresponding to the [Event Driven Architecture meets Functional Programming in Scala](https://leanpub.com/eda-fp-scala) book.
 
-* [Requirements](#requirements)
+## Table of contents
+
+* [Web App](#web-app)
+* [Back-end requirements](#back-end-requirements)
 * [Back-end services](#back-end-services)
    * [Lib](#lib)
    * [Domain](#domain)
@@ -18,9 +21,37 @@ Examples corresponding to the [Event Driven Architecture meets Functional Progra
    * [Alerts](#alerts)
    * [WS Server](#ws-server)
    * [X Demo](#x-demo)
-* [Web App](#web-app)
 
-## Requirements
+## Web App
+
+The web application allows users to subscribe/unsubscribe to/from symbol alerts such as `EURUSD`, which are emitted in real-time via Web Sockets.
+
+![client](./web-app/client.png)
+
+It is written in [Elm](https://elm-lang.org/) and can be built as follows.
+
+```shell
+$ cd web-app && nix-build
+$ xdg-open result/index.html # or specify browser
+```
+
+There's also a `shell.nix` handy for local development.
+
+```shell
+$ cd web-app && nix-shell
+$ elm make src/Main.elm --output=Main.js
+$ xdg-open index.html # or specify browser
+```
+
+If Nix is not your jam, you can install Elm by following the [official instructions](https://guide.elm-lang.org/install/elm.html) and then compile as usual.
+
+```shell
+$ cd web-app
+$ elm make src/Main.elm --output=Main.js
+$ xdg-open index.html # or specify browser
+```
+
+## Back-end requirements
 
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
 
@@ -86,32 +117,3 @@ It consumes `Alert` messages and sends them over Web Sockets whenever there's an
 ### X Demo
 
 It showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
-
-## Web App
-
-The web application allows users to subscribe/unsubscribe to/from symbol alerts such as `EURUSD`, which are emitted in real-time via Web Sockets.
-
-![client](./web-app/forex.png)
-
-It is written in [Elm](https://elm-lang.org/) and can be built as follows.
-
-```shell
-$ cd web-app && nix-build
-$ xdg-open result/index.html # or specify browser
-```
-
-There's also a `shell.nix` handy for local development.
-
-```shell
-$ cd web-app && nix-shell
-$ elm make src/Main.elm --output=Main.js
-$ xdg-open index.html # or specify browser
-```
-
-If Nix is not your jam, you can install Elm by following the [official instructions](https://guide.elm-lang.org/install/elm.html) and then compile as usual.
-
-```shell
-$ cd web-app
-$ elm make src/Main.elm --output=Main.js
-$ xdg-open index.html # or specify browser
-```
