@@ -1,6 +1,6 @@
 package trading
 
-import cats.Show
+import cats.{ Eq, Show }
 
 package object domain {
   type Symbol    = String
@@ -11,10 +11,12 @@ package object domain {
   type TickSize  = Double
   type Timestamp = java.time.Instant
 
-  type SocketId = java.util.UUID
+  type CommandId = java.util.UUID
+  type SocketId  = java.util.UUID
 
   type AskPrice = Price
   type BidPrice = Price
 
+  implicit val timestampEq: Eq[Timestamp]     = Eq.by(_.getEpochSecond)
   implicit val timestampShow: Show[Timestamp] = Show.show(_.toString)
 }

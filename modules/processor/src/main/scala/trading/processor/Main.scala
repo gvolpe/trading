@@ -31,7 +31,7 @@ object Main extends IOApp.Simple {
   val sub =
     Subscription.Builder
       .withName("trading-app")
-      .withType(Subscription.Type.Shared)
+      .withType(Subscription.Type.KeyShared)
       .build
 
   def resources =

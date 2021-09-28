@@ -8,6 +8,7 @@ import derevo.derive
 
 @derive(decoder, encoder, show)
 sealed trait TradeCommand {
+  def id: CommandId
   def symbol: Symbol
   def tradeAction: TradeAction
   def price: Price
@@ -17,6 +18,7 @@ sealed trait TradeCommand {
 
 object TradeCommand {
   final case class Create(
+      id: CommandId,
       symbol: Symbol,
       tradeAction: TradeAction,
       price: Price,
@@ -26,6 +28,7 @@ object TradeCommand {
   ) extends TradeCommand
 
   final case class Update(
+      id: CommandId,
       symbol: Symbol,
       tradeAction: TradeAction,
       price: Price,
@@ -35,6 +38,7 @@ object TradeCommand {
   ) extends TradeCommand
 
   final case class Delete(
+      id: CommandId,
       symbol: Symbol,
       tradeAction: TradeAction,
       price: Price,

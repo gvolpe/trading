@@ -31,6 +31,8 @@ object generators {
   val tradeActionGen: Gen[TradeAction] =
     Gen.oneOf(TradeAction.Ask, TradeAction.Bid)
 
+  val commandIdGen: Gen[CommandId] = Gen.uuid
+
   val symbolGen: Gen[Symbol] =
     Gen.oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
 
@@ -48,32 +50,35 @@ object generators {
 
   val createCommandGen: Gen[TradeCommand.Create] =
     for {
+      i <- commandIdGen
       s <- symbolGen
       a <- tradeActionGen
       p <- priceGen
       q <- quantityGen
       c <- sourceGen
       t <- timestampGen
-    } yield TradeCommand.Create(s, a, p, q, c, t)
+    } yield TradeCommand.Create(i, s, a, p, q, c, t)
 
   val updateCommandGen: Gen[TradeCommand.Update] =
     for {
+      i <- commandIdGen
       s <- symbolGen
       a <- tradeActionGen
       p <- priceGen
       q <- quantityGen
       c <- sourceGen
       t <- timestampGen
-    } yield TradeCommand.Update(s, a, p, q, c, t)
+    } yield TradeCommand.Update(i, s, a, p, q, c, t)
 
   val deleteCommandGen: Gen[TradeCommand.Delete] =
     for {
+      i <- commandIdGen
       s <- symbolGen
       a <- tradeActionGen
       p <- priceGen
       c <- sourceGen
       t <- timestampGen
-    } yield TradeCommand.Delete(s, a, p, c, t)
+    } yield TradeCommand.Delete(i, s, a, p, c, t)
 
   val tradeCommandGen: Gen[TradeCommand] =
     Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)

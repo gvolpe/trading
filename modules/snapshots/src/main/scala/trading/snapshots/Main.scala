@@ -20,6 +20,7 @@ object Main extends IOApp.Simple {
       .resource(resources)
       .flatMap { case (consumer, snapshots) =>
         consumer.receive
+          // TODO: Should start from reading snapshots from Redis
           .evalMapAccumulate(TradeState.empty) { case (st, evt) =>
             IO.unit.tupleLeft(EventSource.runS(st)(evt.command))
           }
@@ -38,10 +39,11 @@ object Main extends IOApp.Simple {
 
   val topic = AppTopic.TradingEvents.make(config)
 
+  // Failover subscription (it's enough to deploy two instances)
   val sub =
     Subscription.Builder
       .withName("snapshots-sub")
-      .withType(Subscription.Type.Shared)
+      .withType(Subscription.Type.Failover)
       .build
 
   def resources =

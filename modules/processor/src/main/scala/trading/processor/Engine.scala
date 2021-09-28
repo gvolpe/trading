@@ -23,8 +23,6 @@ object Engine {
     new Engine[F] {
       def run: Pipe[F, TradeCommand, Unit] =
         commands =>
-          // TODO: This only allows one instance of `trading`. To allow more instances,
-          // we need to shard per symbol, for example.
           Stream
             .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
             .flatMap { latest =>
