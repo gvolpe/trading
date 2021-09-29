@@ -21,6 +21,7 @@ object Main extends IOApp.Simple {
       .flatMap { case (consumer, reader, writer) =>
         Stream
           .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
+          .evalTap(latest => IO.println(s">>> SNAPSHOTS: $latest"))
           .flatMap { latest =>
             consumer.receive
               .mapAccumulate(latest) { case (st, evt) =>

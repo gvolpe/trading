@@ -7,7 +7,7 @@ import trading.events.TradeEvent
 import trading.lib._
 import trading.state.{ DedupState, TradeState }
 
-import cats.Monad
+import cats.MonadThrow
 import cats.syntax.all._
 import fs2.Stream
 
@@ -16,7 +16,7 @@ trait Engine[F[_]] {
 }
 
 object Engine {
-  def make[F[_]: Logger: Monad: Time](
+  def make[F[_]: Logger: MonadThrow: Time](
       consumer: Consumer[F, TradeCommand],
       producer: Producer[F, TradeEvent],
       snapshots: SnapshotReader[F]
@@ -25,23 +25,23 @@ object Engine {
       def run: Stream[F, Unit] =
         Stream
           .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
+          .evalTap(latest => Logger[F].info(s">>> SNAPSHOTS: $latest"))
           .flatMap { latest =>
-            Stream.eval(Logger[F].info(s">>> SNAPSHOTS: $latest")) >>
-              consumer.receiveM
-                .evalMapAccumulate(latest -> DedupState.empty) { case ((st, ds), Consumer.Msg(msgId, command)) =>
-                  Conflicts.dedup(ds)(command) match {
-                    case None =>
-                      Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
-                    case Some(cmd) =>
-                      val (nst, events) = EventSource.run(st)(cmd)
-                      for {
-                        evs <- events.traverse(Time[F].timestamp.map(_))
-                        _   <- evs.traverse(producer.send)
-                        nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(evs.map(_.command), _))
-                        _   <- consumer.ack(msgId)
-                      } yield (nst -> nds) -> ()
-                  }
+            consumer.receiveM
+              .evalMapAccumulate(latest -> DedupState.empty) { case ((st, ds), Consumer.Msg(msgId, command)) =>
+                Conflicts.dedup(ds)(command) match {
+                  case None =>
+                    Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
+                  case Some(cmd) =>
+                    val (nst, events) = EventSource.run(st)(cmd)
+                    for {
+                      evs <- events.traverse(Time[F].timestamp.map(_))
+                      _   <- evs.traverse(producer.send)
+                      nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(evs.map(_.command), _))
+                      _   <- consumer.ack(msgId).attempt.void // don't care if this fails (de-dup)
+                    } yield (nst -> nds) -> ()
                 }
+              }
           }
           .void
     }

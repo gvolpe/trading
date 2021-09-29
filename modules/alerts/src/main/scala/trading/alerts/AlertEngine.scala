@@ -9,7 +9,7 @@ import trading.events.TradeEvent.CommandExecuted
 import trading.lib._
 import trading.state.{ DedupState, TradeState }
 
-import cats.Monad
+import cats.MonadThrow
 import cats.syntax.all._
 import fs2.Stream
 
@@ -18,7 +18,7 @@ trait AlertEngine[F[_]] {
 }
 
 object AlertEngine {
-  def make[F[_]: Logger: Monad: Time](
+  def make[F[_]: Logger: MonadThrow: Time](
       consumer: Consumer[F, TradeEvent],
       producer: Producer[F, Alert],
       snapshots: SnapshotReader[F]
@@ -60,7 +60,7 @@ object AlertEngine {
 
                     Time[F].timestamp.flatMap { ts =>
                       val nds = Conflicts.update(ds)(cmd, ts)
-                      (producer.send(alert) >> consumer.ack(msgId)).tupleLeft(nst -> nds)
+                      (producer.send(alert) >> consumer.ack(msgId)).attempt.void.tupleLeft(nst -> nds)
                     }
                 }
             }
