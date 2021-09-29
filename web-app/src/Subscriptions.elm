@@ -7,13 +7,28 @@ import WS
 
 alertTypeDecoder : Decoder AlertType
 alertTypeDecoder =
-    oneOf
-        [ field "Buy" (succeed Buy)
-        , field "Sell" (succeed Sell)
-        , field "Neutral" (succeed Neutral)
-        , field "StrongBuy" (succeed StrongBuy)
-        , field "StrongSell" (succeed StrongSell)
-        ]
+    string
+        |> andThen
+            (\s ->
+                case s of
+                    "Buy" ->
+                        succeed Buy
+
+                    "Sell" ->
+                        succeed Sell
+
+                    "Neutral" ->
+                        succeed Neutral
+
+                    "StrongBuy" ->
+                        succeed StrongBuy
+
+                    "StrongSell" ->
+                        succeed StrongSell
+
+                    _ ->
+                        fail "Invalid AlertType"
+            )
 
 
 alertValueDecoder : Decoder Alert
