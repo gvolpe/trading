@@ -1,6 +1,6 @@
 package trading.lib
 
-import cats.Functor
+import cats.Applicative
 import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.Queue
 import cr.pulsar.schema.Schema
@@ -9,13 +9,17 @@ import fs2.Stream
 import fs2.kafka.{ ConsumerSettings, KafkaConsumer }
 
 trait Consumer[F[_], A] {
+  def ack(id: Consumer.MsgId): F[Unit]
   def receive: Stream[F, A]
 }
 
 object Consumer {
-  def local[F[_]: Functor, A](queue: Queue[F, Option[A]]): Consumer[F, A] =
+  type MsgId = String
+
+  def local[F[_]: Applicative, A](queue: Queue[F, Option[A]]): Consumer[F, A] =
     new Consumer[F, A] {
-      def receive: Stream[F, A] = Stream.fromQueueNoneTerminated(queue)
+      def receive: Stream[F, A]            = Stream.fromQueueNoneTerminated(queue)
+      def ack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
     }
 
   def pulsar[F[_]: Async, A: Schema](
@@ -25,7 +29,8 @@ object Consumer {
   ): Resource[F, Consumer[F, A]] =
     PulsarConsumer.make[F, A](client, topic, sub).map { c =>
       new Consumer[F, A] {
-        def receive: Stream[F, A] = c.autoSubscribe
+        def receive: Stream[F, A]            = c.autoSubscribe
+        def ack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
       }
     }
 
@@ -38,7 +43,8 @@ object Consumer {
       .evalTap(_.subscribeTo(topic))
       .map { c =>
         new Consumer[F, A] {
-          def receive: Stream[F, A] = c.stream.map(_.record.value)
+          def receive: Stream[F, A]            = c.stream.map(_.record.value)
+          def ack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
         }
       }
 }

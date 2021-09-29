@@ -3,9 +3,7 @@ package trading.core
 import trading.commands.TradeCommand
 import trading.domain.Timestamp
 import trading.events.TradeEvent
-import trading.state.{ DedupState, TradeState }
-
-import cats.syntax.all._
+import trading.state.TradeState
 
 object EventSource {
   def run(st: TradeState)(command: TradeCommand): (TradeState, List[Timestamp => TradeEvent]) =
@@ -23,7 +21,4 @@ object EventSource {
 
   def runS(st: TradeState)(command: TradeCommand): TradeState =
     run(st)(command)._1
-
-  def dedup(st: DedupState)(command: TradeCommand): Option[TradeCommand] =
-    st.ids.map(_.id).contains(command.id).guard[Option].as(command)
 }

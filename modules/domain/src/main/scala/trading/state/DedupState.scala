@@ -1,7 +1,5 @@
 package trading.state
 
-import java.time.Instant
-
 import scala.concurrent.duration._
 
 import trading.domain._
@@ -14,9 +12,8 @@ import derevo.derive
 final case class DedupState(
     ids: Set[IdRegistry]
 ) {
-  // TODO: Should probably be moved to a Ref + Instant.now is effectful
-  def removeOld: Set[IdRegistry] =
-    ids.filter(_.ts.isBefore(Instant.now().minusSeconds(5.seconds.toSeconds)))
+  def removeOld(now: Timestamp): Set[IdRegistry] =
+    ids.filterNot(_.ts.isBefore(now.minusSeconds(5.seconds.toSeconds)))
 }
 
 @derive(eqv, show)
