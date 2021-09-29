@@ -14,21 +14,28 @@ trait SnapshotReader[F[_]] {
   def latest: F[Option[TradeState]]
 }
 
+/** This model only allows for a single snappshots service running at a time.
+  * Thus, the snapshots service uses a Failover subscription mode and it's
+  * recommended to run two instances: a main one, and a failover one.
+  */
 object SnapshotReader {
   def fromClient[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotReader[F] =
     new SnapshotReader[F] {
       def latest: F[Option[TradeState]] =
-        // maybe HSET "EURPLN" "ask" 4.5679 & HSET "EURPLN" "bid" 4.54874
-        /* keys => TODO: filter by symbol according to shard key - NOT SURE IF POSSIBLE */
         redis.keys("snapshot*").flatMap {
-          _.traverse { key =>
+          _.traverseFilter { key =>
             redis.hGetAll(key).map { kv =>
-              val ask    = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
-              val bid    = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
-              val symbol = key.split("-").apply(1) // FIXME: potentially unsafe
-              symbol -> Prices(ask.toMap, bid.toMap, 0.0, 0.0) // FIXME: Read lows and highs
+              val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
+              val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
+              val high = kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0)
+              val low  = kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0)
+
+              Either
+                .catchNonFatal(key.split("-").apply(1)) // get symbol
+                .toOption
+                .map(_ -> Prices(ask.toMap, bid.toMap, high, low))
             }
           }
             .map {

@@ -26,9 +26,7 @@ object SnapshotWriter {
             redis.hSet(s"snapshot-$symbol", "low", prices.low.toString)
         }
     }
-  // Eventually this should be stored in Redis (if set to store in disk) or Cassandra
-  // we should persist one key-value per symbol, where key = symbol
-  // maybe HSET "EURPLN" "ask" 4.5679 & HSET "EURPLN" "bid" 4.54874
+
   def make[F[_]: MkRedis: MonadThrow]: Resource[F, SnapshotWriter[F]] =
     Redis[F].utf8("redis://localhost").map(fromClient[F])
 }

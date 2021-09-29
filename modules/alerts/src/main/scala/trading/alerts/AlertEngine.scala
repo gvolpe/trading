@@ -31,7 +31,7 @@ object AlertEngine {
               case ((st, ds), Consumer.Msg(msgId, CommandExecuted(command, _))) =>
                 Conflicts.dedup(ds)(command) match {
                   case None =>
-                    Logger[F].warn(s"Deduplicating Command ID: ${command.id.show}").tupleLeft(st -> ds)
+                    Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
                   case Some(cmd) =>
                     val nst = EventSource.runS(st)(cmd)
                     val p   = st.prices.get(cmd.symbol)

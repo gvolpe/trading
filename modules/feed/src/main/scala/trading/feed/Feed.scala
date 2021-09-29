@@ -20,7 +20,7 @@ object Feed {
     new Feed[F] {
       def run: F[Unit] =
         commandsGen.replicateA(2).flatten.traverse_ { cmd =>
-          Logger[F].info(cmd.show) >> producer.send(cmd) >> Temporal[F].sleep(100.millis)
+          Logger[F].info(cmd.show) >> producer.send(cmd) >> Temporal[F].sleep(300.millis)
         }
     }
 }
