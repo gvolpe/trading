@@ -8,7 +8,6 @@ import trading.lib.inject._
 import trading.state.TradeState
 
 import cats.effect._
-import cats.syntax.all._
 import cr.pulsar.{ Config, Pulsar, Subscription }
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.effect.Log.Stdout._
@@ -24,8 +23,8 @@ object Main extends IOApp.Simple {
           .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
           .flatMap { latest =>
             consumer.receive
-              .evalMapAccumulate(latest) { case (st, evt) =>
-                IO.unit.tupleLeft(EventSource.runS(st)(evt.command))
+              .mapAccumulate(latest) { case (st, evt) =>
+                EventSource.runS(st)(evt.command) -> ()
               }
               .map(_._1)
               .evalMap { st =>

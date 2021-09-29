@@ -17,9 +17,7 @@ object Main extends IOApp.Simple {
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { case (engine, consumer) =>
-        consumer.receive.through(engine.run)
-      }
+      .flatMap(_.run)
       .compile
       .drain
 
@@ -40,8 +38,7 @@ object Main extends IOApp.Simple {
       _         <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
       snapshots <- SnapshotReader.make[IO]
       producer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic)
-      engine = AlertEngine.make[IO](producer, snapshots)
-      consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
-    } yield engine -> consumer
+      consumer  <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
+    } yield AlertEngine.make[IO](consumer, producer, snapshots)
 
 }

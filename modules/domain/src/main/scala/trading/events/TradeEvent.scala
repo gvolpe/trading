@@ -25,8 +25,8 @@ sealed trait TradeEvent {
 // will pick it up (as it is marked as unacked), but the event generated from such command was already
 // processed (by the alerts and snapshots services), so this would be a duplicate TradeEvent.
 //
-// Event consumers should be able to de-duplicate such events, for which they can keep track of the processed
-// command ids present in the events.
+// Event consumers should be able to de-duplicate such events (idempotent services), for which they can keep
+// track of the processed command ids present in the events.
 object TradeEvent {
   final case class CommandExecuted(
       command: TradeCommand,
