@@ -2,9 +2,12 @@ package trading.commands
 
 import trading.domain._
 
+import cats.Applicative
+import cats.syntax.functor._
 import derevo.cats.show
 import derevo.circe.magnolia.{ decoder, encoder }
 import derevo.derive
+import monocle.Traversal
 
 @derive(decoder, encoder, show)
 sealed trait TradeCommand {
@@ -45,4 +48,15 @@ object TradeCommand {
       source: Source,
       timestamp: Timestamp
   ) extends TradeCommand
+
+  // TODO: law check
+  val _CommandId =
+    new Traversal[TradeCommand, CommandId] {
+      def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
+        s match {
+          case c: Create => f(c.id).map(newId => c.copy(id = newId))
+          case c: Update => f(c.id).map(newId => c.copy(id = newId))
+          case c: Delete => f(c.id).map(newId => c.copy(id = newId))
+        }
+    }
 }

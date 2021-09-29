@@ -26,7 +26,7 @@ Examples corresponding to the [Event Driven Architecture meets Functional Progra
 
 The web application allows users to subscribe/unsubscribe to/from symbol alerts such as `EURUSD`, which are emitted in real-time via Web Sockets.
 
-![client](./web-app/client.png)
+![client](./imgs/webapp.png)
 
 It is written in [Elm](https://elm-lang.org/) and can be built as follows.
 
@@ -81,6 +81,8 @@ modules
 ├── ws-server
 └── x-demo
 ```
+
+![backend](./imgs/backend.png)
 
 ### Lib
 
