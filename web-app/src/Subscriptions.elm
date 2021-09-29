@@ -81,7 +81,7 @@ wsSub =
                     Recv input
 
                 Err error ->
-                    Recv (Unknown (errorToString error))
+                    Recv (Unknown (errorToString (Debug.log "fail to decode WsIn json: " error)))
         )
 
 
