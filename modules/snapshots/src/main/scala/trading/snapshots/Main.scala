@@ -1,6 +1,6 @@
 package trading.snapshots
 
-import trading.core.snapshots.{SnapshotReader, SnapshotWriter}
+import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
 import trading.core.{ AppTopic, EventSource }
 import trading.events.TradeEvent
 import trading.lib.Consumer

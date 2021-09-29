@@ -6,7 +6,7 @@ import cats.MonadThrow
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import dev.profunktor.redis4cats.effect.MkRedis
-import dev.profunktor.redis4cats.{Redis, RedisCommands}
+import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.syntax._
 
 trait SnapshotWriter[F[_]] {
