@@ -1,6 +1,6 @@
 package trading.core
 
-import cr.pulsar.{ Config, Topic }
+import dev.profunktor.pulsar.{ Config, Topic }
 
 sealed trait AppTopic {
   def name: String

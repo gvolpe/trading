@@ -7,7 +7,7 @@ ThisBuild / organizationName := "ProfunKtor"
 
 ThisBuild / scalafixDependencies += Libraries.organizeImports
 
-resolvers += Resolver.sonatypeRepo("snapshots")
+ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 Compile / run / fork := true
 Global / semanticdbEnabled := true

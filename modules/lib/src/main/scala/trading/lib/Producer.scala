@@ -4,8 +4,8 @@ import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.{ Console, Queue }
 import cats.syntax.all._
 import cats.{ Parallel, Show }
-import cr.pulsar.schema.Schema
-import cr.pulsar.{ Producer => PulsarProducer, _ }
+import dev.profunktor.pulsar.schema.Schema
+import dev.profunktor.pulsar.{ Producer => PulsarProducer, _ }
 import fs2.kafka.{ KafkaProducer, ProducerSettings }
 
 trait Producer[F[_], A] {

@@ -5,8 +5,8 @@ import java.nio.charset.StandardCharsets.UTF_8
 import cats.Applicative
 import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.Queue
-import cr.pulsar.schema.Schema
-import cr.pulsar.{ Consumer => PulsarConsumer, _ }
+import dev.profunktor.pulsar.schema.Schema
+import dev.profunktor.pulsar.{ Consumer => PulsarConsumer, _ }
 import fs2.Stream
 import fs2.kafka.{ ConsumerSettings, KafkaConsumer }
 import org.apache.pulsar.client.api.MessageId

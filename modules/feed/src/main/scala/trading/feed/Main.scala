@@ -8,7 +8,7 @@ import trading.lib.Producer
 import trading.lib.inject._
 
 import cats.effect._
-import cr.pulsar.{ Config, Pulsar, ShardKey }
+import dev.profunktor.pulsar.{ Config, Pulsar, ShardKey }
 
 object Main extends IOApp.Simple {
 

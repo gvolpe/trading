@@ -7,7 +7,7 @@ import trading.lib.inject._
 
 import cats.effect._
 import com.comcast.ip4s._
-import cr.pulsar.{ Config, Pulsar, Subscription }
+import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
 import fs2.Stream
 import fs2.concurrent.Topic
 import org.http4s.ember.server.EmberServerBuilder

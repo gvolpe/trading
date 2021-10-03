@@ -11,7 +11,7 @@ object Dependencies {
     val fs2Kafka   = "2.2.0"
     val http4s     = "0.23.4"
     val monocle    = "3.1.0"
-    val neutron    = "0.0.8"
+    val neutron    = "0.1.0-SNAPSHOT"
     val newtype    = "0.4.4"
     val refined    = "0.9.26"
     val redis4cats = "1.0.0"
@@ -48,17 +48,16 @@ object Dependencies {
     val refinedCore = "eu.timepit" %% "refined"      % V.refined
     val refinedCats = "eu.timepit" %% "refined-cats" % V.refined
 
-    // brokers
-    val neutronCore  = "com.chatroulette" %% "neutron-core"  % V.neutron
-    val neutronCirce = "com.chatroulette" %% "neutron-circe" % V.neutron
-    val fs2Kafka     = "com.github.fd4s"  %% "fs2-kafka"     % V.fs2Kafka
+    val neutronCore       = "dev.profunktor" %% "neutron-core"       % V.neutron
+    val neutronCirce      = "dev.profunktor" %% "neutron-circe"      % V.neutron
+    val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
+
+    val fs2Kafka = "com.github.fd4s" %% "fs2-kafka" % V.fs2Kafka
 
     val newtype = "io.estatico" %% "newtype" % V.newtype
 
     val monocleCore  = "dev.optics" %% "monocle-core"  % V.monocle
     val monocleMacro = "dev.optics" %% "monocle-macro" % V.monocle
-
-    val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
     // test
     val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle

@@ -8,7 +8,7 @@ import trading.lib.inject._
 import trading.state.TradeState
 
 import cats.effect._
-import cr.pulsar.{ Config, Pulsar, Subscription }
+import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.effect.Log.Stdout._
 import fs2.Stream
