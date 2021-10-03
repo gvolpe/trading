@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import trading.commands.TradeCommand
 import trading.core.AppTopic
 import trading.lib.Producer
-import trading.lib.inject.circeBytesInject
+import trading.lib.inject.given
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Config, Pulsar, ShardKey }

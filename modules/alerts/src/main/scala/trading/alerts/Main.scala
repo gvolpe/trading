@@ -4,7 +4,7 @@ import trading.core.AppTopic
 import trading.core.snapshots.SnapshotReader
 import trading.domain.Alert
 import trading.events.TradeEvent
-import trading.lib.inject.circeBytesInject
+import trading.lib.inject.given
 import trading.lib.{ Consumer, Producer }
 
 import cats.effect.*

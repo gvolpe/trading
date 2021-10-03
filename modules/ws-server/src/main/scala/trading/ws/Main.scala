@@ -3,7 +3,7 @@ package trading.ws
 import trading.core.AppTopic
 import trading.domain.Alert
 import trading.lib.Consumer
-import trading.lib.inject.circeBytesInject
+import trading.lib.inject.given
 
 import cats.effect.*
 import com.comcast.ip4s.*
