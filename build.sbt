@@ -11,11 +11,10 @@ ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 Compile / run / fork := true
 Global / onChangedBuildSource := ReloadOnSourceChanges
-//Global / semanticdbEnabled := true
 
 val commonSettings = List(
   scalacOptions ++= List("-source:future"),
-  //scalafmtOnCompile := true, // TODO: Migrate scalafmt to Scala 3
+  scalafmtOnCompile := false, // recommended in Scala 3
   testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
   libraryDependencies ++= Seq(
     Libraries.cats,
