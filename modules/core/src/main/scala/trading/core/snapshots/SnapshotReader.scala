@@ -8,14 +8,13 @@ import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import dev.profunktor.redis4cats.effect.MkRedis
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
-import io.circe.parser.{ decode as jsonDecode }
+import io.circe.parser.decode as jsonDecode
 
 trait SnapshotReader[F[_]]:
   def latest: F[Option[TradeState]]
 
-/** This model only allows for a single snappshots service running at a time.
-  * Thus, the snapshots service uses a Failover subscription mode and it's
-  * recommended to run two instances: a main one, and a failover one.
+/** This model only allows for a single snappshots service running at a time. Thus, the snapshots service uses a
+  * Failover subscription mode and it's recommended to run two instances: a main one, and a failover one.
   */
 object SnapshotReader:
   def fromClient[F[_]: MonadThrow](

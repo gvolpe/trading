@@ -2,11 +2,11 @@ package trading.state
 
 import trading.domain.*
 
-import cats.{Eq, Show}
 import cats.syntax.all.*
+import cats.{ Eq, Show }
 import io.circe.Codec
-import monocle.{Focus, Optional}
 import monocle.function.{ At, Index }
+import monocle.{ Focus, Optional }
 
 final case class TradeState(
     prices: TradeState.SymbolPrices

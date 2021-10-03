@@ -2,18 +2,18 @@ package trading.commands
 
 import trading.domain.*
 
-import cats.{Applicative, Show}
 import cats.syntax.functor.*
+import cats.{ Applicative, Show }
 import io.circe.Codec
 import monocle.Traversal
 
 enum TradeCommand(
-  val id: CommandId,
-  val symbol: Symbol,
-  tradeAction: TradeAction,
-  price: Price,
-  source: Source,
-  timestamp: Timestamp
+    val id: CommandId,
+    val symbol: Symbol,
+    tradeAction: TradeAction,
+    price: Price,
+    source: Source,
+    timestamp: Timestamp
 ) derives Codec.AsObject:
   case Create(
       override val id: CommandId,

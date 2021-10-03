@@ -7,7 +7,7 @@ import cats.effect.kernel.{ Concurrent, Deferred, Ref }
 import cats.syntax.all.*
 import fs2.concurrent.Topic
 import fs2.{ Pipe, Stream }
-import io.circe.parser.{ decode as jsonDecode }
+import io.circe.parser.decode as jsonDecode
 import io.circe.syntax.*
 import org.http4s.websocket.WebSocketFrame
 import org.http4s.websocket.WebSocketFrame.{ Close, Text }

@@ -17,6 +17,6 @@ package object domain {
   type AskPrice = Price
   type BidPrice = Price
 
-  given Eq[Timestamp] = Eq.by(_.getEpochSecond)
+  given Eq[Timestamp]   = Eq.by(_.getEpochSecond)
   given Show[Timestamp] = Show.show[Timestamp](_.toString)
 }

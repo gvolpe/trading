@@ -37,7 +37,7 @@ object Engine:
                       evs <- events.traverse(Time[F].timestamp.map(_))
                       _   <- evs.traverse(producer.send)
                       nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(evs.map(_.command), _))
-                      _   <- consumer.ack(msgId).attempt.void // don't care if this fails (de-dup)
+                      _ <- consumer.ack(msgId).attempt.void // don't care if this fails (de-dup)
                     } yield (nst -> nds) -> ()
                 }
               }
