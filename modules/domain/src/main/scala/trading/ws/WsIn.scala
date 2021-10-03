@@ -1,15 +1,15 @@
 package trading.ws
 
-import trading.domain._
+import trading.domain.*
 
-import derevo.circe.magnolia.{ decoder, encoder }
-import derevo.derive
+import cats.Show
+import io.circe.Codec
 
-@derive(decoder, encoder)
-sealed trait WsIn
-object WsIn {
-  case object Close                            extends WsIn
-  case object Heartbeat                        extends WsIn
-  final case class Subscribe(symbol: Symbol)   extends WsIn
-  final case class Unsubscribe(symbol: Symbol) extends WsIn
-}
+enum WsIn derives Codec.AsObject:
+  case Close
+  case Heartbeat
+  case Subscribe(symbol: Symbol)
+  case Unsubscribe(symbol: Symbol)
+
+object WsIn:
+  given Show[WsIn] = Show.show[WsIn](_.toString)

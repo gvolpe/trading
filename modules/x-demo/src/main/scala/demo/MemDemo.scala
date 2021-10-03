@@ -1,15 +1,14 @@
 package demo
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import trading.lib.{ Consumer, Producer }
 
-import cats.effect._
+import cats.effect.*
 import cats.effect.std.Queue
 import fs2.Stream
 
-object MemDemo extends IOApp.Simple {
-
+object MemDemo extends IOApp.Simple:
   def run: IO[Unit] =
     for {
       _     <- IO.println(">>> Initializing in-memory demo <<<")
@@ -21,5 +20,3 @@ object MemDemo extends IOApp.Simple {
         Stream.awakeEvery[IO](100.millis).as("test").evalMap(producer.send)
       ).parJoin(2).interruptAfter(3.seconds).compile.drain
     } yield ()
-
-}

@@ -1,18 +1,18 @@
 package demo
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-import trading.domain.generators._
+import trading.domain.generators.*
 import trading.events.TradeEvent
 import trading.lib.{ Consumer, Producer }
 
-import cats.effect._
-import cats.syntax.all._
+import cats.effect.*
+import cats.syntax.all.*
 import fs2.Stream
-import fs2.kafka._
-import io.circe.syntax._
+import fs2.kafka.*
+import io.circe.syntax.*
 
-object KafkaDemo extends IOApp.Simple {
+object KafkaDemo extends IOApp.Simple:
 
   val event: Option[TradeEvent] =
     (createCommandGen.sample, timestampGen.sample).mapN { case (cmd, ts) =>
@@ -32,11 +32,11 @@ object KafkaDemo extends IOApp.Simple {
       .compile
       .drain
 
-  implicit val eventDeserializer = Deserializer.lift[IO, TradeEvent] { bs =>
+  given Deserializer[IO, TradeEvent] = Deserializer.lift[IO, TradeEvent] { bs =>
     IO.fromEither(io.circe.parser.decode[TradeEvent](new String(bs, "UTF-8")))
   }
 
-  implicit val eventSerializer = Serializer.lift[IO, TradeEvent] { e =>
+  given Serializer[IO, TradeEvent] = Serializer.lift[IO, TradeEvent] { e =>
     IO.pure(e.asJson.noSpaces.getBytes("UTF-8"))
   }
 
@@ -58,5 +58,3 @@ object KafkaDemo extends IOApp.Simple {
       consumer <- Consumer.kafka[IO, TradeEvent](consumerSettings, topic)
       producer <- Producer.kafka[IO, TradeEvent](producerSettings, topic)
     } yield consumer -> producer
-
-}

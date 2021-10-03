@@ -1,16 +1,18 @@
 package trading.events
 
 import trading.commands.TradeCommand
-import trading.domain._
+import trading.domain.*
 
-import derevo.circe.magnolia.{ decoder, encoder }
-import derevo.derive
+import io.circe.Codec
 
-@derive(decoder, encoder)
-sealed trait TradeEvent {
-  def command: TradeCommand
-  def timestamp: Timestamp
-}
+enum TradeEvent(
+    val command: TradeCommand,
+    timestamp: Timestamp
+) derives Codec.AsObject:
+  case CommandExecuted(
+      override val command: TradeCommand,
+      timestamp: Timestamp
+  ) extends TradeEvent(command, timestamp)
 
 // POINTS OF FAILURE (to consider in distributed systems)
 //
@@ -27,9 +29,3 @@ sealed trait TradeEvent {
 //
 // Event consumers should be able to de-duplicate such events (idempotent services), for which they can keep
 // track of the processed command ids present in the events.
-object TradeEvent {
-  final case class CommandExecuted(
-      command: TradeCommand,
-      timestamp: Timestamp
-  ) extends TradeEvent
-}

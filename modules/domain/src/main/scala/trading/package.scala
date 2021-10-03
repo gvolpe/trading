@@ -17,6 +17,6 @@ package object domain {
   type AskPrice = Price
   type BidPrice = Price
 
-  implicit val timestampEq: Eq[Timestamp]     = Eq.by(_.getEpochSecond)
-  implicit val timestampShow: Show[Timestamp] = Show.show(_.toString)
+  given Eq[Timestamp] = Eq.by(_.getEpochSecond)
+  given Show[Timestamp] = Show.show[Timestamp](_.toString)
 }

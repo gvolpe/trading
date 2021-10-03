@@ -4,17 +4,16 @@ import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
 import trading.core.{ AppTopic, EventSource }
 import trading.events.TradeEvent
 import trading.lib.Consumer
-import trading.lib.inject._
+import trading.lib.inject.circeBytesInject
 import trading.state.TradeState
 
-import cats.effect._
+import cats.effect.*
 import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
 import dev.profunktor.redis4cats.Redis
-import dev.profunktor.redis4cats.effect.Log.Stdout._
+import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 
-object Main extends IOApp.Simple {
-
+object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
@@ -56,5 +55,3 @@ object Main extends IOApp.Simple {
       writer = SnapshotWriter.fromClient(redis)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
     } yield (consumer, reader, writer)
-
-}

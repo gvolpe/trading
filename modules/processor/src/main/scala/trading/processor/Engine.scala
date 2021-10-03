@@ -4,18 +4,17 @@ import trading.commands.TradeCommand
 import trading.core.snapshots.SnapshotReader
 import trading.core.{ Conflicts, EventSource }
 import trading.events.TradeEvent
-import trading.lib._
+import trading.lib.*
 import trading.state.{ DedupState, TradeState }
 
 import cats.MonadThrow
-import cats.syntax.all._
+import cats.syntax.all.*
 import fs2.Stream
 
-trait Engine[F[_]] {
+trait Engine[F[_]]:
   def run: Stream[F, Unit]
-}
 
-object Engine {
+object Engine:
   def make[F[_]: Logger: MonadThrow: Time](
       consumer: Consumer[F, TradeCommand],
       producer: Producer[F, TradeEvent],
@@ -45,4 +44,3 @@ object Engine {
           }
           .void
     }
-}

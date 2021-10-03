@@ -1,53 +1,52 @@
 package trading.commands
 
-import trading.domain._
+import trading.domain.*
 
-import cats.Applicative
-import cats.syntax.functor._
-import derevo.cats.show
-import derevo.circe.magnolia.{ decoder, encoder }
-import derevo.derive
+import cats.{Applicative, Show}
+import cats.syntax.functor.*
+import io.circe.Codec
 import monocle.Traversal
 
-@derive(decoder, encoder, show)
-sealed trait TradeCommand {
-  def id: CommandId
-  def symbol: Symbol
-  def tradeAction: TradeAction
-  def price: Price
-  def source: Source
-  def timestamp: Timestamp
-}
-
-object TradeCommand {
-  final case class Create(
-      id: CommandId,
-      symbol: Symbol,
+enum TradeCommand(
+  val id: CommandId,
+  val symbol: Symbol,
+  tradeAction: TradeAction,
+  price: Price,
+  source: Source,
+  timestamp: Timestamp
+) derives Codec.AsObject:
+  case Create(
+      override val id: CommandId,
+      override val symbol: Symbol,
       tradeAction: TradeAction,
       price: Price,
       quantity: Quantity,
       source: Source,
       timestamp: Timestamp
-  ) extends TradeCommand
+  ) extends TradeCommand(id, symbol, tradeAction, price, source, timestamp)
 
-  final case class Update(
-      id: CommandId,
-      symbol: Symbol,
+  case Update(
+      override val id: CommandId,
+      override val symbol: Symbol,
       tradeAction: TradeAction,
       price: Price,
       quantity: Quantity,
       source: Source,
       timestamp: Timestamp
-  ) extends TradeCommand
+  ) extends TradeCommand(id, symbol, tradeAction, price, source, timestamp)
 
-  final case class Delete(
-      id: CommandId,
-      symbol: Symbol,
+  case Delete(
+      override val id: CommandId,
+      override val symbol: Symbol,
       tradeAction: TradeAction,
       price: Price,
       source: Source,
       timestamp: Timestamp
-  ) extends TradeCommand
+  ) extends TradeCommand(id, symbol, tradeAction, price, source, timestamp)
+
+object TradeCommand:
+  // FIXME: proper instance
+  given Show[TradeCommand] = Show.show[TradeCommand](_.toString)
 
   // TODO: law check
   val _CommandId =
@@ -59,4 +58,3 @@ object TradeCommand {
           case c: Delete => f(c.id).map(newId => c.copy(id = newId))
         }
     }
-}

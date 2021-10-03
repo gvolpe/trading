@@ -1,23 +1,22 @@
 package trading.ws
 
-import trading.domain._
+import trading.domain.*
 import trading.lib.{ GenUUID, Logger }
 
 import cats.effect.kernel.{ Concurrent, Deferred, Ref }
-import cats.syntax.all._
+import cats.syntax.all.*
 import fs2.concurrent.Topic
 import fs2.{ Pipe, Stream }
-import io.circe.parser.{ decode => jsonDecode }
-import io.circe.syntax._
+import io.circe.parser.{ decode as jsonDecode }
+import io.circe.syntax.*
 import org.http4s.websocket.WebSocketFrame
 import org.http4s.websocket.WebSocketFrame.{ Close, Text }
 
-trait Handler[F[_]] {
+trait Handler[F[_]]:
   def send: Stream[F, WebSocketFrame]
   def receive: Pipe[F, WebSocketFrame, Unit]
-}
 
-object Handler {
+object Handler:
   def make[F[_]: Concurrent: GenUUID: Logger](
       topic: Topic[F, Alert]
   ): F[Handler[F]] =
@@ -68,4 +67,3 @@ object Handler {
             }.onFinalize(Logger[F].info(s"[$sid] - WS connection terminated"))
         }
     }
-}

@@ -5,7 +5,7 @@ import trading.domain.Timestamp
 import trading.events.TradeEvent
 import trading.state.TradeState
 
-object EventSource {
+object EventSource:
   def run(st: TradeState)(command: TradeCommand): (TradeState, List[Timestamp => TradeEvent]) =
     command match {
       case cmd @ TradeCommand.Create(_, symbol, action, price, quantity, _, _) =>
@@ -21,4 +21,3 @@ object EventSource {
 
   def runS(st: TradeState)(command: TradeCommand): TradeState =
     run(st)(command)._1
-}

@@ -4,19 +4,19 @@ import trading.state.TradeState
 
 import cats.MonadThrow
 import cats.effect.kernel.Resource
-import cats.syntax.all._
+import cats.syntax.all.*
 import dev.profunktor.redis4cats.effect.MkRedis
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
-import io.circe.syntax._
+import io.circe.syntax.*
 
-trait SnapshotWriter[F[_]] {
+trait SnapshotWriter[F[_]]:
   def save(state: TradeState): F[Unit]
-}
 
-object SnapshotWriter {
+object SnapshotWriter:
   def fromClient[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotWriter[F] =
+    // TODO: can we use `with` def save... ?
     new SnapshotWriter[F] {
       def save(state: TradeState): F[Unit] =
         state.prices.toList.traverse_ { case (symbol, prices) =>
@@ -29,4 +29,3 @@ object SnapshotWriter {
 
   def make[F[_]: MkRedis: MonadThrow]: Resource[F, SnapshotWriter[F]] =
     Redis[F].utf8("redis://localhost").map(fromClient[F])
-}

@@ -1,24 +1,23 @@
 package trading.core.snapshots
 
-import trading.domain._
+import trading.domain.*
 import trading.state.{ Prices, TradeState }
 
 import cats.MonadThrow
 import cats.effect.kernel.Resource
-import cats.syntax.all._
+import cats.syntax.all.*
 import dev.profunktor.redis4cats.effect.MkRedis
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
-import io.circe.parser.{ decode => jsonDecode }
+import io.circe.parser.{ decode as jsonDecode }
 
-trait SnapshotReader[F[_]] {
+trait SnapshotReader[F[_]]:
   def latest: F[Option[TradeState]]
-}
 
 /** This model only allows for a single snappshots service running at a time.
   * Thus, the snapshots service uses a Failover subscription mode and it's
   * recommended to run two instances: a main one, and a failover one.
   */
-object SnapshotReader {
+object SnapshotReader:
   def fromClient[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotReader[F] =
@@ -47,4 +46,3 @@ object SnapshotReader {
 
   def make[F[_]: MkRedis: MonadThrow]: Resource[F, SnapshotReader[F]] =
     Redis[F].utf8("redis://localhost").map(fromClient[F])
-}

@@ -4,9 +4,9 @@ import trading.commands.TradeCommand
 import trading.domain.Timestamp
 import trading.state.{ DedupState, IdRegistry }
 
-import cats.syntax.all._
+import cats.syntax.all.*
 
-object Conflicts {
+object Conflicts:
   def dedup(st: DedupState)(command: TradeCommand): Option[TradeCommand] =
     (!st.ids.map(_.id).contains(command.id)).guard[Option].as(command)
 
@@ -15,4 +15,3 @@ object Conflicts {
 
   def updateMany(ds: DedupState)(commands: List[TradeCommand], ts: Timestamp): DedupState =
     DedupState(ds.removeOld(ts) ++ commands.map(c => IdRegistry(c.id, ts)).toSet)
-}

@@ -4,15 +4,14 @@ import java.util.UUID
 
 import cats.effect.kernel.Sync
 
-trait GenUUID[F[_]] {
+trait GenUUID[F[_]]:
   def random: F[UUID]
-}
 
 object GenUUID {
-  @inline def apply[F[_]: GenUUID]: GenUUID[F] = implicitly
+  def apply[F[_]](using ev: GenUUID[F]): GenUUID[F] = ev
 
-  implicit def forSync[F[_]: Sync]: GenUUID[F] =
+  given forSync[F[_]](using F: Sync[F]): GenUUID[F] =
     new GenUUID[F] {
-      def random: F[UUID] = Sync[F].delay(UUID.randomUUID())
+      def random: F[UUID] = F.delay(UUID.randomUUID())
     }
 }

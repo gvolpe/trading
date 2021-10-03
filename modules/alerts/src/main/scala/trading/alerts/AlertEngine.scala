@@ -2,22 +2,21 @@ package trading.alerts
 
 import trading.core.snapshots.SnapshotReader
 import trading.core.{ Conflicts, EventSource }
-import trading.domain.AlertType._
-import trading.domain._
+import trading.domain.AlertType.*
+import trading.domain.*
 import trading.events.TradeEvent
 import trading.events.TradeEvent.CommandExecuted
-import trading.lib._
+import trading.lib.*
 import trading.state.{ DedupState, TradeState }
 
 import cats.MonadThrow
-import cats.syntax.all._
+import cats.syntax.all.*
 import fs2.Stream
 
-trait AlertEngine[F[_]] {
+trait AlertEngine[F[_]]:
   def run: Stream[F, Unit]
-}
 
-object AlertEngine {
+object AlertEngine:
   def make[F[_]: Logger: MonadThrow: Time](
       consumer: Consumer[F, TradeEvent],
       producer: Producer[F, Alert],
@@ -67,4 +66,3 @@ object AlertEngine {
             .void
         }
     }
-}

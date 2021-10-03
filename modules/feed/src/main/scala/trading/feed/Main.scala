@@ -5,13 +5,12 @@ import java.nio.charset.StandardCharsets.UTF_8
 import trading.commands.TradeCommand
 import trading.core.AppTopic
 import trading.lib.Producer
-import trading.lib.inject._
+import trading.lib.inject.circeBytesInject
 
-import cats.effect._
+import cats.effect.*
 import dev.profunktor.pulsar.{ Config, Pulsar, ShardKey }
 
-object Main extends IOApp.Simple {
-
+object Main extends IOApp.Simple:
   def run: IO[Unit] =
     resources.use(_.run)
 
@@ -28,5 +27,3 @@ object Main extends IOApp.Simple {
       _        <- Resource.eval(IO.println(">>> Initializing feed service <<<"))
       producer <- Producer.pulsar[IO, TradeCommand](pulsar, topic, cmdShardKey)
     } yield Feed.random(producer)
-
-}

@@ -1,19 +1,18 @@
 package trading.feed
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import trading.commands.TradeCommand
-import trading.domain.generators._
+import trading.domain.generators.*
 import trading.lib.{ GenUUID, Logger, Producer }
 
 import cats.effect.kernel.Temporal
-import cats.syntax.all._
+import cats.syntax.all.*
 
-trait Feed[F[_]] {
+trait Feed[F[_]]:
   def run: F[Unit]
-}
 
-object Feed {
+object Feed:
   def random[F[_]: GenUUID: Logger: Temporal](
       producer: Producer[F, TradeCommand]
   ): Feed[F] =
@@ -26,4 +25,3 @@ object Feed {
           }
         }
     }
-}

@@ -3,8 +3,8 @@ package trading.domain
 import java.time.Instant
 
 import trading.commands.TradeCommand
-import trading.domain._
-import trading.state._
+import trading.domain.*
+import trading.state.*
 
 import org.scalacheck.{ Cogen, Gen }
 

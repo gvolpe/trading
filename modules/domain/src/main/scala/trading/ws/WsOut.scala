@@ -1,13 +1,13 @@
 package trading.ws
 
-import trading.domain._
+import trading.domain.*
 
-import derevo.circe.magnolia.{ decoder, encoder }
-import derevo.derive
+import cats.Show
+import io.circe.Codec
 
-@derive(decoder, encoder)
-sealed trait WsOut
-object WsOut {
-  final case class Attached(sid: SocketId)    extends WsOut
-  final case class Notification(alert: Alert) extends WsOut
-}
+enum WsOut derives Codec.AsObject:
+  case Attached(sid: SocketId)
+  case Notification(alert: Alert)
+
+object WsOut:
+  given Show[WsOut] = Show.show[WsOut](_.toString)

@@ -1,29 +1,33 @@
 package trading.state
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-import trading.domain._
+import trading.domain.*
+import trading.domain.given_Eq_Timestamp
 
-import derevo.cats._
-import derevo.derive
+import cats.{Eq, Show}
+import cats.syntax.all.*
+import io.circe.Codec
 
 // it should be enough to keep track of the ids processed in the past 5 mins or so
-@derive(eqv, show)
 final case class DedupState(
     ids: Set[IdRegistry]
-) {
+):
   def removeOld(now: Timestamp): Set[IdRegistry] =
     ids.filterNot(_.ts.isBefore(now.minusSeconds(5.seconds.toSeconds)))
-}
 
-@derive(eqv, show)
 final case class IdRegistry(
     id: CommandId,
     ts: Timestamp
 )
 
-object DedupState {
+// TODO: figure out why typeclass derivation does not work
+object IdRegistry:
+  given Eq[IdRegistry] = Eq.and(Eq.by(_.id), Eq.by(_.ts))
+  given Show[IdRegistry] = Show.show[IdRegistry](_.toString)
+
+object DedupState:
   def empty: DedupState = DedupState(Set.empty)
 
-  // TODO: Semilattice instance?
-}
+  given Eq[DedupState] = Eq.by(_.ids)
+  given Show[DedupState] = Show[Set[IdRegistry]].contramap[DedupState](_.ids)

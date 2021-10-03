@@ -3,11 +3,11 @@ package trading.core
 import java.time.Instant
 import java.util.UUID
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import trading.commands.TradeCommand
-import trading.domain._
-import trading.state._
+import trading.domain.*
+import trading.state.*
 
 import cats.data.NonEmptyList
 import weaver.FunSuite

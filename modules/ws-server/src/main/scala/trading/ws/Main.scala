@@ -3,18 +3,17 @@ package trading.ws
 import trading.core.AppTopic
 import trading.domain.Alert
 import trading.lib.Consumer
-import trading.lib.inject._
+import trading.lib.inject.circeBytesInject
 
-import cats.effect._
-import com.comcast.ip4s._
+import cats.effect.*
+import com.comcast.ip4s.*
 import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
 import fs2.Stream
 import fs2.concurrent.Topic
 import org.http4s.ember.server.EmberServerBuilder
-import org.http4s.implicits._
+import org.http4s.implicits.*
 
-object Main extends IOApp.Simple {
-
+object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
@@ -53,5 +52,3 @@ object Main extends IOApp.Simple {
         .build
         .evalMap(Ember.showBanner[IO])
     } yield (alerts, topic, server)
-
-}
