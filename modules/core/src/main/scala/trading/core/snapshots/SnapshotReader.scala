@@ -27,8 +27,8 @@ object SnapshotReader:
             redis.hGetAll(key).map { kv =>
               val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
               val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
-              val high = kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0)
-              val low  = kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0)
+              val high = Price(kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0))
+              val low  = Price(kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0))
 
               Either
                 .catchNonFatal(key.split("-").apply(1)) // get symbol

@@ -6,24 +6,25 @@ import trading.commands.TradeCommand
 import trading.domain.*
 import trading.state.*
 
+import cats.Order
 import org.scalacheck.{ Cogen, Gen }
 
 object cogen {
-  // TODO: When introducing newtypes we'll need this
-  //implicit val askPricesCogen: Cogen[Prices.Ask] =
-  //Cogen.cogenMap[AskPrice, Quantity]
-
-  //implicit val bidPricesCogen: Cogen[Prices.Bid] =
-  //Cogen.cogenMap[BidPrice, Quantity]
-
-  //Cogen((seed, t) =>
-  //c2.perturb(c1.perturb(seed, t._1), t._2)
-  //)
-
-  implicit val quantityCogen: Cogen[Quantity] =
+  given Cogen[Quantity] =
     Cogen.cogenInt.contramap[Quantity](_.value)
 
-  implicit val pricesCogen: Cogen[Prices] =
+  given Ordering[Price] =
+    Order[Price].toOrdering
+
+  given Cogen[Price] =
+    Cogen.bigDecimal.contramap[Price](_.value)
+
+  given Cogen[Map[Price, Quantity]] =
+    Cogen.cogenMap[BigDecimal, Int].contramap[Map[Price, Quantity]] {
+      _.map { case (k, v) => k.value -> v.value }
+    }
+
+  given Cogen[Prices] =
     Cogen.tuple2[Prices.Ask, Prices.Bid].contramap[Prices] { p =>
       p.ask -> p.bid
     }
@@ -42,7 +43,7 @@ object generators {
       .map(s => Symbol.apply(s))
 
   val priceGen: Gen[Price] =
-    Gen.choose(0.78346, 4.78341)
+    Gen.choose(0.78346, 4.78341).map(x => Price(x))
 
   val quantityGen: Gen[Quantity] =
     Gen.choose(1, 30).map(Quantity(_))
@@ -96,7 +97,7 @@ object generators {
   val askPricesGen: Gen[Prices.Ask] =
     Gen.mapOf[AskPrice, Quantity] {
       for {
-        p <- Gen.choose[AskPrice](0.78346, 4.78341)
+        p <- priceGen
         q <- quantityGen
       } yield p -> q
     }
@@ -104,7 +105,7 @@ object generators {
   val bidPricesGen: Gen[Prices.Bid] =
     Gen.mapOf[BidPrice, Quantity] {
       for {
-        p <- Gen.choose[BidPrice](0.78346, 4.78341)
+        p <- priceGen
         q <- quantityGen
       } yield p -> q
     }

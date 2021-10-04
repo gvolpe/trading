@@ -16,7 +16,7 @@ import weaver.scalacheck.Checkers
 object ConflictsSuite extends FunSuite with Checkers {
 
   val s: Symbol    = Symbol("EURUSD")
-  val p1: Price    = 1.1987
+  val p1: Price    = Price(1.1987)
   val q1: Quantity = Quantity(10)
 
   val id0: CommandId = CommandId(UUID.randomUUID())

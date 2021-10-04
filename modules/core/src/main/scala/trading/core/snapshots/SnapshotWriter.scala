@@ -22,8 +22,8 @@ object SnapshotWriter:
         state.prices.toList.traverse_ { case (symbol, prices) =>
           redis.hSet(s"snapshot-$symbol", "ask", prices.ask.toList.asJson.noSpaces) *>
             redis.hSet(s"snapshot-$symbol", "bid", prices.bid.toList.asJson.noSpaces) *>
-            redis.hSet(s"snapshot-$symbol", "high", prices.high.toString) *>
-            redis.hSet(s"snapshot-$symbol", "low", prices.low.toString)
+            redis.hSet(s"snapshot-$symbol", "high", prices.high.show) *>
+            redis.hSet(s"snapshot-$symbol", "low", prices.low.show)
         }
     }
 

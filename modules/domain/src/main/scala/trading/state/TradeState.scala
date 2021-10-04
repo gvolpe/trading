@@ -13,7 +13,7 @@ final case class TradeState(
 ):
   def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState = {
     val h = Prices._High.modify(p => if (price > p) price else p)(_)
-    val l = Prices._Low.modify(p => if (price < p || p === 0.0) price else p)(_)
+    val l = Prices._Low.modify(p => if (price < p || p === Price(0.0)) price else p)(_)
 
     action match {
       case TradeAction.Ask =>
@@ -49,7 +49,7 @@ final case class Prices(
 object Prices:
   given Eq[Prices] = Eq.and(Eq.and(Eq.by(_.ask), Eq.by(_.bid)), Eq.and(Eq.by(_.high), Eq.by(_.low)))
 
-  def empty: Prices = Prices(Map.empty, Map.empty, 0.0, 0.0)
+  def empty: Prices = Prices(Map.empty, Map.empty, Price(0.0), Price(0.0))
 
   type Ask = Map[AskPrice, Quantity]
   type Bid = Map[BidPrice, Quantity]

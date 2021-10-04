@@ -16,10 +16,10 @@ object EventSourceSuite extends FunSuite with Checkers {
   val id: CommandId = CommandId(UUID.randomUUID())
   val s: Symbol     = Symbol("EURUSD")
   val ts: Timestamp = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
-  val p1: Price     = 1.1987
+  val p1: Price     = Price(1.1987)
   val q1: Quantity  = Quantity(10)
 
-  val p2: Price    = 3.5782
+  val p2: Price    = Price(3.5782)
   val q2: Quantity = Quantity(20)
 
   test("Event source state track") {

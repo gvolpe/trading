@@ -1,7 +1,7 @@
 package trading.state
 
 import trading.domain.*
-import trading.domain.cogen.*
+import trading.domain.cogen.given
 import trading.domain.generators.*
 
 import monocle.law.discipline.*
@@ -13,11 +13,12 @@ object TradeStateSuite extends FunSuite with Discipline {
   import Prices.*, TradeState.*
 
   val symbol: Symbol     = Symbol("EURUSD")
-  val price: Price       = 1.5123
-  val askPrice: AskPrice = 1.6537
-  val bidPrice: BidPrice = 1.3908
+  val price: Price       = Price(1.5123)
+  val askPrice: AskPrice = Price(1.6537)
+  val bidPrice: BidPrice = Price(1.3908)
 
   given Arbitrary[Prices]     = Arbitrary(pricesGen)
+  given Arbitrary[Price]      = Arbitrary(priceGen)
   given Arbitrary[Quantity]   = Arbitrary(quantityGen)
   given Arbitrary[TradeState] = Arbitrary(tradeStateGen)
 

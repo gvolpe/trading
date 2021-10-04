@@ -3,9 +3,9 @@ package trading.domain
 import java.time.Instant
 import java.util.UUID
 
-import trading.{ IdNewtype, Newtype }
+import trading.{ IdNewtype, Newtype, NumNewtype }
 
-import cats.{ Eq, Show }
+import cats.{ Eq, Order, Show }
 import io.circe.*
 
 type Symbol = Symbol.Type
@@ -26,12 +26,13 @@ object CommandId extends IdNewtype
 type SocketId = SocketId.Type
 object SocketId extends IdNewtype
 
-type Price     = BigDecimal
-type AskPrice  = Price
-type BidPrice  = Price
-type TickPrice = Double
-type TickSize  = Double
+type Price = Price.Type
+object Price extends NumNewtype[BigDecimal]
+
+type AskPrice = Price
+type BidPrice = Price
 
 // orphan instances go below here //
-given Eq[Instant]   = Eq.by(_.getEpochSecond)
-given Show[Instant] = Show.show[Instant](_.toString)
+given Eq[Instant]    = Eq.by(_.getEpochSecond)
+given Order[Instant] = Order.by(_.getEpochSecond)
+given Show[Instant]  = Show.show[Instant](_.toString)
