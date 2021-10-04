@@ -12,12 +12,13 @@ import weaver.discipline.Discipline
 object TradeStateSuite extends FunSuite with Discipline {
   import Prices.*, TradeState.*
 
-  val symbol: Symbol     = "EURUSD"
+  val symbol: Symbol     = Symbol("EURUSD")
   val price: Price       = 1.5123
   val askPrice: AskPrice = 1.6537
   val bidPrice: BidPrice = 1.3908
 
   given Arbitrary[Prices]     = Arbitrary(pricesGen)
+  given Arbitrary[Quantity]   = Arbitrary(quantityGen)
   given Arbitrary[TradeState] = Arbitrary(tradeStateGen)
 
   checkAll("__AtAsk Optional", OptionalTests(__AtAsk(askPrice)))

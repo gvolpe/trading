@@ -33,7 +33,7 @@ object SnapshotReader:
               Either
                 .catchNonFatal(key.split("-").apply(1)) // get symbol
                 .toOption
-                .map(_ -> Prices(ask.toMap, bid.toMap, high, low))
+                .map(Symbol(_) -> Prices(ask.toMap, bid.toMap, high, low))
             }
           }
             .map {

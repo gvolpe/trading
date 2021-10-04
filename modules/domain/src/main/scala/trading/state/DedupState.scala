@@ -2,7 +2,7 @@ package trading.state
 
 import scala.concurrent.duration.*
 
-import trading.domain.{ given_Eq_Timestamp, * }
+import trading.domain.*
 
 import cats.syntax.all.*
 import cats.{ Eq, Show }
@@ -13,14 +13,14 @@ final case class DedupState(
     ids: Set[IdRegistry]
 ):
   def removeOld(now: Timestamp): Set[IdRegistry] =
-    ids.filterNot(_.ts.isBefore(now.minusSeconds(5.seconds.toSeconds)))
+    ids.filterNot(_.ts.value.isBefore(now.value.minusSeconds(5.seconds.toSeconds)))
 
 final case class IdRegistry(
     id: CommandId,
     ts: Timestamp
 )
 
-// TODO: figure out why typeclass derivation does not work
+// TODO: Use kittens when published
 object IdRegistry:
   given Eq[IdRegistry]   = Eq.and(Eq.by(_.id), Eq.by(_.ts))
   given Show[IdRegistry] = Show.show[IdRegistry](_.toString)

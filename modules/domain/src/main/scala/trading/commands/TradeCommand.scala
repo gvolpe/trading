@@ -1,8 +1,8 @@
 package trading.commands
 
-import trading.domain.*
+import trading.domain.{*, given}
 
-import cats.syntax.functor.*
+import cats.syntax.all.*
 import cats.{ Applicative, Show }
 import io.circe.Codec
 import monocle.Traversal
@@ -45,7 +45,7 @@ enum TradeCommand(
   ) extends TradeCommand(id, symbol, tradeAction, price, source, timestamp)
 
 object TradeCommand:
-  // FIXME: proper instance
+  // FIXME: use kittens when snapshot is published
   given Show[TradeCommand] = Show.show[TradeCommand](_.toString)
 
   // TODO: law check

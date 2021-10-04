@@ -20,7 +20,7 @@ object Handler:
   def make[F[_]: Concurrent: GenUUID: Logger](
       topic: Topic[F, Alert]
   ): F[Handler[F]] =
-    (Deferred[F, Either[Throwable, Unit]], Ref.of[F, Set[Symbol]](Set.empty), GenUUID[F].random).mapN {
+    (Deferred[F, Either[Throwable, Unit]], Ref.of[F, Set[Symbol]](Set.empty), GenUUID[F].make[SocketId]).mapN {
       case (switch, subs, sid) =>
         new Handler[F] {
           val encode: WsOut => F[Option[WebSocketFrame]] = {

@@ -19,7 +19,7 @@ object Main extends IOApp.Simple:
   val topic = AppTopic.TradingCommands.make(config)
 
   val cmdShardKey: TradeCommand => ShardKey =
-    cmd => ShardKey.Of(cmd.symbol.getBytes(UTF_8))
+    cmd => ShardKey.Of(cmd.symbol.value.getBytes(UTF_8))
 
   def resources =
     for {

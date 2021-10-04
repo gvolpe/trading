@@ -20,6 +20,9 @@ object cogen {
   //c2.perturb(c1.perturb(seed, t._1), t._2)
   //)
 
+  implicit val quantityCogen: Cogen[Quantity] =
+    Cogen.cogenInt.contramap[Quantity](_.value)
+
   implicit val pricesCogen: Cogen[Prices] =
     Cogen.tuple2[Prices.Ask, Prices.Bid].contramap[Prices] { p =>
       p.ask -> p.bid
@@ -31,22 +34,24 @@ object generators {
   val tradeActionGen: Gen[TradeAction] =
     Gen.oneOf(TradeAction.Ask, TradeAction.Bid)
 
-  val commandIdGen: Gen[CommandId] = Gen.uuid
+  val commandIdGen: Gen[CommandId] = Gen.uuid.map(id => CommandId(id))
 
   val symbolGen: Gen[Symbol] =
-    Gen.oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
+    Gen
+      .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
+      .map(s => Symbol.apply(s))
 
   val priceGen: Gen[Price] =
     Gen.choose(0.78346, 4.78341)
 
   val quantityGen: Gen[Quantity] =
-    Gen.choose(1, 30)
+    Gen.choose(1, 30).map(Quantity(_))
 
   val sourceGen: Gen[Source] =
     Gen.const("random-feed")
 
   val timestampGen: Gen[Timestamp] =
-    Instant.parse("2021-09-16T14:00:00.00Z")
+    Gen.const(Timestamp(Instant.parse("2021-09-16T14:00:00.00Z")))
 
   val createCommandGen: Gen[TradeCommand.Create] =
     for {

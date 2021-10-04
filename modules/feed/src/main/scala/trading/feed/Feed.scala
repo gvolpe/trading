@@ -3,6 +3,7 @@ package trading.feed
 import scala.concurrent.duration.*
 
 import trading.commands.TradeCommand
+import trading.domain.CommandId
 import trading.domain.generators.*
 import trading.lib.{ GenUUID, Logger, Producer }
 
@@ -19,7 +20,7 @@ object Feed:
     new Feed[F] {
       def run: F[Unit] =
         commandsGen.replicateA(2).flatten.traverse_ { cmd =>
-          GenUUID[F].random.flatMap { cmdId =>
+          GenUUID[F].make[CommandId].flatMap { cmdId =>
             val uniqueCmd = TradeCommand._CommandId.replace(cmdId)(cmd)
             Logger[F].info(cmd.show) >> producer.send(uniqueCmd) >> Temporal[F].sleep(300.millis)
           }

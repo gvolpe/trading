@@ -13,14 +13,14 @@ import weaver.scalacheck.Checkers
 
 object EventSourceSuite extends FunSuite with Checkers {
 
-  val id: CommandId = UUID.randomUUID()
-  val s: Symbol     = "EURUSD"
-  val ts: Timestamp = Instant.parse("2021-09-16T14:00:00.00Z")
+  val id: CommandId = CommandId(UUID.randomUUID())
+  val s: Symbol     = Symbol("EURUSD")
+  val ts: Timestamp = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
   val p1: Price     = 1.1987
-  val q1: Quantity  = 10
+  val q1: Quantity  = Quantity(10)
 
   val p2: Price    = 3.5782
-  val q2: Quantity = 20
+  val q2: Quantity = Quantity(20)
 
   test("Event source state track") {
     val st1 = EventSource.runS(TradeState.empty)(TradeCommand.Create(id, s, TradeAction.Ask, p1, q1, "test", ts))
