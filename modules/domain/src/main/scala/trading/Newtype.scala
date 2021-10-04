@@ -2,7 +2,6 @@ package trading
 
 import java.util.UUID
 
-import cats.syntax.all.*
 import cats.{ Eq, Show }
 import io.circe.{ Decoder, Encoder }
 import monocle.Iso
@@ -17,6 +16,8 @@ abstract class Newtype[A](using
 
   inline def apply(a: A): Type = a
 
+  protected inline final def derive[F[_]](using ev: F[A]): F[Type] = ev
+
   extension (t: Type) inline def value: A = t
 
   given Eq[Type]      = eqv
@@ -25,6 +26,4 @@ abstract class Newtype[A](using
   given Decoder[Type] = dec
 
 abstract class IdNewtype extends Newtype[UUID]:
-  given IsUUID[Type] with
-    def iso: Iso[UUID, Type] =
-      Iso[UUID, Type](apply(_))(_.value)
+  given IsUUID[Type] = derive[IsUUID]
