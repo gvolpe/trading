@@ -3,11 +3,11 @@ package trading.core
 import java.time.Instant
 import java.util.UUID
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import trading.commands.TradeCommand
-import trading.domain._
-import trading.state._
+import trading.domain.*
+import trading.state.*
 
 import cats.data.NonEmptyList
 import weaver.FunSuite
@@ -15,16 +15,16 @@ import weaver.scalacheck.Checkers
 
 object ConflictsSuite extends FunSuite with Checkers {
 
-  val s: Symbol    = "EURUSD"
-  val p1: Price    = 1.1987
-  val q1: Quantity = 10
+  val s: Symbol    = Symbol("EURUSD")
+  val p1: Price    = Price(1.1987)
+  val q1: Quantity = Quantity(10)
 
-  val id0: CommandId = UUID.randomUUID()
-  val id1: CommandId = UUID.randomUUID()
-  val id2: CommandId = UUID.randomUUID()
+  val id0: CommandId = CommandId(UUID.randomUUID())
+  val id1: CommandId = CommandId(UUID.randomUUID())
+  val id2: CommandId = CommandId(UUID.randomUUID())
 
-  val ts0: Timestamp = Instant.parse("2021-09-16T14:00:00.00Z")
-  val ts1: Timestamp = ts0.minusSeconds(6.seconds.toSeconds)
+  val ts0: Timestamp = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
+  val ts1: Timestamp = Timestamp(ts0.value.minusSeconds(6.seconds.toSeconds))
 
   test("De-duplication logic") {
     val cd1 = TradeCommand.Create(id0, s, TradeAction.Ask, p1, q1, "test", ts0)

@@ -2,17 +2,16 @@ package trading.lib
 
 import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.{ Console, Queue }
-import cats.syntax.all._
+import cats.syntax.all.*
 import cats.{ Parallel, Show }
 import dev.profunktor.pulsar.schema.Schema
-import dev.profunktor.pulsar.{ Producer => PulsarProducer, _ }
+import dev.profunktor.pulsar.{ Producer as PulsarProducer, * }
 import fs2.kafka.{ KafkaProducer, ProducerSettings }
 
-trait Producer[F[_], A] {
+trait Producer[F[_], A]:
   def send(a: A): F[Unit]
-}
 
-object Producer {
+object Producer:
   def local[F[_], A](queue: Queue[F, Option[A]]): Producer[F, A] =
     new Producer[F, A] {
       def send(a: A): F[Unit] = queue.offer(Some(a))
@@ -44,7 +43,7 @@ object Producer {
       client: Pulsar.T,
       topic: Topic.Single
   ): Resource[F, Producer[F, A]] =
-    pulsar[F, A](client, topic, Function.const(ShardKey.Default) _)
+    pulsar[F, A](client, topic, _ => ShardKey.Default)
 
   def kafka[F[_]: Async, A](
       settings: ProducerSettings[F, String, A],
@@ -55,4 +54,3 @@ object Producer {
         def send(a: A): F[Unit] = p.produceOne_(topic, "key", a).flatten.void
       }
     }
-}

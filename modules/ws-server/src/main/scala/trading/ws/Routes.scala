@@ -4,9 +4,9 @@ import trading.domain.Alert
 import trading.lib.{ GenUUID, Logger }
 
 import cats.effect.kernel.Concurrent
-import cats.syntax.all._
+import cats.syntax.all.*
 import fs2.concurrent.Topic
-import org.http4s._
+import org.http4s.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.websocket.WebSocketBuilder
 

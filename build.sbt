@@ -1,6 +1,6 @@
 import Dependencies._
 
-ThisBuild / scalaVersion := "2.13.5"
+ThisBuild / scalaVersion := "3.0.2"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
@@ -10,34 +10,25 @@ ThisBuild / scalafixDependencies += Libraries.organizeImports
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 Compile / run / fork := true
-Global / semanticdbEnabled := true
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val commonSettings = List(
-  scalacOptions ++= List("-Ymacro-annotations", "-Yrangepos", "-Wconf:cat=unused:info"),
-  scalafmtOnCompile := true,
+  scalacOptions ++= List("-source:future"),
+  scalafmtOnCompile := false, // recommended in Scala 3
   testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
   libraryDependencies ++= Seq(
-    CompilerPlugins.betterMonadicFor,
-    CompilerPlugins.betterToString,
-    CompilerPlugins.kindProjector,
-    CompilerPlugins.semanticDB,
     Libraries.cats,
     Libraries.catsEffect,
-    Libraries.circeGenericExtras,
-    Libraries.derevoCats,
-    Libraries.derevoCirceMagnolia,
-    Libraries.derevoTagless,
+    Libraries.circeCore,
+    Libraries.circeExtras,
     Libraries.fs2,
     Libraries.fs2Kafka,
     Libraries.monocleCore,
-    Libraries.monocleMacro,
     Libraries.neutronCore,
     Libraries.neutronCirce,
-    Libraries.newtype,
     Libraries.redis4catsEffects,
-    Libraries.refinedCore,
-    Libraries.refinedCats,
     Libraries.monocleLaw       % Test,
+    Libraries.scalacheck       % Test,
     Libraries.weaverCats       % Test,
     Libraries.weaverDiscipline % Test,
     Libraries.weaverScalaCheck % Test

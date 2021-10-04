@@ -3,24 +3,28 @@ package trading.domain
 import java.time.Instant
 
 import trading.commands.TradeCommand
-import trading.domain._
-import trading.state._
+import trading.domain.*
+import trading.state.*
 
+import cats.Order
 import org.scalacheck.{ Cogen, Gen }
 
 object cogen {
-  // TODO: When introducing newtypes we'll need this
-  //implicit val askPricesCogen: Cogen[Prices.Ask] =
-  //Cogen.cogenMap[AskPrice, Quantity]
+  given Cogen[Quantity] =
+    Cogen.cogenInt.contramap[Quantity](_.value)
 
-  //implicit val bidPricesCogen: Cogen[Prices.Bid] =
-  //Cogen.cogenMap[BidPrice, Quantity]
+  given Ordering[Price] =
+    Order[Price].toOrdering
 
-  //Cogen((seed, t) =>
-  //c2.perturb(c1.perturb(seed, t._1), t._2)
-  //)
+  given Cogen[Price] =
+    Cogen.bigDecimal.contramap[Price](_.value)
 
-  implicit val pricesCogen: Cogen[Prices] =
+  given Cogen[Map[Price, Quantity]] =
+    Cogen.cogenMap[BigDecimal, Int].contramap[Map[Price, Quantity]] {
+      _.map { case (k, v) => k.value -> v.value }
+    }
+
+  given Cogen[Prices] =
     Cogen.tuple2[Prices.Ask, Prices.Bid].contramap[Prices] { p =>
       p.ask -> p.bid
     }
@@ -31,22 +35,24 @@ object generators {
   val tradeActionGen: Gen[TradeAction] =
     Gen.oneOf(TradeAction.Ask, TradeAction.Bid)
 
-  val commandIdGen: Gen[CommandId] = Gen.uuid
+  val commandIdGen: Gen[CommandId] = Gen.uuid.map(id => CommandId(id))
 
   val symbolGen: Gen[Symbol] =
-    Gen.oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
+    Gen
+      .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
+      .map(s => Symbol.apply(s))
 
   val priceGen: Gen[Price] =
-    Gen.choose(0.78346, 4.78341)
+    Gen.choose(0.78346, 4.78341).map(x => Price(x))
 
   val quantityGen: Gen[Quantity] =
-    Gen.choose(1, 30)
+    Gen.choose(1, 30).map(Quantity(_))
 
   val sourceGen: Gen[Source] =
     Gen.const("random-feed")
 
   val timestampGen: Gen[Timestamp] =
-    Instant.parse("2021-09-16T14:00:00.00Z")
+    Gen.const(Timestamp(Instant.parse("2021-09-16T14:00:00.00Z")))
 
   val createCommandGen: Gen[TradeCommand.Create] =
     for {
@@ -91,7 +97,7 @@ object generators {
   val askPricesGen: Gen[Prices.Ask] =
     Gen.mapOf[AskPrice, Quantity] {
       for {
-        p <- Gen.choose[AskPrice](0.78346, 4.78341)
+        p <- priceGen
         q <- quantityGen
       } yield p -> q
     }
@@ -99,7 +105,7 @@ object generators {
   val bidPricesGen: Gen[Prices.Bid] =
     Gen.mapOf[BidPrice, Quantity] {
       for {
-        p <- Gen.choose[BidPrice](0.78346, 4.78341)
+        p <- priceGen
         q <- quantityGen
       } yield p -> q
     }

@@ -1,24 +1,22 @@
 package trading.core.snapshots
 
-import trading.domain._
+import trading.domain.*
 import trading.state.{ Prices, TradeState }
 
 import cats.MonadThrow
 import cats.effect.kernel.Resource
-import cats.syntax.all._
+import cats.syntax.all.*
 import dev.profunktor.redis4cats.effect.MkRedis
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
-import io.circe.parser.{ decode => jsonDecode }
+import io.circe.parser.decode as jsonDecode
 
-trait SnapshotReader[F[_]] {
+trait SnapshotReader[F[_]]:
   def latest: F[Option[TradeState]]
-}
 
-/** This model only allows for a single snappshots service running at a time.
-  * Thus, the snapshots service uses a Failover subscription mode and it's
-  * recommended to run two instances: a main one, and a failover one.
+/** This model only allows for a single snappshots service running at a time. Thus, the snapshots service uses a
+  * Failover subscription mode and it's recommended to run two instances: a main one, and a failover one.
   */
-object SnapshotReader {
+object SnapshotReader:
   def fromClient[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotReader[F] =
@@ -29,13 +27,13 @@ object SnapshotReader {
             redis.hGetAll(key).map { kv =>
               val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
               val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
-              val high = kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0)
-              val low  = kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0)
+              val high = Price(kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0))
+              val low  = Price(kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0))
 
               Either
                 .catchNonFatal(key.split("-").apply(1)) // get symbol
                 .toOption
-                .map(_ -> Prices(ask.toMap, bid.toMap, high, low))
+                .map(Symbol(_) -> Prices(ask.toMap, bid.toMap, high, low))
             }
           }
             .map {
@@ -47,4 +45,3 @@ object SnapshotReader {
 
   def make[F[_]: MkRedis: MonadThrow]: Resource[F, SnapshotReader[F]] =
     Redis[F].utf8("redis://localhost").map(fromClient[F])
-}

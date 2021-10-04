@@ -2,11 +2,9 @@ package trading.domain
 
 import trading.ws.WsOut
 
-import derevo.cats.show
-import derevo.circe.magnolia.{ decoder, encoder }
-import derevo.derive
+import cats.Show
+import io.circe.Codec
 
-@derive(decoder, encoder, show)
 final case class Alert(
     alertType: AlertType,
     symbol: Symbol,
@@ -14,6 +12,5 @@ final case class Alert(
     bidPrice: BidPrice,
     high: Price,
     low: Price
-) {
+) derives Codec.AsObject:
   def wsOut: WsOut = WsOut.Notification(this)
-}

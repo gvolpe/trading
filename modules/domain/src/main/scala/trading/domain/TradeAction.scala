@@ -1,13 +1,6 @@
 package trading.domain
 
-import derevo.cats.show
-import derevo.circe.magnolia.{ decoder, encoder }
-import derevo.derive
+import io.circe.Codec
 
-@derive(decoder, encoder, show)
-sealed trait TradeAction
-
-object TradeAction {
-  case object Ask extends TradeAction
-  case object Bid extends TradeAction
-}
+enum TradeAction derives Codec.AsObject:
+  case Ask, Bid

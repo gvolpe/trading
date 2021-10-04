@@ -2,17 +2,20 @@ package trading.lib
 
 import java.util.UUID
 
-import cats.effect.kernel.Sync
+import trading.IsUUID
 
-trait GenUUID[F[_]] {
-  def random: F[UUID]
-}
+import cats.effect.kernel.Sync
+import cats.syntax.functor.*
+
+trait GenUUID[F[_]]:
+  def make[A: IsUUID]: F[A]
 
 object GenUUID {
-  @inline def apply[F[_]: GenUUID]: GenUUID[F] = implicitly
+  def apply[F[_]](using ev: GenUUID[F]): GenUUID[F] = ev
 
-  implicit def forSync[F[_]: Sync]: GenUUID[F] =
+  given forSync[F[_]](using F: Sync[F]): GenUUID[F] =
     new GenUUID[F] {
-      def random: F[UUID] = Sync[F].delay(UUID.randomUUID())
+      def make[A: IsUUID]: F[A] =
+        F.delay(UUID.randomUUID()).map(IsUUID[A].iso.get)
     }
 }

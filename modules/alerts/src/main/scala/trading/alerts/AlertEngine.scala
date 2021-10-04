@@ -2,22 +2,21 @@ package trading.alerts
 
 import trading.core.snapshots.SnapshotReader
 import trading.core.{ Conflicts, EventSource }
-import trading.domain.AlertType._
-import trading.domain._
+import trading.domain.AlertType.*
+import trading.domain.*
 import trading.events.TradeEvent
 import trading.events.TradeEvent.CommandExecuted
-import trading.lib._
+import trading.lib.*
 import trading.state.{ DedupState, TradeState }
 
 import cats.MonadThrow
-import cats.syntax.all._
+import cats.syntax.all.*
 import fs2.Stream
 
-trait AlertEngine[F[_]] {
+trait AlertEngine[F[_]]:
   def run: Stream[F, Unit]
-}
 
-object AlertEngine {
+object AlertEngine:
   def make[F[_]: Logger: MonadThrow: Time](
       consumer: Consumer[F, TradeEvent],
       producer: Producer[F, Alert],
@@ -37,23 +36,23 @@ object AlertEngine {
                     val p   = st.prices.get(cmd.symbol)
                     val c   = nst.prices.get(cmd.symbol)
 
-                    val previousAskMax: AskPrice = p.flatMap(_.ask.keySet.maxOption).getOrElse(0.0)
-                    val previousBidMax: BidPrice = p.flatMap(_.bid.keySet.maxOption).getOrElse(0.0)
-                    val currentAskMax: AskPrice  = c.flatMap(_.ask.keySet.maxOption).getOrElse(0.0)
-                    val currentBidMax: BidPrice  = c.flatMap(_.bid.keySet.maxOption).getOrElse(0.0)
+                    val previousAskMax: AskPrice = p.flatMap(_.ask.keySet.maxOption).getOrElse(Price(0.0))
+                    val previousBidMax: BidPrice = p.flatMap(_.bid.keySet.maxOption).getOrElse(Price(0.0))
+                    val currentAskMax: AskPrice  = c.flatMap(_.ask.keySet.maxOption).getOrElse(Price(0.0))
+                    val currentBidMax: BidPrice  = c.flatMap(_.bid.keySet.maxOption).getOrElse(Price(0.0))
 
-                    val high: Price = c.map(_.high).getOrElse(0.0)
-                    val low: Price  = c.map(_.low).getOrElse(0.0)
+                    val high: Price = c.map(_.high).getOrElse(Price(0.0))
+                    val low: Price  = c.map(_.low).getOrElse(Price(0.0))
 
                     // dummy logic to simulate the trading market
                     val alert: Alert =
-                      if (previousAskMax - currentAskMax > 0.3)
+                      if (previousAskMax - currentAskMax > Price(0.3))
                         Alert(StrongBuy, cmd.symbol, currentAskMax, currentBidMax, high, low)
-                      else if (previousAskMax - currentAskMax > 0.2)
+                      else if (previousAskMax - currentAskMax > Price(0.2))
                         Alert(Buy, cmd.symbol, currentAskMax, currentBidMax, high, low)
-                      else if (currentBidMax - previousBidMax > 0.3)
+                      else if (currentBidMax - previousBidMax > Price(0.3))
                         Alert(StrongSell, cmd.symbol, currentAskMax, currentBidMax, high, low)
-                      else if (currentBidMax - previousBidMax > 0.2)
+                      else if (currentBidMax - previousBidMax > Price(0.2))
                         Alert(Sell, cmd.symbol, currentAskMax, currentBidMax, high, low)
                       else
                         Alert(Neutral, cmd.symbol, currentAskMax, currentBidMax, high, low)
@@ -67,4 +66,3 @@ object AlertEngine {
             .void
         }
     }
-}

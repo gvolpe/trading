@@ -4,16 +4,15 @@ import trading.commands.TradeCommand
 import trading.core.AppTopic
 import trading.core.snapshots.SnapshotReader
 import trading.events.TradeEvent
-import trading.lib.inject._
+import trading.lib.inject.given
 import trading.lib.{ Consumer, Producer }
 
-import cats.effect._
+import cats.effect.*
 import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
-import dev.profunktor.redis4cats.effect.Log.Stdout._
+import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 
-object Main extends IOApp.Simple {
-
+object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
@@ -40,5 +39,3 @@ object Main extends IOApp.Simple {
       snapshots <- SnapshotReader.make[IO]
       consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
     } yield Engine.make(consumer, producer, snapshots)
-
-}

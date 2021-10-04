@@ -1,21 +1,19 @@
 package trading.state
 
-import trading.domain._
+import trading.domain.*
 
-import cats.syntax.all._
-import derevo.cats._
-import derevo.derive
-import monocle.Optional
+import cats.syntax.all.*
+import cats.{ Eq, Show }
+import io.circe.Codec
 import monocle.function.{ At, Index }
-import monocle.macros.GenLens
+import monocle.{ Focus, Optional }
 
-@derive(eqv, show)
 final case class TradeState(
     prices: TradeState.SymbolPrices
-) {
+):
   def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState = {
     val h = Prices._High.modify(p => if (price > p) price else p)(_)
-    val l = Prices._Low.modify(p => if (price < p || p === 0.0) price else p)(_)
+    val l = Prices._Low.modify(p => if (price < p || p === Price(0.0)) price else p)(_)
 
     action match {
       case TradeAction.Ask =>
@@ -40,9 +38,7 @@ final case class TradeState(
           .__BidPrices(symbol)
           .modify(_.removed(price))(this)
     }
-}
 
-@derive(eqv, show)
 final case class Prices(
     ask: Prices.Ask,
     bid: Prices.Bid,
@@ -50,50 +46,49 @@ final case class Prices(
     low: Price
 )
 
-object Prices {
-  def empty: Prices = Prices(Map.empty, Map.empty, 0.0, 0.0)
+object Prices:
+  given Eq[Prices] = Eq.and(Eq.and(Eq.by(_.ask), Eq.by(_.bid)), Eq.and(Eq.by(_.high), Eq.by(_.low)))
+
+  def empty: Prices = Prices(Map.empty, Map.empty, Price(0.0), Price(0.0))
 
   type Ask = Map[AskPrice, Quantity]
   type Bid = Map[BidPrice, Quantity]
 
-  val _Ask  = GenLens[Prices](_.ask)
-  val _Bid  = GenLens[Prices](_.bid)
-  val _High = GenLens[Prices](_.high)
-  val _Low  = GenLens[Prices](_.low)
+  val _Ask  = Focus[Prices](_.ask)
+  val _Bid  = Focus[Prices](_.bid)
+  val _High = Focus[Prices](_.high)
+  val _Low  = Focus[Prices](_.low)
 
-  object __AtAsk {
+  object __AtAsk:
     def apply(p: AskPrice): Optional[Prices, Option[Quantity]] =
       _Ask.andThen(At.atMap[AskPrice, Quantity].at(p))
-  }
 
-  object __AtBid {
+  object __AtBid:
     def apply(p: BidPrice): Optional[Prices, Option[Quantity]] =
       _Bid.andThen(At.atMap[BidPrice, Quantity].at(p))
-  }
-}
+end Prices
 
-object TradeState {
+object TradeState:
   type SymbolPrices = Map[Symbol, Prices]
 
   def empty: TradeState = TradeState(Map.empty)
 
-  val _Prices = GenLens[TradeState](_.prices)
+  given Eq[TradeState] = Eq.by(_.prices)
 
-  object __Prices {
+  val _Prices = Focus[TradeState](_.prices)
+
+  object __Prices:
     def at(s: Symbol): Optional[TradeState, Option[Prices]] =
       _Prices.andThen(At.atMap[Symbol, Prices].at(s))
 
     def index(s: Symbol): Optional[TradeState, Prices] =
       _Prices.andThen(Index.mapIndex[Symbol, Prices].index(s))
-  }
 
-  object __AskPrices {
+  object __AskPrices:
     def apply(s: Symbol): Optional[TradeState, Prices.Ask] =
       __Prices.index(s).andThen(Prices._Ask)
-  }
 
-  object __BidPrices {
+  object __BidPrices:
     def apply(s: Symbol): Optional[TradeState, Prices.Bid] =
       __Prices.index(s).andThen(Prices._Bid)
-  }
-}
+end TradeState
