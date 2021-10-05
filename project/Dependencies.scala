@@ -16,7 +16,7 @@ object Dependencies {
     val scalacheck = "1.15.4"
     val weaver     = "0.7.6"
 
-    val organizeImports = "0.5.0"
+    val organizeImports = "0.5.0+42-7e4a4f8a-SNAPSHOT"
     val semanticDB      = "4.4.28"
   }
 
