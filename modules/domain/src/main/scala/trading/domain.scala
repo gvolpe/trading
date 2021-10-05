@@ -8,6 +8,8 @@ import trading.{ IdNewtype, Newtype, NumNewtype }
 import cats.{ Eq, Order, Show }
 import io.circe.*
 
+export OrphanInstances.given
+
 type Symbol = Symbol.Type
 object Symbol extends Newtype[String]
 
@@ -31,8 +33,3 @@ object Price extends NumNewtype[BigDecimal]
 
 type AskPrice = Price
 type BidPrice = Price
-
-// orphan instances go below here //
-given Eq[Instant]    = Eq.by(_.getEpochSecond)
-given Order[Instant] = Order.by(_.getEpochSecond)
-given Show[Instant]  = Show.show[Instant](_.toString)

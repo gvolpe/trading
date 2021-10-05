@@ -3,6 +3,7 @@ package trading.domain
 import trading.ws.WsOut
 
 import cats.Show
+import cats.derived.semiauto.*
 import io.circe.Codec
 
 final case class Alert(
@@ -12,5 +13,5 @@ final case class Alert(
     bidPrice: BidPrice,
     high: Price,
     low: Price
-) derives Codec.AsObject:
+) derives Codec.AsObject, Show:
   def wsOut: WsOut = WsOut.Notification(this)

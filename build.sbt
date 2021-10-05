@@ -23,6 +23,7 @@ val commonSettings = List(
     Libraries.circeExtras,
     Libraries.fs2,
     Libraries.fs2Kafka,
+    Libraries.kittens,
     Libraries.monocleCore,
     Libraries.neutronCore,
     Libraries.neutronCirce,

@@ -15,14 +15,14 @@ import io.circe.syntax.*
 object KafkaDemo extends IOApp.Simple:
 
   val event: Option[TradeEvent] =
-    (createCommandGen.sample, timestampGen.sample).mapN { case (cmd, ts) =>
+    (createCommandGen.sample, timestampGen.sample).mapN { (cmd, ts) =>
       TradeEvent.CommandExecuted(cmd, ts)
     }
 
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { case (consumer, producer) =>
+      .flatMap { (consumer, producer) =>
         Stream(
           Stream.awakeEvery[IO](1.second).as(event).evalMap(_.traverse_(producer.send)),
           consumer.receive.evalMap(e => IO.println(s">>> KAFKA: $e"))

@@ -1,52 +1,51 @@
 package trading.commands
 
-import trading.domain.{*, given}
+import trading.domain.{ given, * }
 
+import cats.derived.semiauto.{ given, * }
 import cats.syntax.all.*
 import cats.{ Applicative, Show }
 import io.circe.Codec
 import monocle.Traversal
 
-enum TradeCommand(
-    val id: CommandId,
-    val symbol: Symbol,
-    tradeAction: TradeAction,
-    price: Price,
-    source: Source,
-    timestamp: Timestamp
-) derives Codec.AsObject:
-  case Create(
-      override val id: CommandId,
-      override val symbol: Symbol,
-      tradeAction: TradeAction,
-      price: Price,
-      quantity: Quantity,
-      source: Source,
-      timestamp: Timestamp
-  ) extends TradeCommand(id, symbol, tradeAction, price, source, timestamp)
-
-  case Update(
-      override val id: CommandId,
-      override val symbol: Symbol,
-      tradeAction: TradeAction,
-      price: Price,
-      quantity: Quantity,
-      source: Source,
-      timestamp: Timestamp
-  ) extends TradeCommand(id, symbol, tradeAction, price, source, timestamp)
-
-  case Delete(
-      override val id: CommandId,
-      override val symbol: Symbol,
-      tradeAction: TradeAction,
-      price: Price,
-      source: Source,
-      timestamp: Timestamp
-  ) extends TradeCommand(id, symbol, tradeAction, price, source, timestamp)
+sealed trait TradeCommand derives Codec.AsObject, Show {
+  def id: CommandId
+  def symbol: Symbol
+  def tradeAction: TradeAction
+  def price: Price
+  def source: Source
+  def timestamp: Timestamp
+}
 
 object TradeCommand:
-  // FIXME: use kittens when snapshot is published
-  given Show[TradeCommand] = Show.show[TradeCommand](_.toString)
+  final case class Create(
+      id: CommandId,
+      symbol: Symbol,
+      tradeAction: TradeAction,
+      price: Price,
+      quantity: Quantity,
+      source: Source,
+      timestamp: Timestamp
+  ) extends TradeCommand
+
+  final case class Update(
+      id: CommandId,
+      symbol: Symbol,
+      tradeAction: TradeAction,
+      price: Price,
+      quantity: Quantity,
+      source: Source,
+      timestamp: Timestamp
+  ) extends TradeCommand
+
+  final case class Delete(
+      id: CommandId,
+      symbol: Symbol,
+      tradeAction: TradeAction,
+      price: Price,
+      source: Source,
+      timestamp: Timestamp
+  ) extends TradeCommand
 
   // TODO: law check
   val _CommandId =

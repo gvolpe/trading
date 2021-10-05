@@ -9,6 +9,7 @@ object Dependencies {
     val fs2        = "3.1.3"
     val fs2Kafka   = "2.2.0"
     val http4s     = "0.23.4"
+    val kittens    = "2.3.0+26-7ac80086-SNAPSHOT"
     val monocle    = "3.1.0"
     val neutron    = "0.1.0-SNAPSHOT"
     val redis4cats = "1.0.0"
@@ -26,6 +27,7 @@ object Dependencies {
     val cats       = "org.typelevel" %% "cats-core"   % V.cats
     val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
     val fs2        = "co.fs2"        %% "fs2-core"    % V.fs2
+    val kittens    = "org.typelevel" %% "kittens"     % V.kittens
 
     val circeCore   = "io.circe" %% "circe-core"   % V.circe
     val circeExtras = "io.circe" %% "circe-extras" % V.circe

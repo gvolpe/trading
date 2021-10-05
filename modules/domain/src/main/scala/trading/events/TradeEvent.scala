@@ -5,14 +5,16 @@ import trading.domain.*
 
 import io.circe.Codec
 
-enum TradeEvent(
-    val command: TradeCommand,
-    timestamp: Timestamp
-) derives Codec.AsObject:
-  case CommandExecuted(
-      override val command: TradeCommand,
+sealed trait TradeEvent derives Codec.AsObject {
+  def command: TradeCommand
+  def timestamp: Timestamp
+}
+
+object TradeEvent:
+  final case class CommandExecuted(
+      command: TradeCommand,
       timestamp: Timestamp
-  ) extends TradeEvent(command, timestamp)
+  ) extends TradeEvent
 
 // POINTS OF FAILURE (to consider in distributed systems)
 //

@@ -12,7 +12,7 @@ import org.http4s.server.websocket.WebSocketBuilder
 
 final case class Routes[F[_]: Concurrent: GenUUID: Logger](
     topic: Topic[F, Alert]
-) extends Http4sDsl[F] {
+) extends Http4sDsl[F]:
 
   val routes: HttpRoutes[F] = HttpRoutes.of {
     case GET -> Root / "health" =>
@@ -23,5 +23,3 @@ final case class Routes[F[_]: Concurrent: GenUUID: Logger](
         WebSocketBuilder[F].build(h.send, h.receive)
       }
   }
-
-}

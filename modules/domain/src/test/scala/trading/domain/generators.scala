@@ -21,7 +21,7 @@ object cogen {
 
   given Cogen[Map[Price, Quantity]] =
     Cogen.cogenMap[BigDecimal, Int].contramap[Map[Price, Quantity]] {
-      _.map { case (k, v) => k.value -> v.value }
+      _.map { (k, v) => k.value -> v.value }
     }
 
   given Cogen[Prices] =

@@ -10,9 +10,7 @@ trait Logger[F[_]]:
 object Logger:
   def apply[F[_]](using ev: Logger[F]): Logger[F] = ev
 
-  given forConsole[F[_]](using C: Console[F]): Logger[F] =
-    new Logger[F] {
-      def info(str: => String): F[Unit]  = C.println(s"[info] - $str")
-      def error(str: => String): F[Unit] = C.errorln(s"[error] - $str")
-      def warn(str: => String): F[Unit]  = C.println(s"[warn] - $str")
-    }
+  given forConsole[F[_]](using C: Console[F]): Logger[F] with
+    def info(str: => String): F[Unit]  = C.println(s"[info] - $str")
+    def error(str: => String): F[Unit] = C.errorln(s"[error] - $str")
+    def warn(str: => String): F[Unit]  = C.println(s"[warn] - $str")

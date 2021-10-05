@@ -17,7 +17,7 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { case (alerts, topic, server) =>
+      .flatMap { (alerts, topic, server) =>
         Stream(
           Stream.eval(server.useForever),
           topic.subscribers.evalMap(n => IO.println(s">>> WS connections: $n")),

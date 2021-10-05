@@ -12,4 +12,4 @@ enum WsIn derives Codec.AsObject:
   case Unsubscribe(symbol: Symbol)
 
 object WsIn:
-  given Show[WsIn] = Show.show[WsIn](_.toString)
+  given Show[WsIn] = Show.fromToString

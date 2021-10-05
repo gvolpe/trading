@@ -10,4 +10,4 @@ enum WsOut derives Codec.AsObject:
   case Notification(alert: Alert)
 
 object WsOut:
-  given Show[WsOut] = Show.show[WsOut](_.toString)
+  given Show[WsOut] = Show.fromToString

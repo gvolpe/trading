@@ -17,13 +17,13 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { case (consumer, reader, writer) =>
+      .flatMap { (consumer, reader, writer) =>
         Stream
           .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
           .evalTap(latest => IO.println(s">>> SNAPSHOTS: $latest"))
           .flatMap { latest =>
             consumer.receive
-              .mapAccumulate(latest) { case (st, evt) =>
+              .mapAccumulate(latest) { (st, evt) =>
                 EventSource.runS(st)(evt.command) -> ()
               }
               .map(_._1)
