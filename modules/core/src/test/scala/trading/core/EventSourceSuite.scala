@@ -11,8 +11,7 @@ import cats.data.NonEmptyList
 import weaver.FunSuite
 import weaver.scalacheck.Checkers
 
-object EventSourceSuite extends FunSuite with Checkers {
-
+object EventSourceSuite extends FunSuite with Checkers:
   val id: CommandId = CommandId(UUID.randomUUID())
   val s: Symbol     = Symbol("EURUSD")
   val ts: Timestamp = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
@@ -44,5 +43,3 @@ object EventSourceSuite extends FunSuite with Checkers {
       )
       .reduce
   }
-
-}

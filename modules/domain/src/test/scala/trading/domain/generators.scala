@@ -1,15 +1,34 @@
 package trading.domain
 
 import java.time.Instant
+import java.util.UUID
 
 import trading.commands.TradeCommand
 import trading.domain.*
 import trading.state.*
 
 import cats.Order
-import org.scalacheck.{ Cogen, Gen }
+import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
-object cogen {
+object arbitraries:
+  import generators.*
+
+  given Arbitrary[CommandId]    = Arbitrary(commandIdGen)
+  given Arbitrary[TradeCommand] = Arbitrary(tradeCommandGen)
+  given Arbitrary[Prices]       = Arbitrary(pricesGen)
+  given Arbitrary[Price]        = Arbitrary(priceGen)
+  given Arbitrary[Quantity]     = Arbitrary(quantityGen)
+  given Arbitrary[TradeState]   = Arbitrary(tradeStateGen)
+
+object cogen:
+  given uuidCogen: Cogen[UUID] =
+    Cogen[(Long, Long)].contramap { uuid =>
+      uuid.getLeastSignificantBits -> uuid.getMostSignificantBits
+    }
+
+  given Cogen[CommandId] =
+    uuidCogen.contramap(_.value)
+
   given Cogen[Quantity] =
     Cogen.cogenInt.contramap[Quantity](_.value)
 
@@ -28,9 +47,8 @@ object cogen {
     Cogen.tuple2[Prices.Ask, Prices.Bid].contramap[Prices] { p =>
       p.ask -> p.bid
     }
-}
 
-object generators {
+object generators:
 
   val tradeActionGen: Gen[TradeAction] =
     Gen.oneOf(TradeAction.Ask, TradeAction.Bid)
@@ -127,5 +145,3 @@ object generators {
         } yield s -> p
       }
       .map(TradeState.apply)
-
-}

@@ -4,11 +4,11 @@ import trading.domain.{ given, * }
 
 import cats.derived.semiauto.{ given, * }
 import cats.syntax.all.*
-import cats.{ Applicative, Show }
+import cats.{ Applicative, Eq, Show }
 import io.circe.Codec
 import monocle.Traversal
 
-sealed trait TradeCommand derives Codec.AsObject, Show {
+sealed trait TradeCommand derives Codec.AsObject, Eq, Show {
   def id: CommandId
   def symbol: Symbol
   def tradeAction: TradeAction
@@ -47,7 +47,6 @@ object TradeCommand:
       timestamp: Timestamp
   ) extends TradeCommand
 
-  // TODO: law check
   val _CommandId =
     new Traversal[TradeCommand, CommandId] {
       def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
