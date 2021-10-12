@@ -43,12 +43,11 @@ object Main extends IOApp.Simple:
       _      <- Resource.eval(IO.println(">>> Initializing ws-server service <<<"))
       alerts <- Consumer.pulsar[IO, Alert](pulsar, topic, sub).map(_.receive)
       topic  <- Resource.eval(Topic[IO, Alert])
-      api = Routes[IO](topic).routes.orNotFound
       server = EmberServerBuilder
         .default[IO]
         .withHost(host"0.0.0.0")
         .withPort(port"9000")
-        .withHttpApp(api)
+        .withHttpWebSocketApp(Routes[IO](_, topic).routes.orNotFound)
         .build
         .evalMap(Ember.showBanner[IO])
     } yield (alerts, topic, server)

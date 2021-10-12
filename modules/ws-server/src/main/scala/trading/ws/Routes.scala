@@ -11,6 +11,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.server.websocket.WebSocketBuilder
 
 final case class Routes[F[_]: Concurrent: GenUUID: Logger](
+    ws: WebSocketBuilder[F],
     topic: Topic[F, Alert]
 ) extends Http4sDsl[F]:
 
@@ -20,6 +21,6 @@ final case class Routes[F[_]: Concurrent: GenUUID: Logger](
 
     case GET -> Root / "ws" =>
       Handler.make[F](topic).flatMap { h =>
-        WebSocketBuilder[F].build(h.send, h.receive)
+        ws.build(h.send, h.receive)
       }
   }

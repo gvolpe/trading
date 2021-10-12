@@ -6,9 +6,9 @@ object Dependencies {
     val cats       = "2.6.1"
     val catsEffect = "3.2.9"
     val circe      = "0.14.1"
-    val fs2        = "3.1.3"
+    val fs2        = "3.1.5"
     val fs2Kafka   = "2.2.0"
-    val http4s     = "0.23.4"
+    val http4s     = "1.0.0-M28"
     val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
     val neutron    = "0.1.0-SNAPSHOT"
@@ -41,8 +41,6 @@ object Dependencies {
     val neutronCirce      = "dev.profunktor" %% "neutron-circe"      % V.neutron
     val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
-    val fs2Kafka = "com.github.fd4s" %% "fs2-kafka" % V.fs2Kafka
-
     val monocleCore  = "dev.optics" %% "monocle-core"  % V.monocle
     val monocleMacro = "dev.optics" %% "monocle-macro" % V.monocle
 
@@ -53,7 +51,10 @@ object Dependencies {
     val weaverDiscipline = "com.disneystreaming" %% "weaver-discipline" % V.weaver
     val weaverScalaCheck = "com.disneystreaming" %% "weaver-scalacheck" % V.weaver
 
-    // Scalafix rules
+    // only for demo
+    val fs2Kafka = "com.github.fd4s" %% "fs2-kafka" % V.fs2Kafka
+
+    // scalafix rules
     val organizeImports = "com.github.liancheng" %% "organize-imports" % V.organizeImports
   }
 
