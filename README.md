@@ -5,7 +5,7 @@ trading
 [![CI Scala](https://github.com/gvolpe/trading/workflows/Scala/badge.svg)](https://github.com/gvolpe/trading/actions)
 [![MergifyStatus](https://img.shields.io/endpoint.svg?url=https://gh.mergify.io/badges/gvolpe/trading&style=flat)](https://mergify.io)
 
-Examples corresponding to the [Event Driven Architecture meets Functional Programming in Scala](https://leanpub.com/eda-fp-scala) book.
+Examples corresponding to the [Functional event-driven architecture: Powered by Scala 3](https://leanpub.com/feda) book.
 
 ## Table of contents
 
