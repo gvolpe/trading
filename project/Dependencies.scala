@@ -9,7 +9,7 @@ object Dependencies {
     val fs2        = "3.1.3"
     val fs2Kafka   = "2.2.0"
     val http4s     = "0.23.4"
-    val kittens    = "2.3.0+26-7ac80086-SNAPSHOT"
+    val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
     val neutron    = "0.1.0-SNAPSHOT"
     val redis4cats = "1.0.0"
