@@ -16,7 +16,7 @@ final case class TradeState(
     val h = Prices._High.modify(p => if (price > p) price else p)(_)
     val l = Prices._Low.modify(p => if (price < p || p === Price(0.0)) price else p)(_)
 
-    action match {
+    action match
       case TradeAction.Ask =>
         val f = Prices._Ask.modify(_.updated(price, quantity))(_)
         val g = f.andThen(h).andThen(l)
@@ -25,11 +25,10 @@ final case class TradeState(
         val f = Prices._Bid.modify(_.updated(price, quantity))(_)
         val g = f.andThen(h).andThen(l)
         TradeState.__Prices.at(symbol).modify(_.fold(g(Prices.empty))(g).some)(this)
-    }
   }
 
   def remove(symbol: Symbol)(action: TradeAction, price: Price): TradeState =
-    action match {
+    action match
       case TradeAction.Ask =>
         TradeState
           .__AskPrices(symbol)
@@ -38,7 +37,6 @@ final case class TradeState(
         TradeState
           .__BidPrices(symbol)
           .modify(_.removed(price))(this)
-    }
 
 object TradeState:
   type SymbolPrices = Map[Symbol, Prices]

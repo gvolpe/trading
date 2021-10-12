@@ -50,9 +50,10 @@ object TradeCommand:
   val _CommandId =
     new Traversal[TradeCommand, CommandId] {
       def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
-        s match {
-          case c: Create => f(c.id).map(newId => c.copy(id = newId))
-          case c: Update => f(c.id).map(newId => c.copy(id = newId))
-          case c: Delete => f(c.id).map(newId => c.copy(id = newId))
+        f(s.id).map { newId =>
+          s match
+            case c: Create => c.copy(id = newId)
+            case c: Update => c.copy(id = newId)
+            case c: Delete => c.copy(id = newId)
         }
     }

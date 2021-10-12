@@ -28,7 +28,7 @@ object Engine:
           .flatMap { latest =>
             consumer.receiveM
               .evalMapAccumulate(latest -> DedupState.empty) { case ((st, ds), Consumer.Msg(msgId, command)) =>
-                Conflicts.dedup(ds)(command) match {
+                Conflicts.dedup(ds)(command) match
                   case None =>
                     Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
                   case Some(cmd) =>
@@ -39,7 +39,6 @@ object Engine:
                       nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(evs.map(_.command), _))
                       _ <- consumer.ack(msgId).attempt.void // don't care if this fails (de-dup)
                     } yield (nst -> nds) -> ()
-                }
               }
           }
           .void

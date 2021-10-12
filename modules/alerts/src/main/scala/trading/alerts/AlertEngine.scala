@@ -28,7 +28,7 @@ object AlertEngine:
           consumer.receiveM
             .evalMapAccumulate(maybeSt.getOrElse(TradeState.empty) -> DedupState.empty) {
               case ((st, ds), Consumer.Msg(msgId, CommandExecuted(command, _))) =>
-                Conflicts.dedup(ds)(command) match {
+                Conflicts.dedup(ds)(command) match
                   case None =>
                     Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
                   case Some(cmd) =>
@@ -61,7 +61,6 @@ object AlertEngine:
                       val nds = Conflicts.update(ds)(cmd, ts)
                       (producer.send(alert) >> consumer.ack(msgId)).attempt.void.tupleLeft(nst -> nds)
                     }
-                }
             }
             .void
         }

@@ -49,7 +49,7 @@ object Handler:
 
           val receive: Pipe[F, WebSocketFrame, Unit] =
             _.evalMap {
-              decode(_) match {
+              decode(_) match
                 case Left(e) =>
                   Logger[F].error(e)
                 case Right(WsIn.Heartbeat) =>
@@ -63,7 +63,6 @@ object Handler:
                 case Right(WsIn.Unsubscribe(symbol)) =>
                   Logger[F].info(s"[$sid] - Unsubscribing from $symbol alerts") *>
                     subs.update(_ - symbol)
-              }
             }.onFinalize(Logger[F].info(s"[$sid] - WS connection terminated"))
         }
     }
