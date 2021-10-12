@@ -16,7 +16,6 @@ object SnapshotWriter:
   def fromClient[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotWriter[F] =
-    // TODO: can we use `with` def save... ?
     new SnapshotWriter[F] {
       def save(state: TradeState): F[Unit] =
         state.prices.toList.traverse_ { case (symbol, prices) =>
