@@ -17,7 +17,7 @@ object Feed:
   def random[F[_]: GenUUID: Logger: Temporal](
       producer: Producer[F, TradeCommand]
   ): Feed[F] =
-    new Feed[F] {
+    new Feed[F]:
       def run: F[Unit] =
         commandsGen.replicateA(2).flatten.traverse_ { cmd =>
           GenUUID[F].make[CommandId].flatMap { cmdId =>
@@ -25,4 +25,3 @@ object Feed:
             Logger[F].info(cmd.show) >> producer.send(uniqueCmd) >> Temporal[F].sleep(300.millis)
           }
         }
-    }

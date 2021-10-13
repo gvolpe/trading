@@ -16,7 +16,7 @@ object SnapshotWriter:
   def fromClient[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotWriter[F] =
-    new SnapshotWriter[F] {
+    new SnapshotWriter[F]:
       def save(state: TradeState): F[Unit] =
         state.prices.toList.traverse_ { case (symbol, prices) =>
           redis.hSet(s"snapshot-$symbol", "ask", prices.ask.toList.asJson.noSpaces) *>
@@ -24,7 +24,6 @@ object SnapshotWriter:
             redis.hSet(s"snapshot-$symbol", "high", prices.high.show) *>
             redis.hSet(s"snapshot-$symbol", "low", prices.low.show)
         }
-    }
 
   def make[F[_]: MkRedis: MonadThrow]: Resource[F, SnapshotWriter[F]] =
     Redis[F].utf8("redis://localhost").map(fromClient[F])

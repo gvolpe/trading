@@ -22,7 +22,7 @@ object AlertEngine:
       producer: Producer[F, Alert],
       snapshots: SnapshotReader[F]
   ): AlertEngine[F] =
-    new AlertEngine[F] {
+    new AlertEngine[F]:
       val run: Stream[F, Unit] =
         Stream.eval(snapshots.latest).flatMap { maybeSt =>
           consumer.receiveM
@@ -64,4 +64,3 @@ object AlertEngine:
             }
             .void
         }
-    }

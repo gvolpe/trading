@@ -20,7 +20,7 @@ object Engine:
       producer: Producer[F, TradeEvent],
       snapshots: SnapshotReader[F]
   ): Engine[F] =
-    new Engine[F] {
+    new Engine[F]:
       def run: Stream[F, Unit] =
         Stream
           .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
@@ -42,4 +42,3 @@ object Engine:
               }
           }
           .void
-    }

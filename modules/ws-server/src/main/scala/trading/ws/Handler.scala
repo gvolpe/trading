@@ -22,7 +22,7 @@ object Handler:
   ): F[Handler[F]] =
     (Deferred[F, Either[Throwable, Unit]], Ref.of[F, Set[Symbol]](Set.empty), GenUUID[F].make[SocketId]).mapN {
       case (switch, subs, sid) =>
-        new Handler[F] {
+        new Handler[F]:
           val encode: WsOut => F[Option[WebSocketFrame]] = {
             case out @ WsOut.Notification(alert) =>
               subs.get.map(_.find(_ === alert.symbol).as(Text((out: WsOut).asJson.noSpaces)))
@@ -64,5 +64,4 @@ object Handler:
                   Logger[F].info(s"[$sid] - Unsubscribing from $symbol alerts") *>
                     subs.update(_ - symbol)
             }.onFinalize(Logger[F].info(s"[$sid] - WS connection terminated"))
-        }
     }

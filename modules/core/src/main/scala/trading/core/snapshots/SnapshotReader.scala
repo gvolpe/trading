@@ -20,7 +20,7 @@ object SnapshotReader:
   def fromClient[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotReader[F] =
-    new SnapshotReader[F] {
+    new SnapshotReader[F]:
       def latest: F[Option[TradeState]] =
         redis.keys("snapshot*").flatMap {
           _.traverseFilter { key =>
@@ -41,7 +41,6 @@ object SnapshotReader:
               case xs  => Some(TradeState(xs.toMap))
             }
         }
-    }
 
   def make[F[_]: MkRedis: MonadThrow]: Resource[F, SnapshotReader[F]] =
     Redis[F].utf8("redis://localhost").map(fromClient[F])
