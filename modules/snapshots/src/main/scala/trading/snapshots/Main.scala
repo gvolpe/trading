@@ -1,5 +1,6 @@
 package trading.snapshots
 
+import trading.core.http.Ember
 import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
 import trading.core.{ AppTopic, EventSource }
 import trading.events.TradeEvent
@@ -17,20 +18,22 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { (consumer, reader, writer) =>
-        Stream
-          .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
-          .evalTap(latest => IO.println(s">>> SNAPSHOTS: $latest"))
-          .flatMap { latest =>
-            consumer.receive
-              .mapAccumulate(latest) { (st, evt) =>
-                EventSource.runS(st)(evt.command) -> ()
-              }
-              .map(_._1)
-              .evalMap { st =>
-                IO.println(s"Saving snapshot: $st") >> writer.save(st)
-              }
-          }
+      .flatMap { (server, consumer, reader, writer) =>
+        Stream.eval(server.useForever).concurrently {
+          Stream
+            .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
+            .evalTap(latest => IO.println(s">>> SNAPSHOTS: $latest"))
+            .flatMap { latest =>
+              consumer.receive
+                .mapAccumulate(latest) { (st, evt) =>
+                  EventSource.runS(st)(evt.command) -> ()
+                }
+                .map(_._1)
+                .evalMap { st =>
+                  IO.println(s"Saving snapshot: $st") >> writer.save(st)
+                }
+            }
+        }
       }
       .compile
       .drain
@@ -54,4 +57,5 @@ object Main extends IOApp.Simple:
       reader = SnapshotReader.fromClient(redis)
       writer = SnapshotWriter.fromClient(redis)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
-    } yield (consumer, reader, writer)
+      server = Ember.default[IO]
+    } yield (server, consumer, reader, writer)

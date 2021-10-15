@@ -1,15 +1,15 @@
 import Dependencies._
 
-ThisBuild / scalaVersion := "3.1.0-RC3"
-ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / organization := "dev.profunktor"
+ThisBuild / scalaVersion     := "3.1.0-RC3"
+ThisBuild / version          := "0.1.0-SNAPSHOT"
+ThisBuild / organization     := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
 
 ThisBuild / scalafixDependencies += Libraries.organizeImports
 
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
-Compile / run / fork := true
+Compile / run / fork          := true
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val commonSettings = List(
@@ -23,6 +23,8 @@ val commonSettings = List(
     Libraries.circeExtras,
     Libraries.fs2,
     Libraries.fs2Kafka,
+    Libraries.http4sDsl,
+    Libraries.http4sServer,
     Libraries.kittens,
     Libraries.monocleCore,
     Libraries.neutronCore,
@@ -78,9 +80,7 @@ lazy val wsServer = (project in file("modules/ws-server"))
   .settings(commonSettings: _*)
   .settings(
     libraryDependencies ++= List(
-      Libraries.http4sDsl,
-      Libraries.http4sCirce,
-      Libraries.http4sServer
+      Libraries.http4sCirce
     )
   )
   .dependsOn(core)

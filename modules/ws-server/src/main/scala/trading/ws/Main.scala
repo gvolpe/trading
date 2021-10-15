@@ -1,17 +1,15 @@
 package trading.ws
 
 import trading.core.AppTopic
+import trading.core.http.Ember
 import trading.domain.Alert
 import trading.lib.Consumer
 import trading.lib.inject.given
 
 import cats.effect.*
-import com.comcast.ip4s.*
 import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
 import fs2.Stream
 import fs2.concurrent.Topic
-import org.http4s.ember.server.EmberServerBuilder
-import org.http4s.implicits.*
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -43,11 +41,5 @@ object Main extends IOApp.Simple:
       _      <- Resource.eval(IO.println(">>> Initializing ws-server service <<<"))
       alerts <- Consumer.pulsar[IO, Alert](pulsar, topic, sub).map(_.receive)
       topic  <- Resource.eval(Topic[IO, Alert])
-      server = EmberServerBuilder
-        .default[IO]
-        .withHost(host"0.0.0.0")
-        .withPort(port"9000")
-        .withHttpWebSocketApp(Routes[IO](_, topic).routes.orNotFound)
-        .build
-        .evalMap(Ember.showBanner[IO])
+      server = Ember.websocket[IO](WsRoutes[IO](_, topic).routes)
     } yield (alerts, topic, server)

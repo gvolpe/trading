@@ -2,6 +2,7 @@ package trading.processor
 
 import trading.commands.TradeCommand
 import trading.core.AppTopic
+import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
 import trading.events.TradeEvent
 import trading.lib.inject.given
@@ -16,7 +17,9 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap(_.run)
+      .flatMap { (server, engine) =>
+        Stream.eval(server.useForever).concurrently(engine.run)
+      }
       .compile
       .drain
 
@@ -38,4 +41,5 @@ object Main extends IOApp.Simple:
       producer  <- Producer.pulsar[IO, TradeEvent](pulsar, eventsTopic)
       snapshots <- SnapshotReader.make[IO]
       consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
-    } yield Engine.make(consumer, producer, snapshots)
+      server = Ember.default[IO]
+    } yield server -> Engine.make(consumer, producer, snapshots)
