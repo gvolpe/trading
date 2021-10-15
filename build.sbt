@@ -28,6 +28,7 @@ val commonSettings = List(
     Libraries.neutronCore,
     Libraries.neutronCirce,
     Libraries.redis4catsEffects,
+    Libraries.refinedCore,
     Libraries.monocleLaw       % Test,
     Libraries.scalacheck       % Test,
     Libraries.weaverCats       % Test,

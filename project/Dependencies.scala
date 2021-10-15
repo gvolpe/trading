@@ -13,6 +13,7 @@ object Dependencies {
     val monocle    = "3.1.0"
     val neutron    = "0.1.0-SNAPSHOT"
     val redis4cats = "1.0.0"
+    val refined    = "0.9.27"
 
     val scalacheck = "1.15.4"
     val weaver     = "0.7.6"
@@ -41,8 +42,9 @@ object Dependencies {
     val neutronCirce      = "dev.profunktor" %% "neutron-circe"      % V.neutron
     val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
-    val monocleCore  = "dev.optics" %% "monocle-core"  % V.monocle
-    val monocleMacro = "dev.optics" %% "monocle-macro" % V.monocle
+    val monocleCore = "dev.optics" %% "monocle-core" % V.monocle
+
+    val refinedCore = "eu.timepit" %% "refined" % V.refined
 
     // test
     val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle
