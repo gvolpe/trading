@@ -17,7 +17,7 @@ type Timestamp = Timestamp.Type
 object Timestamp extends Newtype[Instant]
 
 type Quantity = Quantity.Type
-object Quantity extends Newtype[Int]
+object Quantity extends NumNewtype[Int]
 
 type Source = String
 object Source extends Newtype[String]
