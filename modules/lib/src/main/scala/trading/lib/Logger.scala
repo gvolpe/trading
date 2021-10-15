@@ -8,7 +8,7 @@ trait Logger[F[_]]:
   def warn(str: => String): F[Unit]
 
 object Logger:
-  def apply[F[_]](using ev: Logger[F]): Logger[F] = ev
+  def apply[F[_]: Logger]: Logger[F] = summon
 
   given forConsole[F[_]](using C: Console[F]): Logger[F] with
     def info(str: => String): F[Unit]  = C.println(s"[info] - $str")

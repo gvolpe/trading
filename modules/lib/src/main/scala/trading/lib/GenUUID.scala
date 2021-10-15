@@ -11,7 +11,7 @@ trait GenUUID[F[_]]:
   def make[A: IsUUID]: F[A]
 
 object GenUUID:
-  def apply[F[_]](using ev: GenUUID[F]): GenUUID[F] = ev
+  def apply[F[_]: GenUUID]: GenUUID[F] = summon
 
   given forSync[F[_]](using F: Sync[F]): GenUUID[F] with
     def make[A: IsUUID]: F[A] =
