@@ -4,7 +4,7 @@ import cats.Monad
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 
-final case class HealthRoutes[F[_]: Monad]() extends Http4sDsl[F]:
+final class HealthRoutes[F[_]: Monad] extends Http4sDsl[F]:
 
   // format: off
   val routes: HttpRoutes[F] = HttpRoutes.of {

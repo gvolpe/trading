@@ -33,12 +33,12 @@ object Engine:
                     Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
                   case Some(cmd) =>
                     val (nst, events) = EventSource.run(st)(cmd)
-                    for {
+                    for
                       evs <- events.traverse(Time[F].timestamp.map(_))
                       _   <- evs.traverse(producer.send)
                       nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(evs.map(_.command), _))
                       _ <- consumer.ack(msgId).attempt.void // don't care if this fails (de-dup)
-                    } yield (nst -> nds) -> ()
+                    yield (nst -> nds) -> ()
               }
           }
           .void

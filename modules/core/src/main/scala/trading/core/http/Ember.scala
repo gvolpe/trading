@@ -26,13 +26,13 @@ object Ember:
   ): Resource[F, Server] =
     make[F]
       .withHttpWebSocketApp { ws =>
-        (f(ws) <+> HealthRoutes[F]().routes).orNotFound
+        (f(ws) <+> HealthRoutes[F].routes).orNotFound
       }
       .build
       .evalTap(showBanner[F])
 
   def default[F[_]: Async: Console]: Resource[F, Server] =
     make[F]
-      .withHttpApp(HealthRoutes[F]().routes.orNotFound)
+      .withHttpApp(HealthRoutes[F].routes.orNotFound)
       .build
       .evalTap(showBanner[F])

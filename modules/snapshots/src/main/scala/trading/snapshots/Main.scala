@@ -50,7 +50,7 @@ object Main extends IOApp.Simple:
       .build
 
   def resources =
-    for {
+    for
       pulsar <- Pulsar.make[IO](config.url)
       _      <- Resource.eval(IO.println(">>> Initializing snapshots service <<<"))
       redis  <- Redis[IO].utf8("redis://localhost")
@@ -58,4 +58,4 @@ object Main extends IOApp.Simple:
       writer = SnapshotWriter.fromClient(redis)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
       server = Ember.default[IO]
-    } yield (server, consumer, reader, writer)
+    yield (server, consumer, reader, writer)

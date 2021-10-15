@@ -10,7 +10,7 @@ import org.http4s.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.websocket.WebSocketBuilder
 
-final case class WsRoutes[F[_]: Concurrent: GenUUID: Logger](
+final class WsRoutes[F[_]: Concurrent: GenUUID: Logger](
     ws: WebSocketBuilder[F],
     topic: Topic[F, Alert]
 ) extends Http4sDsl[F]:

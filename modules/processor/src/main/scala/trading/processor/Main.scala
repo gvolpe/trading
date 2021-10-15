@@ -35,11 +35,11 @@ object Main extends IOApp.Simple:
       .build
 
   def resources =
-    for {
+    for
       pulsar    <- Pulsar.make[IO](config.url)
       _         <- Resource.eval(IO.println(">>> Initializing processor service <<<"))
       producer  <- Producer.pulsar[IO, TradeEvent](pulsar, eventsTopic)
       snapshots <- SnapshotReader.make[IO]
       consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
       server = Ember.default[IO]
-    } yield server -> Engine.make(consumer, producer, snapshots)
+    yield server -> Engine.make(consumer, producer, snapshots)

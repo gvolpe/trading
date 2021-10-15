@@ -53,8 +53,8 @@ object KafkaDemo extends IOApp.Simple:
   val topic = "trading-kafka"
 
   def resources =
-    for {
+    for
       _        <- Resource.eval(IO.println(">>> Initializing kafka demo <<<"))
       consumer <- Consumer.kafka[IO, TradeEvent](consumerSettings, topic)
       producer <- Producer.kafka[IO, TradeEvent](producerSettings, topic)
-    } yield consumer -> producer
+    yield consumer -> producer

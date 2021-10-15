@@ -35,11 +35,11 @@ object Main extends IOApp.Simple:
   val eventsTopic = AppTopic.TradingEvents.make(config)
 
   def resources =
-    for {
+    for
       pulsar    <- Pulsar.make[IO](config.url)
       _         <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
       snapshots <- SnapshotReader.make[IO]
       producer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic)
       consumer  <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
       server = Ember.default[IO]
-    } yield server -> AlertEngine.make[IO](consumer, producer, snapshots)
+    yield server -> AlertEngine.make[IO](consumer, producer, snapshots)

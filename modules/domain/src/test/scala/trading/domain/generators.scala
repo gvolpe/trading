@@ -73,7 +73,7 @@ object generators:
     Gen.const(Timestamp(Instant.parse("2021-09-16T14:00:00.00Z")))
 
   val createCommandGen: Gen[TradeCommand.Create] =
-    for {
+    for
       i <- commandIdGen
       s <- symbolGen
       a <- tradeActionGen
@@ -81,10 +81,10 @@ object generators:
       q <- quantityGen
       c <- sourceGen
       t <- timestampGen
-    } yield TradeCommand.Create(i, s, a, p, q, c, t)
+    yield TradeCommand.Create(i, s, a, p, q, c, t)
 
   val updateCommandGen: Gen[TradeCommand.Update] =
-    for {
+    for
       i <- commandIdGen
       s <- symbolGen
       a <- tradeActionGen
@@ -92,17 +92,17 @@ object generators:
       q <- quantityGen
       c <- sourceGen
       t <- timestampGen
-    } yield TradeCommand.Update(i, s, a, p, q, c, t)
+    yield TradeCommand.Update(i, s, a, p, q, c, t)
 
   val deleteCommandGen: Gen[TradeCommand.Delete] =
-    for {
+    for
       i <- commandIdGen
       s <- symbolGen
       a <- tradeActionGen
       p <- priceGen
       c <- sourceGen
       t <- timestampGen
-    } yield TradeCommand.Delete(i, s, a, p, c, t)
+    yield TradeCommand.Delete(i, s, a, p, c, t)
 
   val tradeCommandGen: Gen[TradeCommand] =
     Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
@@ -114,34 +114,34 @@ object generators:
 
   val askPricesGen: Gen[Prices.Ask] =
     Gen.mapOf[AskPrice, Quantity] {
-      for {
+      for
         p <- priceGen
         q <- quantityGen
-      } yield p -> q
+      yield p -> q
     }
 
   val bidPricesGen: Gen[Prices.Bid] =
     Gen.mapOf[BidPrice, Quantity] {
-      for {
+      for
         p <- priceGen
         q <- quantityGen
-      } yield p -> q
+      yield p -> q
     }
 
   val pricesGen: Gen[Prices] =
-    for {
+    for
       a <- askPricesGen
       b <- bidPricesGen
       h <- priceGen
       l <- priceGen
-    } yield Prices(a, b, h, l)
+    yield Prices(a, b, h, l)
 
   val tradeStateGen: Gen[TradeState] =
     Gen
       .mapOf[Symbol, Prices] {
-        for {
+        for
           s <- symbolGen
           p <- pricesGen
-        } yield s -> p
+        yield s -> p
       }
       .map(TradeState.apply)

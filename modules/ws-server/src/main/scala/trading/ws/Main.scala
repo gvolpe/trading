@@ -36,10 +36,10 @@ object Main extends IOApp.Simple:
   val topic = AppTopic.Alerts.make(config)
 
   def resources =
-    for {
+    for
       pulsar <- Pulsar.make[IO](config.url)
       _      <- Resource.eval(IO.println(">>> Initializing ws-server service <<<"))
       alerts <- Consumer.pulsar[IO, Alert](pulsar, topic, sub).map(_.receive)
       topic  <- Resource.eval(Topic[IO, Alert])
       server = Ember.websocket[IO](WsRoutes[IO](_, topic).routes)
-    } yield (alerts, topic, server)
+    yield (alerts, topic, server)

@@ -31,9 +31,9 @@ object Main extends IOApp.Simple:
     cmd => ShardKey.Of(cmd.symbol.value.getBytes(UTF_8))
 
   def resources =
-    for {
+    for
       pulsar   <- Pulsar.make[IO](config.url)
       _        <- Resource.eval(IO.println(">>> Initializing feed service <<<"))
       producer <- Producer.pulsar[IO, TradeCommand](pulsar, topic, cmdShardKey)
       server = Ember.default[IO]
-    } yield server -> Feed.random(producer)
+    yield server -> Feed.random(producer)
