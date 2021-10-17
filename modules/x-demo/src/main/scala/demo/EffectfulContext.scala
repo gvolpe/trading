@@ -34,7 +34,7 @@ object EffectfulContext extends IOApp.Simple:
 
   val p1: Ctx ?=> IO[Unit] =
     val ctx = summon[Ctx]
-    IO.println("Running program #1")
+    IO.println("Running program #1") *> p2
 
   def p2(using ctx: Ctx): IO[Unit] =
     IO.println("Running program #2") *> p4 *>
@@ -57,5 +57,5 @@ object EffectfulContext extends IOApp.Simple:
 
   val run: IO[Unit] =
     withCtx {
-      p1 &> p2 &> p3
+      p1 &> p3
     }
