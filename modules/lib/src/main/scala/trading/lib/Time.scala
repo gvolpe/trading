@@ -13,5 +13,5 @@ trait Time[F[_]]:
 object Time:
   def apply[F[_]: Time]: Time[F] = summon
 
-  given forSync[F[_]](using F: Sync[F]): Time[F] with
-    def timestamp: F[Timestamp] = F.delay(Instant.now()).map(t => Timestamp(t))
+  given [F[_]: Sync]: Time[F] with
+    def timestamp: F[Timestamp] = Sync[F].delay(Instant.now()).map(t => Timestamp(t))

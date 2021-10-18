@@ -13,6 +13,6 @@ trait GenUUID[F[_]]:
 object GenUUID:
   def apply[F[_]: GenUUID]: GenUUID[F] = summon
 
-  given forSync[F[_]](using F: Sync[F]): GenUUID[F] with
+  given [F[_]: Sync]: GenUUID[F] with
     def make[A: IsUUID]: F[A] =
-      F.delay(UUID.randomUUID()).map(IsUUID[A].iso.get)
+      Sync[F].delay(UUID.randomUUID()).map(IsUUID[A].iso.get)
