@@ -8,14 +8,13 @@ import cats.{ Applicative, Eq, Show }
 import io.circe.Codec
 import monocle.Traversal
 
-sealed trait TradeCommand derives Codec.AsObject, Eq, Show {
+sealed trait TradeCommand derives Codec.AsObject, Eq, Show:
   def id: CommandId
   def symbol: Symbol
   def tradeAction: TradeAction
   def price: Price
   def source: Source
   def timestamp: Timestamp
-}
 
 object TradeCommand:
   final case class Create(

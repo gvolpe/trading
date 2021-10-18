@@ -21,13 +21,13 @@ object EffectfulContext extends IOApp.Simple:
       log: Log
   )
 
-  def withCtx(f: Ctx ?=> IO[Unit]): IO[Unit] =
-    val mkCtx = for
-      id <- Resource.eval(IO(UUID.randomUUID()))
-      sp <- Supervisor[IO]
-      lg <- Resource.eval(Ref.of[IO, List[String]](List.empty))
-    yield Ctx(id, sp, Log(lg))
+  private val mkCtx = for
+    id <- Resource.eval(IO(UUID.randomUUID()))
+    sp <- Supervisor[IO]
+    lg <- Resource.eval(Ref.of[IO, List[String]](List.empty))
+  yield Ctx(id, sp, Log(lg))
 
+  def withCtx(f: Ctx ?=> IO[Unit]): IO[Unit] =
     mkCtx.use { ctx =>
       f(using ctx) *> ctx.log.get.flatMap(_.traverse_(IO.println))
     }
@@ -57,5 +57,15 @@ object EffectfulContext extends IOApp.Simple:
 
   val run: IO[Unit] =
     withCtx {
+      p1 &> p3
+    }
+
+  val run2: IO[Unit] =
+    mkCtx.use { case (given Ctx) =>
+      p1 &> p3
+    }
+
+  val run3: IO[Unit] =
+    mkCtx.use { implicit ctx =>
       p1 &> p3
     }

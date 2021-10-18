@@ -5,10 +5,9 @@ import trading.domain.*
 
 import io.circe.Codec
 
-sealed trait TradeEvent derives Codec.AsObject {
+sealed trait TradeEvent derives Codec.AsObject:
   def command: TradeCommand
   def timestamp: Timestamp
-}
 
 object TradeEvent:
   final case class CommandExecuted(
