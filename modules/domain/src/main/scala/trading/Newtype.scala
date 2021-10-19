@@ -25,10 +25,6 @@ abstract class Newtype[A](using
 
   extension (t: Type) inline def value: A = t
 
-  extension [F[_]](cv: ConfigValue[F, A])
-    def withDefault(value: A): ConfigValue[F, Type] =
-      cv.default(value)
-
   given Eq[Type]                    = eqv
   given Order[Type]                 = ord
   given Show[Type]                  = shw

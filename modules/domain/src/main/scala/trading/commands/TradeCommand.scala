@@ -2,7 +2,8 @@ package trading.commands
 
 import trading.domain.{ given, * }
 
-import cats.derived.semiauto.{ given, * }
+// FIXME: importing all `given` yield ambiguous implicits
+import cats.derived.semiauto.{ coproductEq, product, productEq, * }
 import cats.syntax.all.*
 import cats.{ Applicative, Eq, Show }
 import io.circe.Codec
