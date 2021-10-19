@@ -10,6 +10,12 @@ import io.circe.*
 
 export OrphanInstances.given
 
+type PulsarURI = PulsarURI.Type
+object PulsarURI extends Newtype[String]
+
+type RedisURI = RedisURI.Type
+object RedisURI extends Newtype[String]
+
 type Symbol = Symbol.Type
 object Symbol extends Newtype[String]
 

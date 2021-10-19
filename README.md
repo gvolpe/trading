@@ -118,4 +118,4 @@ It consumes `Alert` messages and sends them over Web Sockets whenever there's an
 
 ### X Demo
 
-It showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
+It contains all the standalone examples shown in the book as well. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module. I

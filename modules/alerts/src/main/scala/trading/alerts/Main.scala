@@ -9,7 +9,7 @@ import trading.lib.inject.given
 import trading.lib.{ Consumer, Producer }
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
+import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 
@@ -23,22 +23,20 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  val config = Config.Builder.default
-
   val sub =
     Subscription.Builder
       .withName("alerts-sub")
       .withType(Subscription.Type.Shared)
       .build
 
-  val alertsTopic = AppTopic.Alerts.make(config)
-  val eventsTopic = AppTopic.TradingEvents.make(config)
-
   def resources =
     for
-      pulsar    <- Pulsar.make[IO](config.url)
-      _         <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
-      snapshots <- SnapshotReader.make[IO]
+      config <- Resource.eval(Config.load[IO])
+      pulsar <- Pulsar.make[IO](config.pulsar.url)
+      _      <- Resource.eval(IO.println(">>> Initializing alerts service <<<"))
+      alertsTopic = AppTopic.Alerts.make(config.pulsar)
+      eventsTopic = AppTopic.TradingEvents.make(config.pulsar)
+      snapshots <- SnapshotReader.make[IO](config.redisUri)
       producer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic)
       consumer  <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
       server = Ember.default[IO]

@@ -42,5 +42,5 @@ object SnapshotReader:
             }
         }
 
-  def make[F[_]: MkRedis: MonadThrow]: Resource[F, SnapshotReader[F]] =
-    Redis[F].utf8("redis://localhost").map(fromClient[F])
+  def make[F[_]: MkRedis: MonadThrow](uri: RedisURI): Resource[F, SnapshotReader[F]] =
+    Redis[F].utf8(uri.value).map(fromClient[F])

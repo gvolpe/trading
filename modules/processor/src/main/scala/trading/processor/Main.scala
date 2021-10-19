@@ -4,6 +4,7 @@ import trading.commands.TradeCommand
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
+import trading.domain.RedisURI
 import trading.events.TradeEvent
 import trading.lib.inject.given
 import trading.lib.{ Consumer, Producer }
@@ -39,7 +40,7 @@ object Main extends IOApp.Simple:
       pulsar    <- Pulsar.make[IO](config.url)
       _         <- Resource.eval(IO.println(">>> Initializing processor service <<<"))
       producer  <- Producer.pulsar[IO, TradeEvent](pulsar, eventsTopic)
-      snapshots <- SnapshotReader.make[IO]
+      snapshots <- SnapshotReader.make[IO](RedisURI("redis://localhost"))
       consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
       server = Ember.default[IO]
     yield server -> Engine.make(consumer, producer, snapshots)

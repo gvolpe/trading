@@ -1,0 +1,101 @@
+version: '3.6'
+
+networks:
+  trading-net: {}
+
+services:
+  pulsar:
+    restart: always
+    image: apachepulsar/pulsar:2.8.1
+    ports:
+      - "6650:6650"
+      - "8080:8080"
+    command: >
+      /bin/bash -c "bin/pulsar standalone"
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
+
+  redis:
+    restart: always
+    image: redis:6.0.8
+    ports:
+      - "6379:6379"
+    environment:
+      - DEBUG=false
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  alerts:
+    restart: always
+    image: trading-alerts:latest
+    ports:
+      - "9000:8080"
+    networks:
+      - trading-net
+    environment:
+      - REDIS_URI=redis://redis
+      - PULSAR_URI=pulsar://pulsar:6650
+    depends_on:
+      pulsar:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  processor:
+    restart: always
+    image: trading-processor:latest
+    ports:
+      - "9001:8080"
+    networks:
+      - trading-net
+    environment:
+      - REDIS_URI=redis://redis
+      - PULSAR_URI=pulsar://pulsar:6650
+    depends_on:
+      pulsar:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  snapshots:
+    restart: always
+    image: trading-snapshots:latest
+    ports:
+      - "9002:8080"
+    networks:
+      - trading-net
+    environment:
+      - REDIS_URI=redis://redis
+      - PULSAR_URI=pulsar://pulsar:6650
+    depends_on:
+      pulsar:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ws-server:
+    restart: always
+    image: trading-ws:latest
+    ports:
+      - "9003:8080"
+    networks:
+      - trading-net
+    environment:
+      - REDIS_URI=redis://redis
+      - PULSAR_URI=pulsar://pulsar:6650
+    depends_on:
+      pulsar:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
