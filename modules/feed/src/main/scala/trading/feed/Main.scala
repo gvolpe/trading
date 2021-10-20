@@ -10,7 +10,7 @@ import trading.lib.inject.given
 
 import cats.effect.*
 import cats.syntax.all.*
-import dev.profunktor.pulsar.{ Config, Pulsar, ShardKey }
+import dev.profunktor.pulsar.{ Pulsar, ShardKey }
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -23,17 +23,15 @@ object Main extends IOApp.Simple:
         .drain
     }
 
-  val config = Config.Builder.default
-
-  val topic = AppTopic.TradingCommands.make(config)
-
   val cmdShardKey: TradeCommand => ShardKey =
     cmd => ShardKey.Of(cmd.symbol.value.getBytes(UTF_8))
 
   def resources =
     for
-      pulsar   <- Pulsar.make[IO](config.url)
-      _        <- Resource.eval(IO.println(">>> Initializing feed service <<<"))
+      config <- Resource.eval(Config.load[IO])
+      pulsar <- Pulsar.make[IO](config.pulsar.url)
+      _      <- Resource.eval(IO.println(">>> Initializing feed service <<<"))
+      topic = AppTopic.TradingCommands.make(config.pulsar)
       producer <- Producer.pulsar[IO, TradeCommand](pulsar, topic, cmdShardKey)
       server = Ember.default[IO]
     yield server -> Feed.random(producer)

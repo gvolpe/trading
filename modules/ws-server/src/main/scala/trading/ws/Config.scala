@@ -1,4 +1,4 @@
-package trading.alerts
+package trading.ws
 
 import cats.effect.kernel.Async
 import cats.syntax.all.*
@@ -7,13 +7,13 @@ import dev.profunktor.pulsar.Config as PulsarConfig
 
 import trading.domain.*
 
-final case class AlertsConfig(
+final case class WsConfig(
     pulsar: PulsarConfig,
     redisUri: RedisURI
 )
 
 object Config:
-  def load[F[_]: Async]: F[AlertsConfig] =
+  def load[F[_]: Async]: F[WsConfig] =
     (
       env("PULSAR_URI").as[PulsarURI].fallback("pulsar://localhost:6650"),
       env("REDIS_URI").as[RedisURI].fallback("redis://localhost").covary[F]
@@ -24,5 +24,5 @@ object Config:
           .withNameSpace("default")
           .withURL(pulsarUri.value)
           .build
-      AlertsConfig(pulsar, redisUri)
+      WsConfig(pulsar, redisUri)
     }.load[F]

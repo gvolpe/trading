@@ -7,7 +7,8 @@ import trading.lib.Consumer
 import trading.lib.inject.given
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
+
+import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import fs2.Stream
 import fs2.concurrent.Topic
 
@@ -25,21 +26,19 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  val config = Config.Builder.default
-
   val sub =
     Subscription.Builder
       .withName("ws-server-sub")
       .withType(Subscription.Type.Shared)
       .build
 
-  val topic = AppTopic.Alerts.make(config)
-
   def resources =
     for
-      pulsar <- Pulsar.make[IO](config.url)
+      config <- Resource.eval(Config.load[IO])
+      pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(IO.println(">>> Initializing ws-server service <<<"))
-      alerts <- Consumer.pulsar[IO, Alert](pulsar, topic, sub).map(_.receive)
+      ptopic = AppTopic.Alerts.make(config.pulsar)
+      alerts <- Consumer.pulsar[IO, Alert](pulsar, ptopic, sub).map(_.receive)
       topic  <- Resource.eval(Topic[IO, Alert])
       server = Ember.websocket[IO](WsRoutes[IO](_, topic).routes)
     yield (alerts, topic, server)

@@ -8,7 +8,7 @@ trait IsUUID[A]:
   def iso: Iso[UUID, A]
 
 object IsUUID:
-  def apply[A](using ev: IsUUID[A]): IsUUID[A] = ev
+  def apply[A: IsUUID]: IsUUID[A] = summon
 
   given IsUUID[UUID] with
     def iso: Iso[UUID, UUID] =

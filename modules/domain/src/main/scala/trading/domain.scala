@@ -3,12 +3,17 @@ package trading.domain
 import java.time.Instant
 import java.util.UUID
 
-import trading.{ IdNewtype, Newtype, NumNewtype }
+import trading.{ IdNewtype, Newtype, NumNewtype, Wrapper }
 
 import cats.{ Eq, Order, Show }
+import ciris.ConfigValue
 import io.circe.*
 
 export OrphanInstances.given
+
+extension [F[_], A](cv: ConfigValue[F, A])
+  def fallback[Raw](value: Raw)(using ev: Wrapper[Raw, A]): ConfigValue[F, A] =
+    cv.default(ev.iso.get(value))
 
 type PulsarURI = PulsarURI.Type
 object PulsarURI extends Newtype[String]

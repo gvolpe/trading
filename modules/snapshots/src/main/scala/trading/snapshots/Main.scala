@@ -9,7 +9,7 @@ import trading.lib.inject.given
 import trading.state.TradeState
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Config, Pulsar, Subscription }
+import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
@@ -38,10 +38,6 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  val config = Config.Builder.default
-
-  val topic = AppTopic.TradingEvents.make(config)
-
   // Failover subscription (it's enough to deploy two instances)
   val sub =
     Subscription.Builder
@@ -51,9 +47,11 @@ object Main extends IOApp.Simple:
 
   def resources =
     for
-      pulsar <- Pulsar.make[IO](config.url)
+      config <- Resource.eval(Config.load[IO])
+      pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(IO.println(">>> Initializing snapshots service <<<"))
-      redis  <- Redis[IO].utf8("redis://localhost")
+      redis  <- Redis[IO].utf8(config.redisUri.value)
+      topic  = AppTopic.TradingEvents.make(config.pulsar)
       reader = SnapshotReader.fromClient(redis)
       writer = SnapshotWriter.fromClient(redis)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)

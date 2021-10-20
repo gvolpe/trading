@@ -25,6 +25,10 @@ abstract class Newtype[A](using
 
   extension (t: Type) inline def value: A = t
 
+  given Wrapper[A, Type] with
+    def iso: Iso[A, Type] =
+      Iso[A, Type](apply(_))(_.value)
+
   given Eq[Type]                    = eqv
   given Order[Type]                 = ord
   given Show[Type]                  = shw

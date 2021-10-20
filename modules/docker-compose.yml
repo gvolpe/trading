@@ -99,3 +99,27 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  feed:
+    restart: always
+    image: trading-feed:latest
+    ports:
+      - "9004:8080"
+    networks:
+      - trading-net
+    environment:
+      - REDIS_URI=redis://redis
+      - PULSAR_URI=pulsar://pulsar:6650
+    depends_on:
+      pulsar:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      alerts:
+        condition: service_started
+      processor:
+        condition: service_started
+      snapshots:
+        condition: service_started
+      ws-server:
+        condition: service_started
