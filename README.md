@@ -65,6 +65,8 @@ To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
 $ docker-compose -f kafka.yml up
 ```
 
+Notice that there's another `docker-compose.yml` under `modules/` that starts both Pulsar and Redis, as well as all the application in its own network, if you're only after running the entire application instead of doing local development.
+
 ## Services
 
 The back-end application consists of 8 modules, from which 5 are deployable applications, and 3 are just shared modules. There's also a demo module and a web application.
@@ -106,7 +108,7 @@ The brain of the trading application. It consumes `TradeCommand`s, processes the
 
 ### Snapshots
 
-It consumes `TradeEvent`s and recreates the `TradeState` that is persisted as a snapshot every configurable amount of events.
+It consumes `TradeEvent`s and recreates the `TradeState` that is persisted as a snapshot, running as a single instance in fail-over mode.
 
 ### Alerts
 

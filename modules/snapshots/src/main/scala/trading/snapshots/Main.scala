@@ -28,8 +28,7 @@ object Main extends IOApp.Simple:
                 .mapAccumulate(latest) { (st, evt) =>
                   EventSource.runS(st)(evt.command) -> ()
                 }
-                .map(_._1)
-                .evalMap { st =>
+                .evalMap { (st, _) =>
                   IO.println(s"Saving snapshot: $st") >> writer.save(st)
                 }
             }
