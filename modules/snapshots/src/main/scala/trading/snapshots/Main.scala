@@ -52,7 +52,7 @@ object Main extends IOApp.Simple:
       redis  <- Redis[IO].utf8(config.redisUri.value)
       topic  = AppTopic.TradingEvents.make(config.pulsar)
       reader = SnapshotReader.fromClient(redis)
-      writer = SnapshotWriter.fromClient(redis)
+      writer = SnapshotWriter.fromClient(redis, config.keyExpiration)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
       server = Ember.default[IO]
     yield (server, consumer, reader, writer)

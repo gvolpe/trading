@@ -1,5 +1,7 @@
 package trading.domain
 
+import scala.concurrent.duration.FiniteDuration
+
 import java.time.Instant
 import java.util.UUID
 
@@ -20,6 +22,9 @@ object PulsarURI extends Newtype[String]
 
 type RedisURI = RedisURI.Type
 object RedisURI extends Newtype[String]
+
+type KeyExpiration = KeyExpiration.Type
+object KeyExpiration extends Newtype[FiniteDuration]
 
 type Symbol = Symbol.Type
 object Symbol extends Newtype[String]
