@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         java:
-          - jdk16
+          - jdk17
     steps:
       - uses: actions/checkout@v2.3.2
 
@@ -26,12 +26,13 @@ jobs:
         uses: coursier/cache-action@v4.1
 
       - name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v12
+        uses: cachix/install-nix-action@v14.1
 
       - name: "Install Cachix ❄️"
-        uses: cachix/cachix-action@v8
+        uses: cachix/cachix-action@v10
         with:
-          name: neutron
+          name: feda
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: "Run with ${{ matrix.java }} 🚀"
         run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt test"
