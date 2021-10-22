@@ -15,8 +15,8 @@ import io.circe.syntax.*
 object KafkaDemo extends IOApp.Simple:
 
   val event: Option[TradeEvent] =
-    (createCommandGen.sample, timestampGen.sample).mapN { (cmd, ts) =>
-      TradeEvent.CommandExecuted(cmd, ts)
+    (eventIdGen.sample, createCommandGen.sample, timestampGen.sample).mapN { (id, cmd, ts) =>
+      TradeEvent.CommandExecuted(id, cmd, ts)
     }
 
   def run: IO[Unit] =

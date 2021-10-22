@@ -27,7 +27,7 @@ object Main extends IOApp.Simple:
             .flatMap { latest =>
               consumer.receiveM
                 .mapAccumulate(latest) { case (st, Consumer.Msg(msgId, evt)) =>
-                  EventSource.runS(st)(evt.command) -> (msgId -> evt.command.id)
+                  EventSource.runS(st)(evt.command) -> (msgId -> evt.id)
                 }
                 .evalMap { case (st, (msdId, evId)) =>
                   IO.println(s">>> Event ID: ${evId}") *>

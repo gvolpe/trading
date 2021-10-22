@@ -41,6 +41,9 @@ object Source extends Newtype[String]
 type CommandId = CommandId.Type
 object CommandId extends IdNewtype
 
+type EventId = EventId.Type
+object EventId extends IdNewtype
+
 type SocketId = SocketId.Type
 object SocketId extends IdNewtype
 

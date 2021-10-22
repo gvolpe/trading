@@ -27,7 +27,7 @@ object AlertEngine:
         Stream.eval(snapshots.latest).flatMap { maybeSt =>
           consumer.receiveM
             .evalMapAccumulate(maybeSt.getOrElse(TradeState.empty) -> DedupState.empty) {
-              case ((st, ds), Consumer.Msg(msgId, CommandExecuted(command, _))) =>
+              case ((st, ds), Consumer.Msg(msgId, CommandExecuted(_, command, _))) =>
                 Conflicts.dedup(ds)(command) match
                   case None =>
                     Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)

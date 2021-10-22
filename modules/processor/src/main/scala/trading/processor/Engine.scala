@@ -3,6 +3,7 @@ package trading.processor
 import trading.commands.TradeCommand
 import trading.core.snapshots.SnapshotReader
 import trading.core.{ Conflicts, EventSource }
+import trading.domain.EventId
 import trading.events.TradeEvent
 import trading.lib.*
 import trading.state.{ DedupState, TradeState }
@@ -15,7 +16,7 @@ trait Engine[F[_]]:
   def run: Stream[F, Unit]
 
 object Engine:
-  def make[F[_]: Logger: MonadThrow: Time](
+  def make[F[_]: GenUUID: Logger: MonadThrow: Time](
       consumer: Consumer[F, TradeCommand],
       producer: Producer[F, TradeEvent],
       snapshots: SnapshotReader[F]
@@ -34,7 +35,7 @@ object Engine:
                   case Some(cmd) =>
                     val (nst, events) = EventSource.run(st)(cmd)
                     for
-                      evs <- events.traverse(Time[F].timestamp.map(_))
+                      evs <- events.traverse((GenUUID[F].make[EventId], Time[F].timestamp).mapN(_))
                       _   <- evs.traverse(producer.send)
                       nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(evs.map(_.command), _))
                       _ <- consumer.ack(msgId).attempt.void // don't care if this fails (de-dup)

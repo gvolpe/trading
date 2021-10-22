@@ -6,12 +6,13 @@ import trading.domain.*
 import io.circe.Codec
 
 sealed trait TradeEvent derives Codec.AsObject:
+  def id: EventId
   def command: TradeCommand
   def timestamp: Timestamp
 
 object TradeEvent:
-  // TODO: Missing event id
   final case class CommandExecuted(
+      id: EventId,
       command: TradeCommand,
       timestamp: Timestamp
   ) extends TradeEvent
@@ -39,5 +40,11 @@ object TradeEvent:
 // will not be snapshots processed during the downtime window, but it will process all the unacked events
 // once the service is up again. For this we use manual unsubscribe in pulsar.
 //
-// The only downside of this approach is that if the `processor` service restarts whenever `snapshots` is down,
-// it will start with an older snapshot, which will be outdated. THINK MORE ABOUT THIS.
+// The only downside of this approach is that any service that reads snapshots at startup such as `alerts`
+// and `processor`, will be reading an older snapshot version if they restart whenever the `snapshots`
+// service is down (which should be extremely rare). This is a trade-off that we must accept in a distributed
+// system. The good news is that this "eventual inconsistency" will only last as long as the `snapshots`
+// service is down, which should rarely happen too, but we need to think about the edge cases.
+//
+// Once `snapshots` is back up, we must restart all instances of `processor` and `alerts` so they start up
+// from a good snapshots version. Hey, distributed systems are hard!

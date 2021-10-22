@@ -55,6 +55,8 @@ object generators:
 
   val commandIdGen: Gen[CommandId] = Gen.uuid.map(id => CommandId(id))
 
+  val eventIdGen: Gen[EventId] = Gen.uuid.map(id => EventId(id))
+
   val symbolGen: Gen[Symbol] =
     Gen
       .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
