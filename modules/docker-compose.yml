@@ -21,6 +21,21 @@ services:
       retries: 15
       start_period: 2m
 
+  # TODO: Add custom application.properties to peek into messages
+  pulsar-manager:
+    restart: always
+    image: apachepulsar/pulsar-manager:v0.2.0
+    ports:
+      - "9527:9527"
+      - "7750:7750"
+    networks:
+      - trading-net
+    depends_on:
+      pulsar:
+        condition: service_healthy
+    environment:
+      - SPRING_CONFIGURATION_FILE=/pulsar-manager/pulsar-manager/application.properties
+
   redis:
     restart: always
     image: redis:6.0.8

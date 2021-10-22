@@ -1,5 +1,8 @@
 version: '3.6'
 
+networks:
+  dev-trading-net: {}
+
 services:
   pulsar:
     restart: always
@@ -9,11 +12,35 @@ services:
       - "8080:8080"
     command: >
       /bin/bash -c "bin/pulsar standalone"
+    networks:
+      - dev-trading-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
+
+  pulsar-manager:
+    restart: always
+    image: apachepulsar/pulsar-manager:v0.2.0
+    ports:
+      - "9527:9527"
+      - "7750:7750"
+    networks:
+      - dev-trading-net
+    depends_on:
+      pulsar:
+        condition: service_healthy
+    environment:
+      - SPRING_CONFIGURATION_FILE=/pulsar-manager/pulsar-manager/application.properties
 
   redis:
     restart: always
     image: redis:6.0.8
     ports:
       - "6379:6379"
+    networks:
+      - dev-trading-net
     environment:
       - DEBUG=false
