@@ -25,7 +25,7 @@ object Main extends IOApp.Simple:
 
   val sub =
     Subscription.Builder
-      .withName("alerts-sub")
+      .withName("alerts")
       .withType(Subscription.Type.Shared)
       .build
 

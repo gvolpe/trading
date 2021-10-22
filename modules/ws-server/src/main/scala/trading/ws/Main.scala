@@ -28,7 +28,7 @@ object Main extends IOApp.Simple:
 
   val sub =
     Subscription.Builder
-      .withName("ws-server-sub")
+      .withName("ws-server")
       .withType(Subscription.Type.Shared)
       .build
 

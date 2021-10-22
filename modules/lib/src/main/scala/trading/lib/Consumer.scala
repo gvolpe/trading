@@ -34,9 +34,11 @@ object Consumer:
   def pulsar[F[_]: Async, A: Schema](
       client: Pulsar.T,
       topic: Topic,
-      sub: Subscription
+      sub: Subscription,
+      opts: PulsarConsumer.Options[F, A] = null // default value does not work
   ): Resource[F, Consumer[F, A]] =
-    PulsarConsumer.make[F, A](client, topic, sub).map { c =>
+    val _opts = Option(opts).getOrElse(PulsarConsumer.Options[F, A]())
+    PulsarConsumer.make[F, A](client, topic, sub, _opts).map { c =>
       new Consumer[F, A]:
         def receiveM: Stream[F, Msg[A]] = c.subscribe.map(m => Msg(new String(m.id.toByteArray(), UTF_8), m.payload))
         def receive: Stream[F, A]       = c.autoSubscribe

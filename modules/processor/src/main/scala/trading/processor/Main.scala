@@ -25,7 +25,7 @@ object Main extends IOApp.Simple:
 
   val sub =
     Subscription.Builder
-      .withName("trading-app")
+      .withName("processor")
       .withType(Subscription.Type.KeyShared)
       .build
 

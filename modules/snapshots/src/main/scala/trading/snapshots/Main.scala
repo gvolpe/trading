@@ -9,10 +9,11 @@ import trading.lib.inject.given
 import trading.state.TradeState
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Pulsar, Subscription }
+import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
+import org.apache.pulsar.client.api.SubscriptionInitialPosition
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -24,12 +25,13 @@ object Main extends IOApp.Simple:
             .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
             .evalTap(latest => IO.println(s">>> SNAPSHOTS: $latest"))
             .flatMap { latest =>
-              consumer.receive
-                .mapAccumulate(latest) { (st, evt) =>
-                  EventSource.runS(st)(evt.command) -> ()
+              consumer.receiveM
+                .mapAccumulate(latest) { case (st, Consumer.Msg(msgId, evt)) =>
+                  EventSource.runS(st)(evt.command) -> (msgId -> evt.command.id)
                 }
-                .evalMap { (st, _) =>
-                  IO.println(s"Saving snapshot: $st") >> writer.save(st)
+                .evalMap { case (st, (msdId, evId)) =>
+                  IO.println(s">>> Event ID: ${evId}") *>
+                    writer.save(st) *> consumer.ack(msdId)
                 }
             }
         }
@@ -40,9 +42,15 @@ object Main extends IOApp.Simple:
   // Failover subscription (it's enough to deploy two instances)
   val sub =
     Subscription.Builder
-      .withName("snapshots-sub")
+      .withName("snapshots")
       .withType(Subscription.Type.Failover)
       .build
+
+  val consumerOptions =
+    PulsarConsumer
+      .Options[IO, TradeEvent]()
+      .withInitialPosition(SubscriptionInitialPosition.Latest)
+      .withManualUnsubscribe
 
   def resources =
     for
@@ -53,6 +61,6 @@ object Main extends IOApp.Simple:
       topic  = AppTopic.TradingEvents.make(config.pulsar)
       reader = SnapshotReader.fromClient(redis)
       writer = SnapshotWriter.fromClient(redis, config.keyExpiration)
-      consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
+      consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub, consumerOptions)
       server = Ember.default[IO]
     yield (server, consumer, reader, writer)
