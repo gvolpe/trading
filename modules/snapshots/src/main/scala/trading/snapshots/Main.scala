@@ -55,5 +55,5 @@ object Main extends IOApp.Simple:
       reader = SnapshotReader.fromClient(redis)
       writer = SnapshotWriter.fromClient(redis, config.keyExpiration)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
-      server = Ember.default[IO]
+      server = Ember.default[IO](config.httpPort)
     yield (server, consumer, reader, writer)

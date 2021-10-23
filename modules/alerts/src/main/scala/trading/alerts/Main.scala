@@ -39,5 +39,5 @@ object Main extends IOApp.Simple:
       snapshots <- SnapshotReader.make[IO](config.redisUri)
       producer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic)
       consumer  <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
-      server = Ember.default[IO]
+      server = Ember.default[IO](config.httpPort)
     yield server -> AlertEngine.make[IO](consumer, producer, snapshots)

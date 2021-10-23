@@ -33,5 +33,5 @@ object Main extends IOApp.Simple:
       _      <- Resource.eval(IO.println(">>> Initializing feed service <<<"))
       topic = AppTopic.TradingCommands.make(config.pulsar)
       producer <- Producer.pulsar[IO, TradeCommand](pulsar, topic, cmdShardKey)
-      server = Ember.default[IO]
+      server = Ember.default[IO](config.httpPort)
     yield server -> Feed.random(producer)

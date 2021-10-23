@@ -15,24 +15,25 @@ object Ember:
   private def showBanner[F[_]](using C: Console[F])(s: Server): F[Unit] =
     C.println(s"\n${Banner.mkString("\n")}\nHTTP Server started at ${s.address}")
 
-  private def make[F[_]: Async] =
+  private def make[F[_]: Async](port: Port) =
     EmberServerBuilder
       .default[F]
       .withHost(host"0.0.0.0")
-      .withPort(port"9000")
+      .withPort(port)
 
   def websocket[F[_]: Async: Console](
+      port: Port,
       f: WebSocketBuilder[F] => HttpRoutes[F]
   ): Resource[F, Server] =
-    make[F]
+    make[F](port)
       .withHttpWebSocketApp { ws =>
         (f(ws) <+> HealthRoutes[F].routes).orNotFound
       }
       .build
       .evalTap(showBanner[F])
 
-  def default[F[_]: Async: Console]: Resource[F, Server] =
-    make[F]
+  def default[F[_]: Async: Console](port: Port): Resource[F, Server] =
+    make[F](port)
       .withHttpApp(HealthRoutes[F].routes.orNotFound)
       .build
       .evalTap(showBanner[F])

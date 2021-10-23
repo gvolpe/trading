@@ -40,5 +40,5 @@ object Main extends IOApp.Simple:
       ptopic = AppTopic.Alerts.make(config.pulsar)
       alerts <- Consumer.pulsar[IO, Alert](pulsar, ptopic, sub).map(_.receive)
       topic  <- Resource.eval(Topic[IO, Alert])
-      server = Ember.websocket[IO](WsRoutes[IO](_, topic).routes)
+      server = Ember.websocket[IO](config.httpPort, WsRoutes[IO](_, topic).routes)
     yield (alerts, topic, server)
