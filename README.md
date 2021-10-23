@@ -84,11 +84,13 @@ modules
 └── x-demo
 ```
 
+TODO: Add pulsar-manager screenshot as well.
+
 ![backend](./imgs/dev.png)
 
 ### Lib
 
-Capability traits such as `Time` and potential library abstractions such as `Consumer` and `Producer`, which abstract over different implementations such as Kafka and Pulsar. Also generic typeclass instances such as `cats.Inject` based on Circe.
+Capability traits such as `Time`, `GenUUID`, and potential library abstractions such as `Consumer` and `Producer`, which abstract over different implementations such as Kafka and Pulsar.
 
 ### Domain
 

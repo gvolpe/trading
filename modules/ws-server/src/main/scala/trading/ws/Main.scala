@@ -4,11 +4,11 @@ import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.domain.Alert
 import trading.lib.Consumer
-import trading.lib.inject.given
 
 import cats.effect.*
 
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
+import dev.profunktor.pulsar.schema.circe.bytes.*
 import fs2.Stream
 import fs2.concurrent.Topic
 

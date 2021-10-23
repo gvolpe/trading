@@ -5,15 +5,14 @@ import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
 import trading.core.{ AppTopic, EventSource }
 import trading.events.TradeEvent
 import trading.lib.Consumer
-import trading.lib.inject.given
 import trading.state.TradeState
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
+import dev.profunktor.pulsar.schema.circe.bytes.*
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
-import org.apache.pulsar.client.api.SubscriptionInitialPosition
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -46,12 +45,6 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.Failover)
       .build
 
-  val consumerOptions =
-    PulsarConsumer
-      .Options[IO, TradeEvent]()
-      .withInitialPosition(SubscriptionInitialPosition.Latest)
-      .withManualUnsubscribe
-
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
@@ -61,6 +54,6 @@ object Main extends IOApp.Simple:
       topic  = AppTopic.TradingEvents.make(config.pulsar)
       reader = SnapshotReader.fromClient(redis)
       writer = SnapshotWriter.fromClient(redis, config.keyExpiration)
-      consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub, consumerOptions)
+      consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
       server = Ember.default[IO]
     yield (server, consumer, reader, writer)

@@ -6,11 +6,11 @@ import trading.commands.TradeCommand
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.lib.Producer
-import trading.lib.inject.given
 
 import cats.effect.*
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Pulsar, ShardKey }
+import dev.profunktor.pulsar.schema.circe.bytes.*
 import fs2.Stream
 
 object Main extends IOApp.Simple:
