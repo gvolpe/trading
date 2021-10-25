@@ -59,13 +59,19 @@ The back-end application is structured as a mono-repo, and it requires both Apac
 $ docker-compose up
 ```
 
+![pulsar](./imgs/pulsar.png)
+
 To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
 
 ```shell
 $ docker-compose -f kafka.yml up
 ```
 
-Notice that there's another `docker-compose.yml` under `modules/` that starts both Pulsar and Redis, as well as all the application in its own network, if you're only after running the entire application instead of doing local development.
+### Running application
+
+Notice that there's also another `docker-compose.yml` under `modules/` that starts both Pulsar and Redis, as well as all the services except `feed` in its own network, if you're only after running the entire application instead of doing local development.
+
+It is recommended to run the `feed` service directly from `sbt` whenever necessary, to avoid random data from polluting the topics.
 
 ## Services
 
@@ -83,8 +89,6 @@ modules
 ├── ws-server
 └── x-demo
 ```
-
-TODO: Add pulsar-manager screenshot as well.
 
 ![backend](./imgs/dev.png)
 
