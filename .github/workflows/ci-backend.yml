@@ -7,6 +7,7 @@ on:
       - main
     paths-ignore:
       - 'web-app/**'
+      - 'imgs/**'
       - 'README.md'
       - 'docker-compose.yml'
       - 'kafka.yml'
