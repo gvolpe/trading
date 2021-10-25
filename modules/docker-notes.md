@@ -5,7 +5,7 @@
 We need to install `curl` to the base image, used for health-checks.
 
 ```
-$ docker build -t jdk17-with-curl .
+$ docker build -t jdk17-curl .
 ```
 
 #### Compare sizes
@@ -13,7 +13,7 @@ $ docker build -t jdk17-with-curl .
 ```
 $ docker image ls --format "{{ .Size }}" openjdk:17-slim buster
 400MB
-$ docker image ls --format "{{ .Size }}" jdk17-with-curl:latest
+$ docker image ls --format "{{ .Size }}" jdk17-curl:latest
 422MB
 ```
 
