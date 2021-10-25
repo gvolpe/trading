@@ -21,7 +21,6 @@ services:
       retries: 15
       start_period: 2m
 
-  # TODO: Add custom application.properties to peek into messages
   pulsar-manager:
     restart: always
     image: apachepulsar/pulsar-manager:v0.2.0
@@ -34,7 +33,7 @@ services:
       pulsar:
         condition: service_healthy
     environment:
-      - SPRING_CONFIGURATION_FILE=/pulsar-manager/pulsar-manager/application.properties
+      - SPRING_CONFIGURATION_FILE=../pulsar-manager/application.properties
 
   redis:
     restart: always
@@ -67,6 +66,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9004/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
 
   processor:
     restart: always
@@ -84,6 +89,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9003/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
 
   snapshots:
     restart: always
@@ -101,6 +112,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9002/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
 
   ws-server:
     restart: always
@@ -118,7 +135,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
 
+  # Comment out the feed service if you don't want random data generation
   feed:
     restart: always
     image: trading-feed:latest
@@ -136,10 +160,16 @@ services:
       redis:
         condition: service_healthy
       alerts:
-        condition: service_started
+        condition: service_healthy
       processor:
-        condition: service_started
+        condition: service_healthy
       snapshots:
-        condition: service_started
+        condition: service_healthy
       ws-server:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m

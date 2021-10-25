@@ -20,7 +20,7 @@ final case class SnapshotsConfig(
 object Config:
   def load[F[_]: Async]: F[SnapshotsConfig] =
     (
-      env("HTTP_PORT").as[Port].default(port"9001"),
+      env("HTTP_PORT").as[Port].default(port"9002"),
       env("PULSAR_URI").as[PulsarURI].fallback("pulsar://localhost:6650"),
       env("REDIS_URI").as[RedisURI].fallback("redis://localhost"),
       env("SNAPSHOT_KEY_EXPIRATION").as[KeyExpiration].fallback(1.hour).covary[F]

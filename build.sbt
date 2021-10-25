@@ -42,7 +42,7 @@ val commonSettings = List(
 
 def dockerSettings(name: String) = List(
   Docker / packageName := s"trading-$name",
-  dockerBaseImage      := "openjdk:17-slim-buster",
+  dockerBaseImage      := "jdk17-with-curl:latest", // "openjdk:17-slim-buster",
   dockerExposedPorts ++= List(8080),
   makeBatScripts     := Nil,
   dockerUpdateLatest := true

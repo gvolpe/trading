@@ -33,7 +33,7 @@ services:
       pulsar:
         condition: service_healthy
     environment:
-      - SPRING_CONFIGURATION_FILE=/pulsar-manager/pulsar-manager/application.properties
+      - SPRING_CONFIGURATION_FILE=./pulsar-manager/application.properties
 
   redis:
     restart: always

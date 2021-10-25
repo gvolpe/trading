@@ -17,7 +17,7 @@ final case class FeedConfig(
 object Config:
   def load[F[_]: Async]: F[FeedConfig] =
     (
-      env("HTTP_PORT").as[Port].default(port"9003"),
+      env("HTTP_PORT").as[Port].default(port"9001"),
       env("PULSAR_URI").as[PulsarURI].fallback("pulsar://localhost:6650"),
       env("REDIS_URI").as[RedisURI].fallback("redis://localhost").covary[F]
     ).parMapN { (port, pulsarUri, redisUri) =>
