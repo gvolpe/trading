@@ -1,7 +1,5 @@
 package trading.feed
 
-import java.nio.charset.StandardCharsets.UTF_8
-
 import trading.commands.TradeCommand
 import trading.core.AppTopic
 import trading.core.http.Ember
@@ -23,15 +21,12 @@ object Main extends IOApp.Simple:
         .drain
     }
 
-  val cmdShardKey: TradeCommand => ShardKey =
-    cmd => ShardKey.Of(cmd.symbol.value.getBytes(UTF_8))
-
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(IO.println(">>> Initializing feed service <<<"))
       topic = AppTopic.TradingCommands.make(config.pulsar)
-      producer <- Producer.pulsar[IO, TradeCommand](pulsar, topic, cmdShardKey)
+      producer <- Producer.sharded[IO, TradeCommand](pulsar, topic)
       server = Ember.default[IO](config.httpPort)
     yield server -> Feed.random(producer)

@@ -9,8 +9,10 @@ ThisBuild / scalafixDependencies += Libraries.organizeImports
 
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
-Compile / run / fork          := true
+Compile / run / fork := true
+
 Global / onChangedBuildSource := ReloadOnSourceChanges
+Global / semanticdbEnabled    := true // for metals
 
 val commonSettings = List(
   scalacOptions ++= List("-source:future"),

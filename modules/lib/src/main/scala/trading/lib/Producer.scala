@@ -20,16 +20,15 @@ object Producer:
     new Producer[F, A]:
       def send(a: A): F[Unit] = Console[F].println(a)
 
-  def pulsar[F[_]: Async: Parallel, A: Schema](
+  def sharded[F[_]: Async: Parallel, A: Schema: Shard](
       client: Pulsar.T,
-      topic: Topic.Single,
-      shardKey: A => ShardKey
+      topic: Topic.Single
   ): Resource[F, Producer[F, A]] =
     PulsarProducer
       .make[F, A](
         client,
         topic,
-        PulsarProducer.Options[F, A]().withShardKey(shardKey)
+        PulsarProducer.Options[F, A]().withShardKey(Shard[A].key)
       )
       .map { p =>
         new Producer[F, A]:
@@ -40,7 +39,8 @@ object Producer:
       client: Pulsar.T,
       topic: Topic.Single
   ): Resource[F, Producer[F, A]] =
-    pulsar[F, A](client, topic, _ => ShardKey.Default)
+    given Shard[A] = Shard.default[A]
+    pulsar[F, A](client, topic)
 
   def kafka[F[_]: Async, A](
       settings: ProducerSettings[F, String, A],
