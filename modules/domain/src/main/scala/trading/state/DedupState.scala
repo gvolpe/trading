@@ -13,7 +13,7 @@ final case class DedupState(
     ids: Set[IdRegistry]
 ) derives Eq, Show:
   def removeOld(now: Timestamp): Set[IdRegistry] =
-    ids.filterNot(_.ts.value.isBefore(now.value.minusSeconds(5.minutes.toSeconds)))
+    ids.filterNot(_.ts.value.isBefore(now.value.minusSeconds(DedupState.Threshold.toSeconds)))
 
 final case class IdRegistry(
     id: CommandId,
@@ -22,3 +22,5 @@ final case class IdRegistry(
 
 object DedupState:
   def empty: DedupState = DedupState(Set.empty)
+
+  val Threshold = 5.minutes

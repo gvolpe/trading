@@ -23,7 +23,7 @@ object ConflictsSuite extends FunSuite with Checkers:
   val id2: CommandId = CommandId(UUID.randomUUID())
 
   val ts0: Timestamp = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
-  val ts1: Timestamp = Timestamp(ts0.value.minusSeconds(6.seconds.toSeconds))
+  val ts1: Timestamp = Timestamp(ts0.value.minusSeconds((DedupState.Threshold + 1.second).toSeconds))
 
   test("De-duplication logic") {
     val cd1 = TradeCommand.Create(id0, s, TradeAction.Ask, p1, q1, "test", ts0)
