@@ -80,8 +80,8 @@ update msg model =
 
         Recv input ->
             case input of
-                Attached sid ->
-                    ( { model | socketId = Just sid }
+                Attached sid users ->
+                    ( { model | socketId = Just sid, onlineUsers = users }
                     , Cmd.none
                     )
 

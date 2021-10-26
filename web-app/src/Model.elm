@@ -38,7 +38,7 @@ type alias Alert =
 
 
 type WsIn
-    = Attached SocketId
+    = Attached SocketId Int
     | CloseConnection
     | ConnectionError String
     | Notification Alert
@@ -60,6 +60,7 @@ type alias Model =
     { symbol : Symbol
     , wsUrl : WSUrl
     , socketId : Maybe SocketId
+    , onlineUsers : Int
     , alerts : Dict Symbol Alert
     , sub : Maybe Symbol
     , unsub : Maybe Symbol
@@ -84,6 +85,7 @@ init _ =
     ( { symbol = ""
       , wsUrl = "ws://localhost:9000/ws"
       , socketId = Nothing
+      , onlineUsers = 0
       , alerts = dummyAlerts -- Dict.fromList []
       , sub = Nothing
       , unsub = Nothing

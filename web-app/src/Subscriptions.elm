@@ -49,7 +49,7 @@ notificationDecoder =
 
 attachedDecoder : Decoder WsIn
 attachedDecoder =
-    map Attached (field "Attached" (field "sid" string))
+    field "Attached" (map2 Attached (field "sid" string) (field "onlineUsers" int))
 
 
 connectionErrorDecoder : Decoder WsIn

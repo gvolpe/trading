@@ -6,7 +6,7 @@ import cats.Show
 import io.circe.Codec
 
 enum WsOut derives Codec.AsObject:
-  case Attached(sid: SocketId)
+  case Attached(sid: SocketId, onlineUsers: Long)
   case Notification(alert: Alert)
 
 object WsOut:
