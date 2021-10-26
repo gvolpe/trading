@@ -5,7 +5,7 @@ import cats.syntax.all.*
 import io.circe.{ Decoder, Encoder, Json }
 
 enum VoteResult:
-  case Good, Neutral, Bad
+  case Up, Down
 
 object VoteResult:
   given Eq[VoteResult]   = Eq.fromUniversalEquals

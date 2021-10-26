@@ -9,5 +9,5 @@ final case class Author(
     name: AuthorName,
     website: Option[Website],
     reputation: Reputation,
-    forecasts: List[Int] // maybe link to published forecasts?
+    forecasts: List[ForecastId]
 ) derives Codec.AsObject, Show

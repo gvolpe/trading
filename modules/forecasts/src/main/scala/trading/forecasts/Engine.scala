@@ -1,8 +1,9 @@
 package trading.forecasts
 
 import trading.commands.ForecastCommand
-import trading.domain.EventId
-import trading.events.TradeEvent
+import trading.domain.*
+import trading.events.{ AuthorEvent, ForecastEvent }
+import trading.forecasts.store.{ AuthorStore, ForecastStore }
 import trading.lib.*
 
 import cats.MonadThrow
@@ -15,20 +16,34 @@ trait Engine[F[_]]:
 object Engine:
   def make[F[_]: GenUUID: Logger: MonadThrow: Time](
       consumer: Consumer[F, ForecastCommand],
-      producer: Producer[F, TradeEvent]
+      authors: Producer[F, AuthorEvent],
+      forecasts: Producer[F, ForecastEvent],
+      atStore: AuthorStore[F],
+      fcStore: ForecastStore[F]
   ): Engine[F] =
     new Engine[F]:
       def run: Stream[F, Unit] =
         consumer.receiveM
+          // TODO: The entire pattern-match can be made pure logic somewhere else, taking ids and timestamp
           .evalMap {
             case Consumer.Msg(id, cmd: ForecastCommand.Publish) =>
               // TODO: fetch author info, update reputation
-              Logger[F].info(cmd.toString).as(id)
+              val fc = Forecast(cmd.forecastId, cmd.authorId, cmd.symbol, cmd.tag, cmd.description, ForecastScore(0))
+              fcStore.save(fc) *> Logger[F].info(cmd.toString).as(id)
             case Consumer.Msg(id, cmd: ForecastCommand.Register) =>
-              // TODO: add author store in Redis (though, it should be in SQL), validate username is unique
-              // also publish event AuthorCreated(authorId, etc) or AuthorNotCreated(reason: Duplicate)
-              Logger[F].info(cmd.toString).as(id)
+              (GenUUID[F].make[AuthorId], GenUUID[F].make[EventId], Time[F].timestamp).tupled.flatMap {
+                (authorId, eventId, ts) =>
+                  val author = Author(authorId, cmd.authorName, cmd.authorWebsite, Reputation.empty, List.empty)
+                  atStore
+                    .save(author)
+                    .as(AuthorEvent.Registered(eventId, author.id, author.name, ts))
+                    .handleError { case AuthorStore.DuplicateAuthorError(_) =>
+                      AuthorEvent.NotRegistered(eventId, author.name, "duplicate username", ts)
+                    }
+                    .as(id)
+              }
             case Consumer.Msg(id, cmd: ForecastCommand.Vote) =>
               // TODO: fetch author info, update reputation, maybe also update article points?
               Logger[F].info(cmd.toString).as(id)
-          }.evalMap(consumer.ack)
+          }
+          .evalMap(consumer.ack)

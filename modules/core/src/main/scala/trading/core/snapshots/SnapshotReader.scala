@@ -18,7 +18,7 @@ trait SnapshotReader[F[_]]:
   */
 object SnapshotReader:
   def fromClient[F[_]: MonadThrow](
-      redis: RedisCommands[F, String, String]
+      redis: RedisCommands[F, String, String] // FIXME: this ain't a client
   ): SnapshotReader[F] =
     new SnapshotReader[F]:
       def latest: F[Option[TradeState]] =

@@ -15,7 +15,7 @@ trait SnapshotWriter[F[_]]:
 
 object SnapshotWriter:
   def fromClient[F[_]: MonadThrow](
-      redis: RedisCommands[F, String, String],
+      redis: RedisCommands[F, String, String], // FIXME: this is not a client
       exp: KeyExpiration
   ): SnapshotWriter[F] =
     new SnapshotWriter[F]:
