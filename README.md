@@ -16,6 +16,7 @@ Examples corresponding to the [Functional event-driven architecture: Powered by 
    * [Domain](#domain)
    * [Core](#core)
    * [Feed](#feed)
+   * [Forecasts](#forecasts)
    * [Processor](#processor)
    * [Snapshots](#snapshots)
    * [Alerts](#alerts)
@@ -83,6 +84,7 @@ modules
 ├── core
 ├── domain
 ├── feed
+├── forecasts
 ├── lib
 ├── processor
 ├── snapshots
@@ -107,6 +109,10 @@ Core functionality that needs to be shared across different modules such as snap
 ### Feed
 
 Generates random `TradeCommand`s such as `Create` or `Delete` and publishes them to the `trading-commands` topic.
+
+### Forecasts
+
+Registers new authors and forecasts, while calculating the author's reputation.
 
 ### Processor
 

@@ -54,7 +54,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "trading-app"
   )
-  .aggregate(lib, domain, core, alerts, feed, processor, snapshots, ws, demo)
+  .aggregate(lib, domain, core, alerts, feed, forecasts, processor, snapshots, ws, demo)
 
 lazy val domain = (project in file("modules/domain"))
   .settings(commonSettings: _*)
@@ -84,6 +84,13 @@ lazy val feed = (project in file("modules/feed"))
   )
   .dependsOn(core)
   .dependsOn(domain % "compile->compile;compile->test")
+
+lazy val forecasts = (project in file("modules/forecasts"))
+  .enablePlugins(DockerPlugin)
+  .enablePlugins(AshScriptPlugin)
+  .settings(commonSettings: _*)
+  .settings(dockerSettings("forecasts"))
+  .dependsOn(core)
 
 lazy val snapshots = (project in file("modules/snapshots"))
   .enablePlugins(DockerPlugin)

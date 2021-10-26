@@ -47,6 +47,22 @@ object EventId extends IdNewtype
 type SocketId = SocketId.Type
 object SocketId extends IdNewtype
 
+type AuthorId = AuthorId.Type
+object AuthorId extends IdNewtype
+
+type AuthorName = AuthorName.Type
+object AuthorName extends Newtype[String]
+
+// TODO: should be a positive double from 0-100 (refinement)
+type Reputation = Reputation.Type
+object Reputation extends NumNewtype[Double]
+
+type ForecastId = ForecastId.Type
+object ForecastId extends IdNewtype
+
+type Website = Website.Type
+object Website extends Newtype[String]
+
 type Price = Price.Type
 object Price extends NumNewtype[BigDecimal]
 

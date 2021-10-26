@@ -20,7 +20,7 @@ trait Consumer[F[_], A]:
 object Consumer:
   type MsgId = String
 
-  final case class Msg[A](id: MsgId, value: A)
+  final case class Msg[A](id: MsgId, payload: A)
 
   def local[F[_]: Applicative, A](
       queue: Queue[F, Option[A]]
