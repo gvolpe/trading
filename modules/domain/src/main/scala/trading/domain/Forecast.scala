@@ -6,9 +6,8 @@ import io.circe.Codec
 
 final case class Forecast(
     id: ForecastId,
-    authorId: AuthorId,
     symbol: Symbol,
     tag: ForecastTag,
-    description: String,
+    description: ForecastDescription,
     score: ForecastScore
 ) derives Codec.AsObject, Show

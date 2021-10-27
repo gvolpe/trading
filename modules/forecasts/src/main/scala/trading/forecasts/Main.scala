@@ -10,6 +10,7 @@ import trading.lib.{ Consumer, Producer }
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import dev.profunktor.pulsar.schema.circe.bytes.*
+import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 
@@ -17,8 +18,12 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { (server, engine) =>
-        Stream.eval(server.useForever).concurrently(engine.run)
+      .flatMap { (server, consumer, engine) =>
+        Stream.eval(server.useForever).concurrently {
+          consumer.receiveM.evalMap { case Consumer.Msg(id, cmd) =>
+            engine.run(cmd) *> consumer.ack(id)
+          }
+        }
       }
       .compile
       .drain
@@ -39,7 +44,8 @@ object Main extends IOApp.Simple:
       authors   <- Producer.pulsar[IO, AuthorEvent](pulsar, eventsTopic)
       forecasts <- Producer.pulsar[IO, ForecastEvent](pulsar, eventsTopic)
       consumer  <- Consumer.pulsar[IO, ForecastCommand](pulsar, cmdTopic, sub)
-      atStore <- AuthorStore.make[IO](config.redisUri) // TODO: Create RedisClient
-      fcStore <- ForecastStore.make[IO](config.redisUri)
+      redis     <- RedisClient[IO].from(config.redisUri.value)
+      atStore   <- AuthorStore.fromClient[IO](redis, config.authorExp)
+      fcStore   <- ForecastStore.fromClient[IO](redis, config.forecastExp)
       server = Ember.default[IO](config.httpPort)
-    yield server -> Engine.make(consumer, authors, forecasts, atStore, fcStore)
+    yield (server, consumer, Engine.make(authors, forecasts, atStore, fcStore))

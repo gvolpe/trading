@@ -39,6 +39,7 @@ abstract class Newtype[A](using
 
 abstract class IdNewtype extends Newtype[UUID]:
   given IsUUID[Type] = derive[IsUUID]
+  def unsafeFrom(str: String): Type = apply(UUID.fromString(str))
 
 abstract class NumNewtype[A](using
     eqv: Eq[A],

@@ -4,11 +4,14 @@ import scala.concurrent.duration.*
 import scala.util.control.NoStackTrace
 
 import trading.domain.*
+import trading.forecasts.Config
 
 import cats.MonadThrow
-import cats.effect.kernel.Resource
+import cats.effect.kernel.{ Async, Resource }
 import cats.syntax.all.*
-import dev.profunktor.redis4cats.effect.MkRedis
+import dev.profunktor.redis4cats.connection.RedisClient
+import dev.profunktor.redis4cats.data.RedisCodec
+import dev.profunktor.redis4cats.effect.{ Log, MkRedis }
 import dev.profunktor.redis4cats.effects.{ SetArg, SetArgs }
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.parser.decode as jsonDecode
@@ -17,29 +20,60 @@ import io.circe.syntax.*
 trait AuthorStore[F[_]]:
   def fetch(id: AuthorId): F[Option[Author]]
   def save(author: Author): F[Unit]
+  def addForecast(id: AuthorId, fid: ForecastId): F[Unit]
 
 // Ideally this should be persisted in a proper database such as PostgreSQL but to keep things simple we use Redis.
 object AuthorStore:
+  case object AuthorNotFound                              extends NoStackTrace
   final case class DuplicateAuthorError(name: AuthorName) extends NoStackTrace
 
-  //TODO: configure expiration time
-  def fromClient[F[_]: MonadThrow](
-      redis: RedisCommands[F, String, String]
-  ): AuthorStore[F] =
-    new AuthorStore[F]:
-      def fetch(id: AuthorId): F[Option[Author]] =
-        redis.get(s"author-${id.show}").map(_.flatMap(jsonDecode[Author](_).toOption))
-
-      def save(author: Author): F[Unit] =
-        redis
-          .set(
-            s"author-${author.id.show}",
-            author.asJson.noSpaces,
-            SetArgs(SetArg.Existence.Nx, SetArg.Ttl.Ex(30.days))
-          )
-          .flatMap {
-            DuplicateAuthorError(author.name).raiseError.unlessA(_)
+  def fromClient[F[_]: MkRedis: MonadThrow](
+      client: RedisClient,
+      exp: Config.AuthorExpiration
+  ): Resource[F, AuthorStore[F]] =
+    Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
+      new AuthorStore[F]:
+        def fetch(id: AuthorId): F[Option[Author]] =
+          val key1   = s"author-${id.show}"
+          val key2   = s"author-forecasts-${id.show}"
+          val fields = List("name", "website")
+          redis.hmGet(key1, fields*).flatMap { kv =>
+            if kv.nonEmpty then
+              redis.sMembers(key2).map { fc =>
+                val n = AuthorName(kv.getOrElse(fields(0), ""))
+                val w = kv.get(fields(1)).map(Website(_))
+                val f = fc.toList.map(ForecastId.unsafeFrom)
+                Author(id, n, w, f).some
+              }
+            else none.pure[F]
           }
 
-  def make[F[_]: MkRedis: MonadThrow](uri: RedisURI): Resource[F, AuthorStore[F]] =
-    Redis[F].utf8(uri.value).map(fromClient[F])
+        def save(author: Author): F[Unit] =
+          val key1   = s"author-${author.id.show}"
+          val key2   = s"author-forecasts-${author.id.show}"
+          val values = Map("name" -> author.name.show) ++ author.website.map("website" -> _).toMap
+
+          for
+            x <- redis.hSetNx(key1, "name", author.name.show)
+            _ <- DuplicateAuthorError(author.name).raiseError.unlessA(x)
+            _ <- author.website.traverse_(w => redis.hSet(key1, "website", w.show))
+            _ <- redis.sAdd(key2, author.forecasts.map(_.show)*)
+            _ <- redis.expire(key1, exp.value)
+            _ <- redis.expire(key2, exp.value)
+          yield ()
+
+        def addForecast(id: AuthorId, fid: ForecastId): F[Unit] =
+          for
+            kv <- redis.hGetAll(s"author-${id.show}")
+            _  <- AuthorNotFound.raiseError.whenA(kv.isEmpty)
+            key = s"author-forecasts-${id.show}"
+            _ <- redis.sAdd(key, fid.show)
+            _ <- redis.expire(key, exp.value)
+          yield ()
+    }
+
+  def make[F[_]: Async: Log](
+      uri: RedisURI,
+      exp: Config.AuthorExpiration
+  ): Resource[F, AuthorStore[F]] =
+    RedisClient[F].from(uri.value).flatMap(fromClient[F](_, exp))

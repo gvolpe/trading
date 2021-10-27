@@ -28,7 +28,7 @@ object ForecastCommand:
       authorId: AuthorId,
       forecastId: ForecastId,
       symbol: Symbol,
-      description: String, // TODO: newtype
+      description: ForecastDescription,
       tag: ForecastTag,
       timestamp: Timestamp
   ) extends ForecastCommand

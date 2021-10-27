@@ -4,73 +4,60 @@ import scala.concurrent.duration.*
 import scala.util.control.NoStackTrace
 
 import trading.domain.*
+import trading.forecasts.Config
 
 import cats.MonadThrow
-import cats.effect.kernel.{Async ,Resource}
+import cats.effect.kernel.{ Async, Resource }
 import cats.syntax.all.*
-import dev.profunktor.redis4cats.codecs.Codecs
-import dev.profunktor.redis4cats.codecs.splits.*
 import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.data.RedisCodec
-import dev.profunktor.redis4cats.effect.Log.Stdout.*
-import dev.profunktor.redis4cats.effect.MkRedis
+import dev.profunktor.redis4cats.effect.{ Log, MkRedis }
 import dev.profunktor.redis4cats.effects.{ SetArg, SetArgs }
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.parser.decode as jsonDecode
 import io.circe.syntax.*
 
 trait ForecastStore[F[_]]:
-  //def fetchAll(id: AuthorId): F[List[Forecast]] // not needed for now
-  def fetch(id: AuthorId, fid: ForecastId): F[Option[Forecast]]
+  def fetch(fid: ForecastId): F[Option[Forecast]]
   def save(forecast: Forecast): F[Unit]
-  def upvote(id: AuthorId, fid: ForecastId): F[Unit]
-  def downvote(id: AuthorId, fid: ForecastId): F[Unit]
+  def castVote(fid: ForecastId, res: VoteResult): F[Unit]
 
 // Ideally this should be persisted in a proper database such as PostgreSQL but to keep things simple we use Redis.
 object ForecastStore:
-  private val longCodec: RedisCodec[String, Long] =
-    Codecs.derive(RedisCodec.Utf8, stringLongEpi)
-
   def fromClient[F[_]: MkRedis: MonadThrow](
-      client: RedisClient
+      client: RedisClient,
+      exp: Config.ForecastExpiration
   ): Resource[F, ForecastStore[F]] =
-    (Redis[F].fromClient(client, RedisCodec.Utf8), Redis[F].fromClient(client, longCodec)).mapN { (redis, redisN) =>
+    Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
       new ForecastStore[F]:
-        def fetch(id: AuthorId, fid: ForecastId): F[Option[Forecast]] =
-          val fields = List(
-            s"forecast-${fid.show}-description",
-            s"forecast-${fid.show}-tag",
-            s"forecast-${fid.show}-score",
-            s"forecast-${fid.show}-symbol"
-          )
-          redis.hmGet(s"author-${id.show}", fields*).map { kv =>
+        def fetch(fid: ForecastId): F[Option[Forecast]] =
+          val fields = List("desc", "tag", "score", "symbol")
+          redis.hmGet(s"forecast-${fid.show}", fields*).map { kv =>
             kv.nonEmpty.guard[Option].as {
-              val d = kv.getOrElse(fields(0), "No description")
+              val d = ForecastDescription(kv.getOrElse(fields(0), ""))
               val t = kv.get(fields(1)).map(ForecastTag.from).getOrElse(ForecastTag.Unknown)
               val c = ForecastScore(kv.get(fields(2)).flatMap(_.toIntOption).getOrElse(0))
               val s = Symbol(kv.getOrElse(fields(3), ""))
-              Forecast(fid, id, s, t, d, c)
+              Forecast(fid, s, t, d, c)
             }
           }
 
         def save(fc: Forecast): F[Unit] =
-          val key = s"author-${fc.authorId.show}"
+          val key = s"forecast-${fc.id.show}"
           val values = Map(
-            s"forecast-${fc.id.show}-description" -> fc.description,
-            s"forecast-${fc.id.show}-tag" -> fc.tag.show,
-            s"forecast-${fc.id.show}-score" -> fc.score.show
+            "desc"   -> fc.description.show,
+            "tag"    -> fc.tag.show,
+            "score"  -> fc.score.show,
+            "symbol" -> fc.symbol.show
           )
-          redis.hmSet(key, values) <* redis.expire(key, 90.days) // TODO: Make it configurable
+          redis.hmSet(key, values) <* redis.expire(key, exp.value)
 
-        private def castVote(id: AuthorId, fid: ForecastId, value: Int): F[Unit] =
-          redisN.hIncrBy(s"author-${id.show}", s"forecast-${fid.show}-score", value).void
-
-        def upvote(id: AuthorId, fid: ForecastId): F[Unit] =
-          castVote(id, fid, 1)
-
-        def downvote(id: AuthorId, fid: ForecastId): F[Unit] =
-          castVote(id, fid, -1)
+        def castVote(fid: ForecastId, res: VoteResult): F[Unit] =
+          redis.hIncrBy(s"forecast-${fid.show}", "score", res.asInt).void
     }
 
-  def make[F[_]: Async](uri: RedisURI): Resource[F, ForecastStore[F]] =
-    RedisClient[F].from(uri.value).flatMap(fromClient[F])
+  def make[F[_]: Async: Log](
+      uri: RedisURI,
+      exp: Config.ForecastExpiration
+  ): Resource[F, ForecastStore[F]] =
+    RedisClient[F].from(uri.value).flatMap(fromClient[F](_, exp))

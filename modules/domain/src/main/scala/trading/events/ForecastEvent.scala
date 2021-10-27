@@ -18,6 +18,13 @@ object ForecastEvent:
       timestamp: Timestamp
   ) extends ForecastEvent
 
+  final case class NotPublished(
+      id: EventId,
+      forecastId: ForecastId,
+      reason: String,
+      timestamp: Timestamp
+  ) extends ForecastEvent
+
   final case class Voted(
       id: EventId,
       forecastId: ForecastId,

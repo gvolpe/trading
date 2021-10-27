@@ -64,6 +64,9 @@ object ForecastScore extends NumNewtype[Int]
 type ForecastId = ForecastId.Type
 object ForecastId extends IdNewtype
 
+type ForecastDescription = ForecastDescription.Type
+object ForecastDescription extends Newtype[String]
+
 type Website = Website.Type
 object Website extends Newtype[String]
 
