@@ -38,14 +38,17 @@ object AuthorStore:
           val key2   = s"author-forecasts-${id.show}"
           val fields = List("name", "website")
           redis.hmGet(key1, fields*).flatMap { kv =>
-            if kv.nonEmpty then
-              redis.sMembers(key2).map { fc =>
-                val n = AuthorName(kv.getOrElse(fields(0), ""))
-                val w = kv.get(fields(1)).map(Website(_))
-                val f = fc.toList.map(ForecastId.unsafeFrom)
-                Author(id, n, w, f).some
+            kv.nonEmpty
+              .guard[Option]
+              .as {
+                redis.sMembers(key2).map { fc =>
+                  val n = AuthorName(kv.getOrElse(fields(0), ""))
+                  val w = kv.get(fields(1)).map(Website(_))
+                  val f = fc.toList.map(ForecastId.unsafeFrom)
+                  Author(id, n, w, f)
+                }
               }
-            else none.pure[F]
+              .sequence
           }
 
         def save(author: Author): F[Unit] =

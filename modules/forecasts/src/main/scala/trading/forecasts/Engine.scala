@@ -28,11 +28,11 @@ object Engine:
               .addForecast(aid, fid)
               .flatMap { _ =>
                 val fc = Forecast(fid, symbol, tag, desc, ForecastScore(0))
-                val ev = ForecastEvent.Published(eid, fid, symbol, ts)
+                val ev = ForecastEvent.Published(eid, aid, fid, symbol, ts)
                 fcStore.save(fc).as(ev)
               }
               .handleError { case AuthorStore.AuthorNotFound =>
-                ForecastEvent.NotPublished(eid, fid, "Author not found", ts)
+                ForecastEvent.NotPublished(eid, aid, fid, Reason("Author not found"), ts)
               }
               .flatMap(forecasts.send)
           }
@@ -43,12 +43,11 @@ object Engine:
               .save(author)
               .as(AuthorEvent.Registered(eid, aid, name, ts))
               .handleError { case AuthorStore.DuplicateAuthorError(_) =>
-                AuthorEvent.NotRegistered(eid, name, "duplicate username", ts)
+                AuthorEvent.NotRegistered(eid, name, Reason("Duplicate username"), ts)
               }
               .flatMap(authors.send)
           }
         case ForecastCommand.Vote(_, fid, res, _) =>
-          // TODO: update author's reputation?
           (GenUUID[F].make[EventId], Time[F].timestamp).tupled
             .flatMap { (eid, ts) =>
               val ev = ForecastEvent.Voted(eid, fid, res, ts)

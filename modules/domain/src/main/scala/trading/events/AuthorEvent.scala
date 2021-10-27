@@ -20,14 +20,6 @@ object AuthorEvent:
   final case class NotRegistered(
       id: EventId,
       authorName: AuthorName,
-      reason: String,
-      timestamp: Timestamp
-  ) extends AuthorEvent
-
-  final case class ReputationUpdated(
-      id: EventId,
-      authorId: AuthorId,
-      authorName: AuthorName,
-      newReputation: Reputation,
+      reason: Reason,
       timestamp: Timestamp
   ) extends AuthorEvent

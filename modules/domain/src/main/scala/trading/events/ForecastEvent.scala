@@ -13,6 +13,7 @@ sealed trait ForecastEvent derives Codec.AsObject:
 object ForecastEvent:
   final case class Published(
       id: EventId,
+      authorId: AuthorId,
       forecastId: ForecastId,
       symbol: Symbol,
       timestamp: Timestamp
@@ -20,8 +21,9 @@ object ForecastEvent:
 
   final case class NotPublished(
       id: EventId,
+      authorId: AuthorId,
       forecastId: ForecastId,
-      reason: String,
+      reason: Reason,
       timestamp: Timestamp
   ) extends ForecastEvent
 

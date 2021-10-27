@@ -53,11 +53,6 @@ object AuthorId extends IdNewtype
 type AuthorName = AuthorName.Type
 object AuthorName extends Newtype[String]
 
-// TODO: should be a positive double from 0-100 (refinement)
-type Reputation = Reputation.Type
-object Reputation extends NumNewtype[Double]:
-  def empty: Reputation = Reputation(0.0)
-
 type ForecastScore = ForecastScore.Type
 object ForecastScore extends NumNewtype[Int]
 
@@ -69,6 +64,9 @@ object ForecastDescription extends Newtype[String]
 
 type Website = Website.Type
 object Website extends Newtype[String]
+
+type Reason = Reason.Type
+object Reason extends Newtype[String]
 
 type Price = Price.Type
 object Price extends NumNewtype[BigDecimal]

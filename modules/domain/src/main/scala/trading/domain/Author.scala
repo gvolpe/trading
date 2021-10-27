@@ -8,6 +8,5 @@ final case class Author(
     id: AuthorId,
     name: AuthorName,
     website: Option[Website],
-    //reputation: Reputation, // TODO: can be calculated on the fly?
     forecasts: List[ForecastId]
 ) derives Codec.AsObject, Show
