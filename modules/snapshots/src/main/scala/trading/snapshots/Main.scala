@@ -10,7 +10,7 @@ import trading.state.TradeState
 import cats.effect.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import dev.profunktor.pulsar.schema.circe.bytes.*
-import dev.profunktor.redis4cats.Redis
+import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 
@@ -50,10 +50,10 @@ object Main extends IOApp.Simple:
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(IO.println(">>> Initializing snapshots service <<<"))
-      redis  <- Redis[IO].utf8(config.redisUri.value)
-      topic  = AppTopic.TradingEvents.make(config.pulsar)
-      reader = SnapshotReader.fromClient(redis)
-      writer = SnapshotWriter.fromClient(redis, config.keyExpiration)
+      topic = AppTopic.TradingEvents.make(config.pulsar)
+      redis    <- RedisClient[IO].from(config.redisUri.value)
+      reader   <- SnapshotReader.fromClient[IO](redis)
+      writer   <- SnapshotWriter.fromClient[IO](redis, config.keyExpiration)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
       server = Ember.default[IO](config.httpPort)
     yield (server, consumer, reader, writer)

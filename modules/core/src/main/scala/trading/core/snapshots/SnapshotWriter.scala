@@ -1,12 +1,14 @@
 package trading.core.snapshots
 
-import trading.domain.KeyExpiration
+import trading.domain.*
 import trading.state.TradeState
 
 import cats.MonadThrow
-import cats.effect.kernel.Resource
+import cats.effect.kernel.{Async ,Resource}
 import cats.syntax.all.*
-import dev.profunktor.redis4cats.effect.MkRedis
+import dev.profunktor.redis4cats.connection.RedisClient
+import dev.profunktor.redis4cats.data.RedisCodec
+import dev.profunktor.redis4cats.effect.{ Log, MkRedis }
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.syntax.*
 
@@ -14,22 +16,25 @@ trait SnapshotWriter[F[_]]:
   def save(state: TradeState): F[Unit]
 
 object SnapshotWriter:
-  def fromClient[F[_]: MonadThrow](
-      redis: RedisCommands[F, String, String], // FIXME: this is not a client
-      exp: KeyExpiration
-  ): SnapshotWriter[F] =
-    new SnapshotWriter[F]:
-      def save(state: TradeState): F[Unit] =
-        state.prices.toList.traverse_ { case (symbol, prices) =>
-          val key = s"snapshot-$symbol"
-          redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces) *>
-            redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces) *>
-            redis.hSet(key, "high", prices.high.show) *>
-            redis.hSet(key, "low", prices.low.show) *>
-            redis.expire(key, exp.value)
-        }
-
-  def make[F[_]: MkRedis: MonadThrow](
+  def fromClient[F[_]: MkRedis: MonadThrow](
+      client: RedisClient,
       exp: KeyExpiration
   ): Resource[F, SnapshotWriter[F]] =
-    Redis[F].utf8("redis://localhost").map(cli => fromClient[F](cli, exp))
+    Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
+      new SnapshotWriter[F]:
+        def save(state: TradeState): F[Unit] =
+          state.prices.toList.traverse_ { case (symbol, prices) =>
+            val key = s"snapshot-$symbol"
+            redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces) *>
+              redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces) *>
+              redis.hSet(key, "high", prices.high.show) *>
+              redis.hSet(key, "low", prices.low.show) *>
+              redis.expire(key, exp.value)
+          }
+    }
+
+  def make[F[_]: Async: Log: MonadThrow](
+      uri: RedisURI,
+      exp: KeyExpiration
+  ): Resource[F, SnapshotWriter[F]] =
+    RedisClient[F].from(uri.value).flatMap(fromClient[F](_, exp))
