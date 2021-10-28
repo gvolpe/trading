@@ -9,7 +9,6 @@ import trading.state.{ DedupState, TradeState }
 
 import cats.MonadThrow
 import cats.syntax.all.*
-import fs2.Stream
 
 object Engine:
   def fsm[F[_]: GenUUID: Logger: MonadThrow: Time](
