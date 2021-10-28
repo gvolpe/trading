@@ -11,7 +11,7 @@ import cats.data.NonEmptyList
 import weaver.FunSuite
 import weaver.scalacheck.Checkers
 
-object EventSourceSuite extends FunSuite with Checkers:
+object TradeEngineSuite extends FunSuite with Checkers:
   val id: CommandId = CommandId(UUID.randomUUID())
   val s: Symbol     = Symbol("EURUSD")
   val ts: Timestamp = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
@@ -22,16 +22,16 @@ object EventSourceSuite extends FunSuite with Checkers:
   val q2: Quantity = Quantity(20)
 
   test("Event source state track") {
-    val st1 = EventSource.runS(TradeState.empty)(TradeCommand.Create(id, s, TradeAction.Ask, p1, q1, "test", ts))
+    val st1 = TradeEngine.fsm.runS(TradeState.empty, TradeCommand.Create(id, s, TradeAction.Ask, p1, q1, "test", ts))
     val ex1 = TradeState(Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
 
-    val st2 = EventSource.runS(st1)(TradeCommand.Update(id, s, TradeAction.Ask, p2, q2, "test", ts))
+    val st2 = TradeEngine.fsm.runS(st1, TradeCommand.Update(id, s, TradeAction.Ask, p2, q2, "test", ts))
     val ex2 = TradeState(Map(s -> Prices(ask = Map(p1 -> q1, p2 -> q2), bid = Map.empty, p2, p1)))
 
-    val st3 = EventSource.runS(st2)(TradeCommand.Delete(id, s, TradeAction.Ask, p1, "test", ts))
+    val st3 = TradeEngine.fsm.runS(st2, TradeCommand.Delete(id, s, TradeAction.Ask, p1, "test", ts))
     val ex3 = TradeState(Map(s -> Prices(ask = Map(p2 -> q2), bid = Map.empty, p2, p1)))
 
-    val st4 = EventSource.runS(st3)(TradeCommand.Create(id, s, TradeAction.Bid, p1, q1, "test", ts))
+    val st4 = TradeEngine.fsm.runS(st3, TradeCommand.Create(id, s, TradeAction.Bid, p1, q1, "test", ts))
     val ex4 = TradeState(Map(s -> Prices(ask = Map(p2 -> q2), bid = Map(p1 -> q1), p2, p1)))
 
     NonEmptyList

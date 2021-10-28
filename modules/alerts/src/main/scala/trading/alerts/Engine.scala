@@ -1,6 +1,6 @@
 package trading.alerts
 
-import trading.core.{ Conflicts, EventSource }
+import trading.core.{ Conflicts, TradeEngine }
 import trading.domain.AlertType.*
 import trading.domain.*
 import trading.events.TradeEvent
@@ -21,7 +21,7 @@ object Engine:
         case None =>
           Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
         case Some(cmd) =>
-          val nst = EventSource.runS(st)(cmd)
+          val nst = TradeEngine.fsm.runS(st, cmd)
           val p   = st.prices.get(cmd.symbol)
           val c   = nst.prices.get(cmd.symbol)
 

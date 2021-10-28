@@ -104,7 +104,7 @@ Commands, events, state, and all business-related data modeling.
 
 ### Core
 
-Core functionality that needs to be shared across different modules such as snapshots, `AppTopic`, and `EventSource`.
+Core functionality that needs to be shared across different modules such as snapshots, `AppTopic`, and `TradeEngine`.
 
 ### Feed
 

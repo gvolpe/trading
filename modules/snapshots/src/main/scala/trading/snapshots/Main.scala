@@ -2,7 +2,7 @@ package trading.snapshots
 
 import trading.core.http.Ember
 import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
-import trading.core.{ AppTopic, EventSource }
+import trading.core.{ AppTopic, TradeEngine }
 import trading.events.TradeEvent
 import trading.lib.Consumer
 import trading.state.TradeState
@@ -26,7 +26,7 @@ object Main extends IOApp.Simple:
             .flatMap { latest =>
               consumer.receiveM
                 .mapAccumulate(latest) { case (st, Consumer.Msg(msgId, evt)) =>
-                  EventSource.runS(st)(evt.command) -> (msgId -> evt.id)
+                  TradeEngine.fsm.runS(st, evt.command) -> (msgId -> evt.id)
                 }
                 .evalMap { case (st, (msdId, evId)) =>
                   IO.println(s">>> Event ID: ${evId}") *>

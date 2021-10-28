@@ -1,7 +1,7 @@
 package trading.processor
 
 import trading.commands.TradeCommand
-import trading.core.{ Conflicts, EventSource }
+import trading.core.{ Conflicts, TradeEngine }
 import trading.domain.EventId
 import trading.events.TradeEvent
 import trading.lib.*
@@ -20,7 +20,7 @@ object Engine:
         case None =>
           Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
         case Some(cmd) =>
-          val (nst, events) = EventSource.run(st)(cmd)
+          val (nst, events) = TradeEngine.fsm.run(st, cmd)
           for
             evs <- events.traverse((GenUUID[F].make[EventId], Time[F].timestamp).mapN(_))
             _   <- evs.traverse(producer.send)
