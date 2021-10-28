@@ -7,19 +7,22 @@ import io.circe.Codec
 
 sealed trait AuthorEvent derives Codec.AsObject:
   def id: EventId
-  def timestamp: Timestamp
+  def cid: CorrelationId
+  def createdAt: Timestamp
 
 object AuthorEvent:
   final case class Registered(
       id: EventId,
+      cid: CorrelationId,
       authorId: AuthorId,
       authorName: AuthorName,
-      timestamp: Timestamp
+      createdAt: Timestamp
   ) extends AuthorEvent
 
   final case class NotRegistered(
       id: EventId,
+      cid: CorrelationId,
       authorName: AuthorName,
       reason: Reason,
-      timestamp: Timestamp
+      createdAt: Timestamp
   ) extends AuthorEvent

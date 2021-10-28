@@ -8,13 +8,13 @@ import io.circe.Codec
 sealed trait TradeEvent derives Codec.AsObject:
   def id: EventId
   def command: TradeCommand
-  def timestamp: Timestamp
+  def createdAt: Timestamp
 
 object TradeEvent:
   final case class CommandExecuted(
       id: EventId,
       command: TradeCommand,
-      timestamp: Timestamp
+      createdAt: Timestamp
   ) extends TradeEvent
 
 // POINTS OF FAILURE (to consider in distributed systems)

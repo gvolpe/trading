@@ -44,6 +44,9 @@ object CommandId extends IdNewtype
 type EventId = EventId.Type
 object EventId extends IdNewtype
 
+type CorrelationId = CorrelationId.Type
+object CorrelationId extends IdNewtype
+
 type SocketId = SocketId.Type
 object SocketId extends IdNewtype
 

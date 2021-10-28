@@ -13,31 +13,35 @@ import monocle.Traversal
 
 sealed trait ForecastCommand derives Codec.AsObject, Eq, Show:
   def id: CommandId
-  def timestamp: Timestamp
+  def cid: CorrelationId
+  def createdAt: Timestamp
 
 object ForecastCommand:
   final case class Register(
       id: CommandId,
+      cid: CorrelationId,
       authorName: AuthorName,
       authorWebsite: Option[Website],
-      timestamp: Timestamp
+      createdAt: Timestamp
   ) extends ForecastCommand
 
   final case class Publish(
       id: CommandId,
+      cid: CorrelationId,
       authorId: AuthorId,
       forecastId: ForecastId,
       symbol: Symbol,
       description: ForecastDescription,
       tag: ForecastTag,
-      timestamp: Timestamp
+      createdAt: Timestamp
   ) extends ForecastCommand
 
   final case class Vote(
       id: CommandId,
+      cid: CorrelationId,
       forecastId: ForecastId,
       result: VoteResult,
-      timestamp: Timestamp
+      createdAt: Timestamp
   ) extends ForecastCommand
 
   val _CommandId =
