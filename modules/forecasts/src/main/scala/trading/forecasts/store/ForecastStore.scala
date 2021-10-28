@@ -24,7 +24,7 @@ trait ForecastStore[F[_]]:
 
 // Ideally this should be persisted in a proper database such as PostgreSQL but to keep things simple we use Redis.
 object ForecastStore:
-  def fromClient[F[_]: MkRedis: MonadThrow](
+  def make[F[_]: MkRedis: MonadThrow](
       client: RedisClient,
       exp: Config.ForecastExpiration
   ): Resource[F, ForecastStore[F]] =
@@ -60,4 +60,4 @@ object ForecastStore:
       uri: RedisURI,
       exp: Config.ForecastExpiration
   ): Resource[F, ForecastStore[F]] =
-    RedisClient[F].from(uri.value).flatMap(fromClient[F](_, exp))
+    RedisClient[F].from(uri.value).flatMap(make[F](_, exp))

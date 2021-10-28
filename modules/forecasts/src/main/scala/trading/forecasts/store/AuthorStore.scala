@@ -27,7 +27,7 @@ object AuthorStore:
   case object AuthorNotFound                              extends NoStackTrace
   final case class DuplicateAuthorError(name: AuthorName) extends NoStackTrace
 
-  def fromClient[F[_]: MkRedis: MonadThrow](
+  def make[F[_]: MkRedis: MonadThrow](
       client: RedisClient,
       exp: Config.AuthorExpiration
   ): Resource[F, AuthorStore[F]] =
@@ -79,4 +79,4 @@ object AuthorStore:
       uri: RedisURI,
       exp: Config.AuthorExpiration
   ): Resource[F, AuthorStore[F]] =
-    RedisClient[F].from(uri.value).flatMap(fromClient[F](_, exp))
+    RedisClient[F].from(uri.value).flatMap(make[F](_, exp))
