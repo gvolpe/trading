@@ -5,7 +5,8 @@ import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
 import trading.events.TradeEvent
-import trading.lib.{ Consumer, Producer }
+import trading.lib.*
+import trading.state.{ DedupState, TradeState }
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
@@ -17,8 +18,16 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { (server, engine) =>
-        Stream.eval(server.useForever).concurrently(engine.run)
+      .flatMap { (server, consumer, snapshots, fsm) =>
+        Stream.eval(server.useForever).concurrently {
+          Stream
+            .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
+            .evalTap(latest => Logger[IO].info(s">>> SNAPSHOTS: $latest"))
+            .flatMap { latest =>
+              consumer.receiveM
+                .evalMapAccumulate(latest -> DedupState.empty)(fsm.run)
+            }
+        }
       }
       .compile
       .drain
@@ -40,4 +49,4 @@ object Main extends IOApp.Simple:
       snapshots <- SnapshotReader.make[IO](config.redisUri)
       consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
       server = Ember.default[IO](config.httpPort)
-    yield server -> Engine.make(consumer, producer, snapshots)
+    yield (server, consumer, snapshots, Engine.fsm(producer, consumer.ack))
