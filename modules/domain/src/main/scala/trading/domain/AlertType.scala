@@ -11,7 +11,7 @@ object AlertType:
   given Show[AlertType] = Show.fromToString
 
   given Decoder[AlertType] = Decoder[String].emap[AlertType] { str =>
-    Either.catchNonFatal(AlertType.valueOf(str)).leftMap(_.getMessage)
+    Either.catchNonFatal(valueOf(str)).leftMap(_.getMessage)
   }
 
   given Encoder[AlertType] = Encoder[String].contramap[AlertType](_.toString)

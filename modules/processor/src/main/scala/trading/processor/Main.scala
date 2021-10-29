@@ -24,8 +24,7 @@ object Main extends IOApp.Simple:
             .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
             .evalTap(latest => Logger[IO].info(s">>> SNAPSHOTS: $latest"))
             .flatMap { latest =>
-              consumer.receiveM
-                .evalMapAccumulate(latest -> DedupState.empty)(fsm.run)
+              consumer.receiveM.evalMapAccumulate(latest -> DedupState.empty)(fsm.run)
             }
         }
       }

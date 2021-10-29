@@ -22,14 +22,14 @@ object TradeEngine:
       case (st @ TradeState(On, _), cmd @ TradeCommand.Delete(_, symbol, action, price, _, _)) =>
         val nst = st.remove(symbol)(action, price)
         nst -> List((id, ts) => TradeEvent.CommandExecuted(id, cmd, ts))
-      // Trading status: Off
-      case (st @ TradeState(Off, _), cmd) =>
-        st -> List((id, ts) => TradeEvent.CommandRejected(id, cmd, Reason("Trading is Off"), ts))
       // Trading switch: On / Off
       case (st, TradeCommand.Start(_, _)) =>
-        val nst = TradeState._Status.replace(Off)(st)
+        val nst = TradeState._Status.replace(On)(st)
         nst -> List((id, ts) => TradeEvent.Started(id, ts))
       case (st, TradeCommand.Stop(_, _)) =>
         val nst = TradeState._Status.replace(Off)(st)
         nst -> List((id, ts) => TradeEvent.Stopped(id, ts))
+      // Trading status: Off
+      case (st @ TradeState(Off, _), cmd) =>
+        st -> List((id, ts) => TradeEvent.CommandRejected(id, cmd, Reason("Trading is Off"), ts))
     }

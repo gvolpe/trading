@@ -120,7 +120,7 @@ object generators:
 
   val tradeCommandGen: Gen[TradeCommand] =
     Gen.frequency(
-      1 -> Gen.oneOf(startCommandGen, stopCommandGen),
+      2 -> Gen.oneOf(startCommandGen, stopCommandGen),
       9 -> Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
     )
 

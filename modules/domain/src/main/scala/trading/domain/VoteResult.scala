@@ -16,7 +16,7 @@ object VoteResult:
   given Show[VoteResult] = Show.fromToString
 
   given Decoder[VoteResult] = Decoder[String].emap[VoteResult] { str =>
-    Either.catchNonFatal(VoteResult.valueOf(str)).leftMap(_.getMessage)
+    Either.catchNonFatal(valueOf(str)).leftMap(_.getMessage)
   }
 
   given Encoder[VoteResult] = Encoder[String].contramap[VoteResult](_.toString)

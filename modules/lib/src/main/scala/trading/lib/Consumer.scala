@@ -31,13 +31,15 @@ object Consumer:
       def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
       def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
 
-  def pulsar[F[_]: Async, A: Schema](
+  def pulsar[F[_]: Async: Logger, A: Schema](
       client: Pulsar.T,
       topic: Topic,
       sub: Subscription,
       opts: PulsarConsumer.Options[F, A] = null // default value does not work
   ): Resource[F, Consumer[F, A]] =
-    val _opts = Option(opts).getOrElse(PulsarConsumer.Options[F, A]())
+    val _opts = Option(opts)
+      .getOrElse(PulsarConsumer.Options[F, A]())
+    //.withLogger(m => t => Logger[F].info(s">>> RECEIVED: $m - Topic: $t"))
     PulsarConsumer.make[F, A](client, topic, sub, _opts).map { c =>
       new Consumer[F, A]:
         def receiveM: Stream[F, Msg[A]] = c.subscribe.map(m => Msg(new String(m.id.toByteArray(), UTF_8), m.payload))

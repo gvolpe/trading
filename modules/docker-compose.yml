@@ -50,6 +50,26 @@ services:
       timeout: 3s
       retries: 30
 
+  ws-server:
+    restart: always
+    image: trading-ws:latest
+    ports:
+      - "9000:9000"
+    networks:
+      - trading-net
+    environment:
+      - HTTP_PORT=9000
+      - PULSAR_URI=pulsar://pulsar:6650
+    depends_on:
+      pulsar:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
+
   alerts:
     restart: always
     image: trading-alerts:latest
@@ -65,6 +85,8 @@ services:
       pulsar:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      ws-server:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9004/health"]
@@ -89,6 +111,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      ws-server:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9003/health"]
       interval: 2s
@@ -112,28 +136,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9002/health"]
-      interval: 2s
-      timeout: 5s
-      retries: 15
-      start_period: 2m
-
-  ws-server:
-    restart: always
-    image: trading-ws:latest
-    ports:
-      - "9000:9000"
-    networks:
-      - trading-net
-    environment:
-      - HTTP_PORT=9000
-      - PULSAR_URI=pulsar://pulsar:6650
-    depends_on:
-      pulsar:
+      ws-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:9002/health"]
       interval: 2s
       timeout: 5s
       retries: 15

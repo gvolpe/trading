@@ -39,6 +39,7 @@ object Handler:
 
           val send: Stream[F, WebSocketFrame] =
             topic.subscribers
+              .take(1)
               .evalMap(n => encode(WsOut.Attached(sid, n + 1)))
               .append {
                 topic
