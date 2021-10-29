@@ -36,7 +36,10 @@ view model =
             ]
         , div [ id "sid-card", class "card" ]
             [ div [ class "sid-body" ]
-                [ renderSocketId model.socketId ]
+                [ renderTradeStatus model.tradeStatus
+                , span [] [ text " " ]
+                , renderSocketId model.socketId
+                ]
             ]
         , p [] []
         , table [ class "table table-inverse", hidden (Dict.isEmpty model.alerts) ]
@@ -51,7 +54,7 @@ view model =
                     , th [] []
                     ]
                 ]
-            , tbody [] (List.map renderAlertRow (Dict.toList model.alerts))
+            , tbody [] (List.concatMap renderAlertRow (Dict.toList model.alerts))
             ]
         ]
 
@@ -63,11 +66,21 @@ renderSocketId ma =
             span [ id "socket-id", class "badge badge-pill badge-success" ] [ text ("Socket ID: " ++ sid) ]
 
         Nothing ->
-            div []
+            span []
                 [ span [ id "socket-id", class "badge badge-pill badge-secondary" ] [ text "<Disconnected>" ]
                 , span [] [ text " " ]
                 , button [ class "badge badge-pill badge-primary", onClick Connect ] [ text "Connect" ]
                 ]
+
+
+renderTradeStatus : TradeStatus -> Html Msg
+renderTradeStatus ts =
+    case ts of
+        On ->
+            span [ id "trade-status", class "badge badge-pill badge-success" ] [ text ("Trading " ++ toString ts) ]
+
+        Off ->
+            span [ id "trade-status", class "badge badge-pill badge-danger" ] [ text ("Trading " ++ toString ts) ]
 
 
 alertTypeColumn : String -> String -> Html Msg
@@ -94,21 +107,27 @@ renderAlertType at =
             alertTypeColumn "buy" "Buy"
 
 
-renderAlertRow : ( Symbol, Alert ) -> Html Msg
+renderAlertRow : ( Symbol, Alert ) -> List (Html Msg)
 renderAlertRow ( symbol, alert ) =
-    tr []
-        [ th [] [ text symbol ]
-        , th [] [ alert.bidPrice |> toString |> text ]
-        , th [] [ alert.askPrice |> toString |> text ]
-        , th [] [ alert.high |> toString |> text ]
-        , th [] [ alert.low |> toString |> text ]
-        , renderAlertType alert.alertType
-        , th []
-            [ button
-                [ class "badge badge-pill badge-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ]
-                [ img [ src "assets/icons/delete.png", width 16, height 16 ] [] ]
+    case alert of
+        TradeAlert t ->
+            [ tr []
+                [ th [] [ text symbol ]
+                , th [] [ t.bidPrice |> toString |> text ]
+                , th [] [ t.askPrice |> toString |> text ]
+                , th [] [ t.high |> toString |> text ]
+                , th [] [ t.low |> toString |> text ]
+                , renderAlertType t.alertType
+                , th []
+                    [ button
+                        [ class "badge badge-pill badge-danger", onClick (Unsubscribe symbol), title "Unsubscribe" ]
+                        [ img [ src "assets/icons/delete.png", width 16, height 16 ] [] ]
+                    ]
+                ]
             ]
-        ]
+
+        TradeUpdate _ ->
+            []
 
 
 ifIsEnter : msg -> D.Decoder msg

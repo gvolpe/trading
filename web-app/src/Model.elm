@@ -27,14 +27,21 @@ type AlertType
     | StrongSell
 
 
-type alias Alert =
-    { alertType : AlertType
-    , symbol : Symbol
-    , askPrice : Price
-    , bidPrice : Price
-    , high : Price
-    , low : Price
-    }
+type TradeStatus
+    = On
+    | Off
+
+
+type Alert
+    = TradeAlert
+        { alertType : AlertType
+        , symbol : Symbol
+        , askPrice : Price
+        , bidPrice : Price
+        , high : Price
+        , low : Price
+        }
+    | TradeUpdate TradeStatus
 
 
 type WsIn
@@ -62,6 +69,7 @@ type alias Model =
     , socketId : Maybe SocketId
     , onlineUsers : Int
     , alerts : Dict Symbol Alert
+    , tradeStatus : TradeStatus
     , sub : Maybe Symbol
     , unsub : Maybe Symbol
     , error : Maybe String
@@ -71,12 +79,12 @@ type alias Model =
 dummyAlerts : Dict Symbol Alert
 dummyAlerts =
     Dict.fromList
-        [ ( "EURUSD", Alert Sell "EURUSD" 1.287434123 1.3567576891 1.4712312454 1.23545623114 )
-        , ( "CHFEUR", Alert Buy "CHFEUR" 1.301236451 1.4328765419 1.4789877536 1.27054836753 )
-        , ( "CHFGBP", Alert Buy "CHFEUR" 1.301236451 1.4328765419 1.4789877536 1.27054836753 )
-        , ( "GBPUSD", Alert StrongSell "GBPUSD" 2.487465452 2.7344545629 2.9983565471 2.21236312235 )
-        , ( "EURPLN", Alert Neutral "EURPLN" 4.691272348 4.4534524323 4.8347145275 3.83476129853 )
-        , ( "AUDCAD", Alert StrongBuy "AUDCAD" 10.209676347 10.3723136644 10.5430958726 10.01236543289 )
+        [ ( "EURUSD", TradeAlert { alertType = Sell, symbol = "EURUSD", askPrice = 1.287434123, bidPrice = 1.3567576891, high = 1.4712312454, low = 1.23545623114 } )
+        , ( "CHFEUR", TradeAlert { alertType = Buy, symbol = "CHFEUR", askPrice = 1.301236451, bidPrice = 1.4328765419, high = 1.4789877536, low = 1.27054836753 } )
+        , ( "CHFGBP", TradeAlert { alertType = Buy, symbol = "CHFEUR", askPrice = 1.301236451, bidPrice = 1.4328765419, high = 1.4789877536, low = 1.27054836753 } )
+        , ( "GBPUSD", TradeAlert { alertType = StrongSell, symbol = "GBPUSD", askPrice = 2.487465452, bidPrice = 2.7344545629, high = 2.9983565471, low = 2.21236312235 } )
+        , ( "EURPLN", TradeAlert { alertType = Neutral, symbol = "EURPLN", askPrice = 4.691272348, bidPrice = 4.4534524323, high = 4.8347145275, low = 3.83476129853 } )
+        , ( "AUDCAD", TradeAlert { alertType = StrongBuy, symbol = "AUDCAD", askPrice = 10.209676347, bidPrice = 10.3723136644, high = 10.5430958726, low = 10.01236543289 } )
         ]
 
 
@@ -87,6 +95,7 @@ init _ =
       , socketId = Nothing
       , onlineUsers = 0
       , alerts = dummyAlerts -- Dict.fromList []
+      , tradeStatus = On
       , sub = Nothing
       , unsub = Nothing
       , error = Nothing

@@ -96,9 +96,16 @@ update msg model =
                     )
 
                 Notification alert ->
-                    ( { model | alerts = Dict.insert alert.symbol alert model.alerts }
-                    , Cmd.none
-                    )
+                    case alert of
+                        TradeAlert t ->
+                            ( { model | alerts = Dict.insert t.symbol alert model.alerts }
+                            , Cmd.none
+                            )
+
+                        TradeUpdate st ->
+                            ( { model | tradeStatus = st }
+                            , Cmd.none
+                            )
 
                 SocketClosed ->
                     ( { model | socketId = Nothing }

@@ -31,15 +31,44 @@ alertTypeDecoder =
             )
 
 
+tradeStatusDecoder : Decoder TradeStatus
+tradeStatusDecoder =
+    string
+        |> andThen
+            (\s ->
+                case s of
+                    "On" ->
+                        succeed On
+
+                    "Off" ->
+                        succeed Off
+
+                    _ ->
+                        fail "Invalid trade status"
+            )
+
+
 alertValueDecoder : Decoder Alert
 alertValueDecoder =
-    map6 Alert
-        (field "alertType" alertTypeDecoder)
-        (field "symbol" string)
-        (field "askPrice" float)
-        (field "bidPrice" float)
-        (field "high" float)
-        (field "low" float)
+    oneOf [ tradeAlertDecoder, tradeUpdateDecoder ]
+
+
+tradeUpdateDecoder : Decoder Alert
+tradeUpdateDecoder =
+    field "TradeUpdate" (map TradeUpdate (field "status" tradeStatusDecoder))
+
+
+tradeAlertDecoder : Decoder Alert
+tradeAlertDecoder =
+    field "TradeAlert"
+        (map6 (\t s a b h l -> TradeAlert { alertType = t, symbol = s, askPrice = a, bidPrice = b, high = h, low = l })
+            (field "alertType" alertTypeDecoder)
+            (field "symbol" string)
+            (field "askPrice" float)
+            (field "bidPrice" float)
+            (field "high" float)
+            (field "low" float)
+        )
 
 
 notificationDecoder : Decoder WsIn
