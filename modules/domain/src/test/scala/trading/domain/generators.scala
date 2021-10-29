@@ -106,8 +106,23 @@ object generators:
       t <- timestampGen
     yield TradeCommand.Delete(i, s, a, p, c, t)
 
+  val startCommandGen: Gen[TradeCommand.Start] =
+    for
+      i <- commandIdGen
+      t <- timestampGen
+    yield TradeCommand.Start(i, t)
+
+  val stopCommandGen: Gen[TradeCommand.Stop] =
+    for
+      i <- commandIdGen
+      t <- timestampGen
+    yield TradeCommand.Stop(i, t)
+
   val tradeCommandGen: Gen[TradeCommand] =
-    Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
+    Gen.frequency(
+      1 -> Gen.oneOf(startCommandGen, stopCommandGen),
+      9 -> Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
+    )
 
   def commandsGen: List[TradeCommand] =
     Gen.listOfN(10, tradeCommandGen).sample.toList.flatten
