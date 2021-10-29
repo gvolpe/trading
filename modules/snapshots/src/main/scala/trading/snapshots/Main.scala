@@ -26,7 +26,11 @@ object Main extends IOApp.Simple:
             .flatMap { latest =>
               consumer.receiveM
                 .mapAccumulate(latest) { case (st, Consumer.Msg(msgId, evt)) =>
-                  TradeEngine.fsm.runS(st, evt.command) -> (msgId -> evt.id)
+                  TradeEvent._Command.get(evt) match // TODO: is this the correct behavior?
+                    case Some(cmd) =>
+                      TradeEngine.fsm.runS(st, cmd) -> (msgId -> evt.id)
+                    case None =>
+                      st -> (msgId -> evt.id)
                 }
                 .evalMap { case (st, (msdId, evId)) =>
                   IO.println(s">>> Event ID: ${evId}") *>

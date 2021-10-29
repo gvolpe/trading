@@ -25,8 +25,8 @@ object SnapshotReader:
     Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
       new SnapshotReader[F]:
         def latest: F[Option[TradeState]] =
-          redis.keys("snapshot*").flatMap {
-            _.traverseFilter { key =>
+          (redis.get("trading-status"), redis.keys("snapshot*")).tupled.flatMap { (st, sn) =>
+            sn.traverseFilter { key =>
               redis.hGetAll(key).map { kv =>
                 val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
                 val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
@@ -38,11 +38,12 @@ object SnapshotReader:
                   .toOption
                   .map(Symbol(_) -> Prices(ask.toMap, bid.toMap, high, low))
               }
+            }.map {
+              case Nil => None
+              case xs =>
+                val ts = st.flatMap(TradingStatus.from).getOrElse(TradingStatus.On)
+                TradeState(ts, xs.toMap).some
             }
-              .map {
-                case Nil => None
-                case xs  => Some(TradeState(xs.toMap))
-              }
           }
     }
 

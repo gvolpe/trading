@@ -138,6 +138,9 @@ object generators:
       l <- priceGen
     yield Prices(a, b, h, l)
 
+  val tradingStatusGen: Gen[TradingStatus] =
+    Gen.oneOf(TradingStatus.On, TradingStatus.Off)
+
   val tradeStateGen: Gen[TradeState] =
     Gen
       .mapOf[Symbol, Prices] {
@@ -146,4 +149,8 @@ object generators:
           p <- pricesGen
         yield s -> p
       }
-      .map(TradeState.apply)
+      .flatMap { kv =>
+        tradingStatusGen.map { st =>
+          TradeState(st, kv)
+        }
+      }

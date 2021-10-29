@@ -4,7 +4,7 @@ import trading.domain.*
 import trading.state.TradeState
 
 import cats.MonadThrow
-import cats.effect.kernel.{Async ,Resource}
+import cats.effect.kernel.{ Async, Resource }
 import cats.syntax.all.*
 import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.data.RedisCodec
@@ -24,12 +24,14 @@ object SnapshotWriter:
       new SnapshotWriter[F]:
         def save(state: TradeState): F[Unit] =
           state.prices.toList.traverse_ { case (symbol, prices) =>
-            val key = s"snapshot-$symbol"
-            redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces) *>
-              redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces) *>
-              redis.hSet(key, "high", prices.high.show) *>
-              redis.hSet(key, "low", prices.low.show) *>
-              redis.expire(key, exp.value)
+            val key1 = s"snapshot-$symbol"
+            val key2 = s"trading-status"
+            redis.hSet(key1, "ask", prices.ask.toList.asJson.noSpaces) *>
+              redis.hSet(key1, "bid", prices.bid.toList.asJson.noSpaces) *>
+              redis.hSet(key1, "high", prices.high.show) *>
+              redis.hSet(key1, "low", prices.low.show) *>
+              redis.expire(key1, exp.value) *>
+              redis.set(key2, state.status.show)
           }
     }
 

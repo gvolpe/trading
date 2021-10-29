@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 
 import trading.commands.TradeCommand
 
+import cats.syntax.all.*
 import dev.profunktor.pulsar.ShardKey
 
 trait Shard[A]:
@@ -18,4 +19,11 @@ object Shard:
 
   given Shard[TradeCommand] with
     val key: TradeCommand => ShardKey =
-      cmd => ShardKey.Of(cmd.symbol.value.getBytes(UTF_8))
+      cmd =>
+        ShardKey.Of {
+          TradeCommand._Symbol
+            .get(cmd)
+            .map(_.value)
+            .getOrElse(cmd.id.show)
+            .getBytes(UTF_8)
+        }

@@ -24,7 +24,8 @@ object Engine:
           for
             evs <- events.traverse((GenUUID[F].make[EventId], Time[F].timestamp).mapN(_))
             _   <- evs.traverse(producer.send)
-            nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(evs.map(_.command), _))
+            ecs = evs.flatMap(e => TradeEvent._Command.get(e).toList)
+            nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(ecs, _))
             _ <- ack(msgId).attempt.void // don't care if this fails (de-dup)
           yield (nst -> nds) -> ()
     }

@@ -5,6 +5,7 @@ import java.util.UUID
 
 import trading.commands.TradeCommand
 import trading.domain.*
+import trading.domain.TradingStatus.*
 import trading.state.*
 
 import cats.data.NonEmptyList
@@ -21,18 +22,18 @@ object TradeEngineSuite extends FunSuite with Checkers:
   val p2: Price    = Price(3.5782)
   val q2: Quantity = Quantity(20)
 
-  test("Event source state track") {
+  test("Trade engine state machine") {
     val st1 = TradeEngine.fsm.runS(TradeState.empty, TradeCommand.Create(id, s, TradeAction.Ask, p1, q1, "test", ts))
-    val ex1 = TradeState(Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
+    val ex1 = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
 
     val st2 = TradeEngine.fsm.runS(st1, TradeCommand.Update(id, s, TradeAction.Ask, p2, q2, "test", ts))
-    val ex2 = TradeState(Map(s -> Prices(ask = Map(p1 -> q1, p2 -> q2), bid = Map.empty, p2, p1)))
+    val ex2 = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1, p2 -> q2), bid = Map.empty, p2, p1)))
 
     val st3 = TradeEngine.fsm.runS(st2, TradeCommand.Delete(id, s, TradeAction.Ask, p1, "test", ts))
-    val ex3 = TradeState(Map(s -> Prices(ask = Map(p2 -> q2), bid = Map.empty, p2, p1)))
+    val ex3 = TradeState(On, Map(s -> Prices(ask = Map(p2 -> q2), bid = Map.empty, p2, p1)))
 
     val st4 = TradeEngine.fsm.runS(st3, TradeCommand.Create(id, s, TradeAction.Bid, p1, q1, "test", ts))
-    val ex4 = TradeState(Map(s -> Prices(ask = Map(p2 -> q2), bid = Map(p1 -> q1), p2, p1)))
+    val ex4 = TradeState(On, Map(s -> Prices(ask = Map(p2 -> q2), bid = Map(p1 -> q1), p2, p1)))
 
     NonEmptyList
       .of(
