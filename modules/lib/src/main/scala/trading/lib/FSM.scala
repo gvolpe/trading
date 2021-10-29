@@ -1,7 +1,7 @@
 package trading.lib
 
-import cats.{ Functor, Id }
 import cats.syntax.all.*
+import cats.{ Functor, Id }
 
 case class FSM[F[_], S, I, O](run: (S, I) => F[(S, O)]):
   def runS(using F: Functor[F]): (S, I) => F[S] =

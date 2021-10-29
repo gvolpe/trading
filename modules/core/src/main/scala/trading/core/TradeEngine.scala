@@ -1,13 +1,13 @@
 package trading.core
 
-import cats.Id
-
 import trading.commands.TradeCommand
-import trading.domain.*
 import trading.domain.TradingStatus.*
+import trading.domain.*
 import trading.events.TradeEvent
 import trading.lib.FSM
 import trading.state.TradeState
+
+import cats.Id
 
 object TradeEngine:
   val fsm: FSM[Id, TradeState, TradeCommand, List[(EventId, Timestamp) => TradeEvent]] =

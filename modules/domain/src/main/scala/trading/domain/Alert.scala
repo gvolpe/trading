@@ -2,16 +2,21 @@ package trading.domain
 
 import trading.ws.WsOut
 
-import cats.Show
-import cats.derived.semiauto.*
 import io.circe.Codec
 
-final case class Alert(
-    alertType: AlertType,
-    symbol: Symbol,
-    askPrice: AskPrice,
-    bidPrice: BidPrice,
-    high: Price,
-    low: Price
-) derives Codec.AsObject, Show:
+sealed trait Alert derives Codec.AsObject:
   def wsOut: WsOut = WsOut.Notification(this)
+
+object Alert:
+  final case class TradeAlert(
+      alertType: AlertType,
+      symbol: Symbol,
+      askPrice: AskPrice,
+      bidPrice: BidPrice,
+      high: Price,
+      low: Price
+  ) extends Alert
+
+  final case class TradeUpdate(
+      status: TradingStatus
+  ) extends Alert

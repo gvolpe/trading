@@ -4,8 +4,8 @@ import java.time.Instant
 import java.util.UUID
 
 import trading.commands.TradeCommand
-import trading.domain.*
 import trading.domain.TradingStatus.*
+import trading.domain.*
 import trading.state.*
 
 import cats.data.NonEmptyList

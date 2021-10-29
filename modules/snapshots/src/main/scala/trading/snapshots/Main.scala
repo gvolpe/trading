@@ -8,8 +8,8 @@ import trading.lib.Consumer
 import trading.state.TradeState
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import dev.profunktor.pulsar.schema.circe.bytes.*
+import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
@@ -26,7 +26,7 @@ object Main extends IOApp.Simple:
             .flatMap { latest =>
               consumer.receiveM
                 .mapAccumulate(latest) { case (st, Consumer.Msg(msgId, evt)) =>
-                  TradeEvent._Command.get(evt) match // TODO: is this the correct behavior?
+                  TradeEvent._Command.get(evt) match
                     case Some(cmd) =>
                       TradeEngine.fsm.runS(st, cmd) -> (msgId -> evt.id)
                     case None =>

@@ -2,12 +2,12 @@ package trading
 
 import java.util.UUID
 
+import trading.domain.OrphanInstances.given
+
 import cats.{ Eq, Order, Show }
 import ciris.{ ConfigDecoder, ConfigValue }
 import io.circe.{ Decoder, Encoder }
 import monocle.Iso
-
-import trading.domain.OrphanInstances.given
 
 abstract class Newtype[A](using
     eqv: Eq[A],

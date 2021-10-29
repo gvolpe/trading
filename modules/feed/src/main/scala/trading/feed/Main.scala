@@ -7,8 +7,8 @@ import trading.lib.Producer
 
 import cats.effect.*
 import cats.syntax.all.*
-import dev.profunktor.pulsar.{ Pulsar, ShardKey }
 import dev.profunktor.pulsar.schema.circe.bytes.*
+import dev.profunktor.pulsar.{ Pulsar, ShardKey }
 import fs2.Stream
 
 object Main extends IOApp.Simple:

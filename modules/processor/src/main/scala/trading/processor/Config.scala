@@ -1,12 +1,12 @@
 package trading.processor
 
+import trading.domain.{*, given}
+
 import cats.effect.kernel.Async
 import cats.syntax.all.*
 import ciris.*
 import com.comcast.ip4s.*
 import dev.profunktor.pulsar.Config as PulsarConfig
-
-import trading.domain.{*, given}
 
 final case class ProcessorConfig(
     httpPort: Port,

@@ -1,6 +1,6 @@
 package trading.commands
 
-import trading.domain.{ given, * }
+import trading.domain.{*, given}
 import trading.domain.ForecastTag.given // to derive Eq (should not be needed, though)
 import trading.domain.VoteResult.given // to derive Eq (should not be needed, though)
 

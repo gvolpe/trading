@@ -2,6 +2,7 @@ package trading.alerts
 
 import trading.commands.TradeCommand
 import trading.core.{ Conflicts, TradeEngine }
+import trading.domain.Alert.{TradeAlert, TradeUpdate}
 import trading.domain.AlertType.*
 import trading.domain.*
 import trading.events.TradeEvent
@@ -17,13 +18,14 @@ object Engine:
       ack: Consumer.MsgId => F[Unit]
   ): FSM[F, (TradeState, DedupState), Consumer.Msg[TradeEvent], Unit] =
     FSM {
-      // TODO: decide what to do on Started and Stopped / Rejected
       case ((st, ds), Consumer.Msg(msgId, TradeEvent.Started(_, _))) =>
-        ().pure[F].tupleLeft(st -> ds)
+        val alert = TradeUpdate(TradingStatus.On)
+        (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
       case ((st, ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, _))) =>
-        ().pure[F].tupleLeft(st -> ds)
+        val alert = TradeUpdate(TradingStatus.Off)
+        (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
       case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandRejected(_, _, _, _))) =>
-        ().pure[F].tupleLeft(st -> ds)
+        ack(msgId).tupleLeft(st -> ds)
       case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandExecuted(_, command, _))) =>
         Conflicts.dedup(ds)(command) match
           case None =>
@@ -46,20 +48,20 @@ object Engine:
                 // dummy logic to simulate the trading market
                 val alert: Alert =
                   if (previousAskMax - currentAskMax > Price(0.3))
-                    Alert(StrongBuy, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(StrongBuy, symbol, currentAskMax, currentBidMax, high, low)
                   else if (previousAskMax - currentAskMax > Price(0.2))
-                    Alert(Buy, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(Buy, symbol, currentAskMax, currentBidMax, high, low)
                   else if (currentBidMax - previousBidMax > Price(0.3))
-                    Alert(StrongSell, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(StrongSell, symbol, currentAskMax, currentBidMax, high, low)
                   else if (currentBidMax - previousBidMax > Price(0.2))
-                    Alert(Sell, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(Sell, symbol, currentAskMax, currentBidMax, high, low)
                   else
-                    Alert(Neutral, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(Neutral, symbol, currentAskMax, currentBidMax, high, low)
 
                 Time[F].timestamp.flatMap { ts =>
                   val nds = Conflicts.update(ds)(cmd, ts)
                   (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(nst -> nds)
                 }
               case None =>
-                Logger[F].warn("s").tupleLeft(st -> ds)
+                ack(msgId).attempt.void.tupleLeft(st -> ds)
     }

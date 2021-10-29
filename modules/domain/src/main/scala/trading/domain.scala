@@ -1,11 +1,11 @@
 package trading.domain
 
-import scala.concurrent.duration.FiniteDuration
-
 import java.time.Instant
 import java.util.UUID
 
-import trading.{ IdNewtype, Newtype, NumNewtype, Wrapper }
+import scala.concurrent.duration.FiniteDuration
+
+import trading.*
 
 import cats.{ Eq, Order, Show }
 import ciris.ConfigValue

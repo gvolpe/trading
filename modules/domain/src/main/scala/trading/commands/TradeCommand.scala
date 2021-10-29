@@ -1,6 +1,6 @@
 package trading.commands
 
-import trading.domain.{ given, * }
+import trading.domain.{*, given}
 
 // FIXME: importing all `given` yield ambiguous implicits
 import cats.derived.semiauto.{ coproductEq, product, productEq, * }

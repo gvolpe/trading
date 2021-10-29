@@ -1,7 +1,7 @@
 package demo
 
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 type EventId   = UUID
 type UserId    = UUID

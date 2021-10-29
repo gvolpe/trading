@@ -1,7 +1,7 @@
 package trading.domain
 
-import cats.{ Eq, Show }
 import cats.syntax.all.*
+import cats.{ Eq, Show }
 import io.circe.Codec
 
 enum ForecastTag derives Codec.AsObject:

@@ -1,9 +1,9 @@
 package trading.domain
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
-
 import java.time.Instant
 import java.util.UUID
+
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 
 import cats.*
 import cats.syntax.all.*

@@ -2,14 +2,14 @@ package trading.forecasts
 
 import scala.concurrent.duration.*
 
+import trading.Newtype
+import trading.domain.{*, given}
+
 import cats.effect.kernel.Async
 import cats.syntax.all.*
 import ciris.*
 import com.comcast.ip4s.*
 import dev.profunktor.pulsar.Config as PulsarConfig
-
-import trading.Newtype
-import trading.domain.{ given, * }
 
 final case class ForecastsConfig(
     httpPort: Port,

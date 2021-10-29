@@ -9,8 +9,8 @@ import trading.lib.*
 import trading.state.{ DedupState, TradeState }
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import dev.profunktor.pulsar.schema.circe.bytes.*
+import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 

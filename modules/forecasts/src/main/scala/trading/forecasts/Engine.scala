@@ -1,7 +1,7 @@
 package trading.forecasts
 
-import trading.domain.*
 import trading.commands.ForecastCommand
+import trading.domain.*
 import trading.events.{ AuthorEvent, ForecastEvent }
 import trading.forecasts.store.{ AuthorStore, ForecastStore }
 import trading.lib.*
