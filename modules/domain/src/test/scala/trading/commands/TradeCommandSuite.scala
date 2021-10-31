@@ -11,3 +11,4 @@ import weaver.discipline.Discipline
 
 object TradeCommandSuite extends FunSuite with Discipline:
   checkAll("Traversal[TradeCommand, CommandId]", TraversalTests(TradeCommand._CommandId))
+  checkAll("Traversal[TradeCommand, Timestamp]", TraversalTests(TradeCommand._CreatedAt))

@@ -2,7 +2,7 @@ package trading.alerts
 
 import trading.commands.TradeCommand
 import trading.core.{ Conflicts, TradeEngine }
-import trading.domain.Alert.{TradeAlert, TradeUpdate}
+import trading.domain.Alert.{ TradeAlert, TradeUpdate }
 import trading.domain.AlertType.*
 import trading.domain.*
 import trading.events.TradeEvent
@@ -18,15 +18,15 @@ object Engine:
       ack: Consumer.MsgId => F[Unit]
   ): FSM[F, (TradeState, DedupState), Consumer.Msg[TradeEvent], Unit] =
     FSM {
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Started(_, _))) =>
+      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Started(_, _, _))) =>
         val alert = TradeUpdate(TradingStatus.On)
         (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, _))) =>
+      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, _, _))) =>
         val alert = TradeUpdate(TradingStatus.Off)
         (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandRejected(_, _, _, _))) =>
+      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandRejected(_, _, _, _, _))) =>
         ack(msgId).tupleLeft(st -> ds)
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandExecuted(_, command, _))) =>
+      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandExecuted(_, _, command, _))) =>
         Conflicts.dedup(ds)(command) match
           case None =>
             Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)

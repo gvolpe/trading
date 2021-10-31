@@ -18,6 +18,8 @@ object ConflictsSuite extends FunSuite with Checkers:
   val p1: Price    = Price(1.1987)
   val q1: Quantity = Quantity(10)
 
+  val cid: CorrelationId = CorrelationId(UUID.randomUUID())
+
   val id0: CommandId = CommandId(UUID.randomUUID())
   val id1: CommandId = CommandId(UUID.randomUUID())
   val id2: CommandId = CommandId(UUID.randomUUID())
@@ -26,11 +28,11 @@ object ConflictsSuite extends FunSuite with Checkers:
   val ts1: Timestamp = Timestamp(ts0.value.minusSeconds((DedupState.Threshold + 1.second).toSeconds))
 
   test("De-duplication logic") {
-    val cd1 = TradeCommand.Create(id0, s, TradeAction.Ask, p1, q1, "test", ts0)
+    val cd1 = TradeCommand.Create(id0, cid, s, TradeAction.Ask, p1, q1, "test", ts0)
     val st1 = Conflicts.update(DedupState.empty)(cd1, ts0)
     val ex1 = DedupState(Set(IdRegistry(id0, ts0)))
 
-    val cd2 = TradeCommand.Update(id1, s, TradeAction.Ask, p1, q1, "test", ts0)
+    val cd2 = TradeCommand.Update(id1, cid, s, TradeAction.Ask, p1, q1, "test", ts0)
     val st2 = Conflicts.update(st1)(cd2, ts1) // older than 5 seconds, should be removed in next update
     val ex2 = DedupState(Set(IdRegistry(id0, ts0), IdRegistry(id1, ts1)))
 
@@ -38,12 +40,12 @@ object ConflictsSuite extends FunSuite with Checkers:
     val rx2 = Some(cd2)
 
     // duplicate event (already processed)
-    val cd3 = TradeCommand.Create(id0, s, TradeAction.Ask, p1, q1, "test", ts0)
+    val cd3 = TradeCommand.Create(id0, cid, s, TradeAction.Ask, p1, q1, "test", ts0)
     val rs3 = Conflicts.dedup(st2)(cd3)
     val rx3 = None
 
     // update should now remove id1 (from cd2), which has old timestamp (ts1)
-    val st4 = Conflicts.update(st2)(TradeCommand.Create(id2, s, TradeAction.Bid, p1, q1, "test", ts0), ts0)
+    val st4 = Conflicts.update(st2)(TradeCommand.Create(id2, cid, s, TradeAction.Bid, p1, q1, "test", ts0), ts0)
     val ex4 = DedupState(Set(IdRegistry(id0, ts0), IdRegistry(id2, ts0)))
 
     NonEmptyList

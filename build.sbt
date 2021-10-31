@@ -44,7 +44,7 @@ val commonSettings = List(
 
 def dockerSettings(name: String) = List(
   Docker / packageName := s"trading-$name",
-  dockerBaseImage      := "jdk17-curl:latest", // "openjdk:17-slim-buster",
+  dockerBaseImage      := "jdk17-curl:latest",
   dockerExposedPorts ++= List(8080),
   makeBatScripts     := Nil,
   dockerUpdateLatest := true
@@ -54,7 +54,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "trading-app"
   )
-  .aggregate(lib, domain, core, alerts, feed, forecasts, processor, snapshots, ws, demo)
+  .aggregate(lib, domain, core, alerts, feed, forecasts, processor, snapshots, tracing, ws, demo)
 
 lazy val domain = (project in file("modules/domain"))
   .settings(commonSettings: _*)
@@ -104,6 +104,20 @@ lazy val processor = (project in file("modules/processor"))
   .enablePlugins(AshScriptPlugin)
   .settings(commonSettings: _*)
   .settings(dockerSettings("processor"))
+  .dependsOn(core)
+
+lazy val tracing = (project in file("modules/tracing"))
+  .enablePlugins(DockerPlugin)
+  .enablePlugins(AshScriptPlugin)
+  .settings(commonSettings: _*)
+  .settings(dockerSettings("tracing"))
+  .settings(
+    libraryDependencies ++= List(
+      Libraries.http4sCirce,
+      Libraries.natchezCore,
+      Libraries.natchezHoneycomb
+    )
+  )
   .dependsOn(core)
 
 lazy val ws = (project in file("modules/ws-server"))

@@ -19,6 +19,7 @@ object arbitraries:
   given Arbitrary[Price]        = Arbitrary(priceGen)
   given Arbitrary[Quantity]     = Arbitrary(quantityGen)
   given Arbitrary[TradeState]   = Arbitrary(tradeStateGen)
+  given Arbitrary[Timestamp]    = Arbitrary(timestampGen)
 
 object cogen:
   given uuidCogen: Cogen[UUID] =
@@ -28,6 +29,9 @@ object cogen:
 
   given Cogen[CommandId] =
     uuidCogen.contramap(_.value)
+
+  given Cogen[Timestamp] =
+    Cogen[String].contramap(_.toString)
 
   given Cogen[Quantity] =
     Cogen.cogenInt.contramap[Quantity](_.value)
@@ -55,6 +59,8 @@ object generators:
 
   val commandIdGen: Gen[CommandId] = Gen.uuid.map(id => CommandId(id))
 
+  val correlationIdGen: Gen[CorrelationId] = Gen.uuid.map(id => CorrelationId(id))
+
   val eventIdGen: Gen[EventId] = Gen.uuid.map(id => EventId(id))
 
   val symbolGen: Gen[Symbol] =
@@ -77,46 +83,51 @@ object generators:
   val createCommandGen: Gen[TradeCommand.Create] =
     for
       i <- commandIdGen
+      d <- correlationIdGen
       s <- symbolGen
       a <- tradeActionGen
       p <- priceGen
       q <- quantityGen
       c <- sourceGen
       t <- timestampGen
-    yield TradeCommand.Create(i, s, a, p, q, c, t)
+    yield TradeCommand.Create(i, d, s, a, p, q, c, t)
 
   val updateCommandGen: Gen[TradeCommand.Update] =
     for
       i <- commandIdGen
+      d <- correlationIdGen
       s <- symbolGen
       a <- tradeActionGen
       p <- priceGen
       q <- quantityGen
       c <- sourceGen
       t <- timestampGen
-    yield TradeCommand.Update(i, s, a, p, q, c, t)
+    yield TradeCommand.Update(i, d, s, a, p, q, c, t)
 
   val deleteCommandGen: Gen[TradeCommand.Delete] =
     for
       i <- commandIdGen
+      d <- correlationIdGen
       s <- symbolGen
       a <- tradeActionGen
       p <- priceGen
       c <- sourceGen
       t <- timestampGen
-    yield TradeCommand.Delete(i, s, a, p, c, t)
+    yield TradeCommand.Delete(i, d, s, a, p, c, t)
 
   val startCommandGen: Gen[TradeCommand.Start] =
     for
       i <- commandIdGen
+      d <- correlationIdGen
       t <- timestampGen
-    yield TradeCommand.Start(i, t)
+    yield TradeCommand.Start(i, d, t)
 
   val stopCommandGen: Gen[TradeCommand.Stop] =
     for
       i <- commandIdGen
+      d <- correlationIdGen
       t <- timestampGen
-    yield TradeCommand.Stop(i, t)
+    yield TradeCommand.Stop(i, d, t)
 
   val tradeCommandGen: Gen[TradeCommand] =
     Gen.frequency(

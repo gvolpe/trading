@@ -12,6 +12,7 @@ object Dependencies {
     val http4s     = "1.0.0-M28"
     val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
+    val natchez    = "0.1.4"
     val neutron    = "0.1.0"
     val redis4cats = "1.0.0+62-618c9d75-SNAPSHOT"
     val refined    = "0.9.27"
@@ -40,6 +41,9 @@ object Dependencies {
     val http4sServer = http4s("ember-server")
     val http4sClient = http4s("ember-client")
     val http4sCirce  = http4s("circe")
+
+    val natchezCore      = "org.tpolecat" %% "natchez-core"      % V.natchez
+    val natchezHoneycomb = "org.tpolecat" %% "natchez-honeycomb" % V.natchez
 
     val neutronCore       = "dev.profunktor" %% "neutron-core"       % V.neutron
     val neutronCirce      = "dev.profunktor" %% "neutron-circe"      % V.neutron
