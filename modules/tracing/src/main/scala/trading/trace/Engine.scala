@@ -1,61 +1,68 @@
 package trading.trace
 
+import java.time.Instant
+
 import scala.concurrent.duration.*
 
-import trading.commands.TradeCommand
-import trading.events.TradeEvent
+import trading.commands.*
+import trading.events.*
 import trading.lib.{ FSM, Logger }
 
 import cats.Monad
-import cats.effect.{ Trace as _, * }
 import cats.syntax.all.*
-import io.circe.syntax.*
-import natchez.*
-import natchez.honeycomb.Honeycomb
-import java.time.Instant
+import cats.Applicative
 
 object Engine:
-  //TODO: DoTrace could be some external component, so we can easily mock it for testing with a ref
-  private def doTrace[F[_]: Async](
-      ep: EntryPoint[F],
-      evt: TradeEvent,
-      cmd: TradeCommand
-  ): F[Unit] =
-    ep.root("trading-root").use { root =>
-      root.span("trading-tx").use { sp =>
-        val durationMs = evt.createdAt.value.toEpochMilli - cmd.createdAt.value.toEpochMilli
-        sp.put("correlation-id"      -> evt.cid.show) *>
-          sp.put("command-timestamp" -> cmd.createdAt.show) *>
-          sp.put("event-timestamp" -> evt.createdAt.show) *>
-          sp.put("duration-tx-ms" -> durationMs.show) *>
-          sp.put("payload-event" -> evt.asJson.noSpaces) *>
-          sp.put("payload-command" -> cmd.asJson.noSpaces)
-      }
-    }
-
-  def fsm[F[_]: Async: Logger](
-      ep: EntryPoint[F]
+  def tradingFsm[F[_]: Logger: Monad](
+      tracer: Tracer[F]
   ): FSM[F, (List[TradeEvent], List[TradeCommand]), Either[TradeEvent, TradeCommand], Unit] =
     FSM {
       case ((events, commands), Right(cmd)) =>
-        Logger[F].info(s"Events: ${events.size}, Commands: ${commands.size}").flatMap { _ =>
+        Logger[F].info(s"Trading >>> Events: ${events.size}, Commands: ${commands.size}").flatMap { _ =>
           events.find(_.cid === cmd.cid) match
             case Some(evt) =>
               val ne = events.filterNot(_.id === evt.id)
               val nc = commands.filterNot(_.id === cmd.id)
-              doTrace(ep, evt, cmd).tupleLeft(ne -> nc)
+              tracer.trading(evt, cmd).tupleLeft(ne -> nc)
             case None =>
               ().pure[F].tupleLeft(events -> (commands :+ cmd))
         }
 
       case ((events, commands), Left(evt)) =>
-        Logger[F].info(s"Events: ${events.size}, Commands: ${commands.size}").flatMap { _ =>
+        Logger[F].info(s"Trading >>> Events: ${events.size}, Commands: ${commands.size}").flatMap { _ =>
           commands.find(_.cid === evt.cid) match
             case Some(cmd) =>
               val ne = events.filterNot(_.id === evt.id)
               val nc = commands.filterNot(_.id === cmd.id)
-              doTrace(ep, evt, cmd).tupleLeft(ne -> nc)
+              tracer.trading(evt, cmd).tupleLeft(ne -> nc)
             case None =>
               ().pure[F].tupleLeft((events :+ evt) -> commands)
         }
+    }
+
+  type ForecastState = (List[AuthorEvent], List[ForecastEvent], List[ForecastCommand])
+  type ForecastIn    = Either[AuthorEvent, Either[ForecastEvent, ForecastCommand]]
+
+  def forecastFsm[F[_]: Applicative: Logger](
+      tracer: Tracer[F]
+  ): FSM[F, ForecastState, ForecastIn, Unit] =
+    FSM {
+      case ((atEvents, fcEvents, fcCommands), Right(Right(cmd))) =>
+        (atEvents.find(_.cid === cmd.cid), fcEvents.find(_.cid === cmd.cid)) match
+          case (Some(evt), _) =>
+            val ne = atEvents.filterNot(_.id === evt.id)
+            val nc = fcCommands.filterNot(_.id === cmd.id)
+            tracer.forecasting(evt.asLeft, cmd).tupleLeft((ne, fcEvents, nc))
+          case (_, Some(evt)) =>
+            val ne = fcEvents.filterNot(_.id === evt.id)
+            val nc = fcCommands.filterNot(_.id === cmd.id)
+            tracer.forecasting(evt.asRight, cmd).tupleLeft((atEvents, ne, nc))
+          case (None, None) =>
+            ().pure[F].tupleLeft((atEvents, fcEvents, (fcCommands :+ cmd)))
+
+      case ((atEvents, fcEvents, fcCommands), Right(Left(fcEvt))) =>
+        ().pure[F].tupleLeft((atEvents, fcEvents, fcCommands))
+
+      case ((atEvents, fcEvents, fcCommands), Left(atEvt)) =>
+        ().pure[F].tupleLeft((atEvents, fcEvents, fcCommands))
     }

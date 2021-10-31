@@ -1,10 +1,10 @@
 package trading.trace
 
-import trading.commands.TradeCommand
+import trading.commands.*
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
-import trading.events.TradeEvent
+import trading.events.*
 import trading.lib.*
 import trading.state.{ DedupState, TradeState }
 
@@ -20,14 +20,28 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { (server, events, commands, ep) =>
-        Stream.eval(server.useForever).concurrently {
-          events
-            .either(commands)
+      .flatMap { (server, tradingEvents, tradingCommands, authorEvents, forecastEvents, forecastCommands, tracer) =>
+        val trading =
+          tradingEvents
+            .either(tradingCommands)
             .evalMapAccumulate(
               List.empty[TradeEvent] -> List.empty[TradeCommand]
-            )(Engine.fsm[IO](ep).run)
-        }
+            )(Engine.tradingFsm[IO](tracer).run)
+
+        val forecasting =
+          authorEvents
+            .either(
+              forecastEvents.either(forecastCommands)
+            )
+            .evalMapAccumulate(
+              (List.empty[AuthorEvent], List.empty[ForecastEvent], List.empty[ForecastCommand])
+            )(Engine.forecastFsm[IO](tracer).run)
+
+        Stream(
+          Stream.eval(server.useForever),
+          trading,
+          forecasting
+        ).parJoinUnbounded
       }
       .compile
       .drain
@@ -38,7 +52,7 @@ object Main extends IOApp.Simple:
     Honeycomb.entryPoint[IO]("trading-app") { ep =>
       IO {
         ep.setWriteKey(apiKey.value)
-          .setDataset("trading-test3")
+          .setDataset("demo")
           .build
       }
     }
@@ -49,16 +63,21 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.Exclusive)
       .build
 
-  // TODO: better do tracing with forecasts instead of trading?
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(IO.println(">>> Initializing tracing service <<<"))
-      evtTopic = AppTopic.TradingEvents.make(config.pulsar)
-      cmdTopic = AppTopic.TradingCommands.make(config.pulsar)
-      ep       <- entryPoint(config.honeycombApiKey)
-      events   <- Consumer.pulsar[IO, TradeEvent](pulsar, evtTopic, sub).map(_.receive)
-      commands <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub).map(_.receive)
+      ep     <- entryPoint(config.honeycombApiKey)
+      tracer           = Tracer.make[IO](ep)
+      tradingEvtTopic  = AppTopic.TradingEvents.make(config.pulsar)
+      tradingCmdTopic  = AppTopic.TradingCommands.make(config.pulsar)
+      forecastCmdTopic = AppTopic.ForecastCommands.make(config.pulsar)
+      forecastEvtTopic = AppTopic.ForecastEvents.make(config.pulsar)
+      tradingEvents    <- Consumer.pulsar[IO, TradeEvent](pulsar, tradingEvtTopic, sub).map(_.receive)
+      tradingCommands  <- Consumer.pulsar[IO, TradeCommand](pulsar, tradingCmdTopic, sub).map(_.receive)
+      authorEvents     <- Consumer.pulsar[IO, AuthorEvent](pulsar, forecastEvtTopic, sub).map(_.receive)
+      forecastEvents   <- Consumer.pulsar[IO, ForecastEvent](pulsar, forecastEvtTopic, sub).map(_.receive)
+      forecastCommands <- Consumer.pulsar[IO, ForecastCommand](pulsar, forecastCmdTopic, sub).map(_.receive)
       server = Ember.default[IO](config.httpPort)
-    yield (server, events, commands, ep)
+    yield (server, tradingEvents, tradingCommands, authorEvents, forecastEvents, forecastCommands, tracer)
