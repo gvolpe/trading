@@ -32,8 +32,10 @@ services:
     depends_on:
       pulsar:
         condition: service_healthy
+    volumes:
+      - ../pulsar-manager/application.properties:/pulsar-manager/custom.properties
     environment:
-      - SPRING_CONFIGURATION_FILE=./pulsar-manager/application.properties
+      - SPRING_CONFIGURATION_FILE=/pulsar-manager/custom.properties
 
   redis:
     restart: always
