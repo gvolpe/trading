@@ -5,6 +5,7 @@ import java.time.Instant
 import scala.concurrent.duration.*
 
 import trading.commands.*
+import trading.domain.Alert
 import trading.events.*
 import trading.lib.{ FSM, Logger }
 
@@ -13,33 +14,46 @@ import cats.syntax.all.*
 import cats.Applicative
 
 object Engine:
-  type TradeIn = TradeEvent | TradeCommand
+  type TradeState = (List[TradeCommand], List[TradeEvent], List[Alert])
+  type TradeIn    = TradeCommand | TradeEvent | Alert
 
   def tradingFsm[F[_]: Logger: Monad](
       tracer: Tracer[F]
-  ): FSM[F, (List[TradeEvent], List[TradeCommand]), TradeIn, Unit] =
+  ): FSM[F, TradeState, TradeIn, Unit] =
     FSM {
-      case ((events, commands), cmd: TradeCommand) =>
-        Logger[F].info(s"Trading >>> Events: ${events.size}, Commands: ${commands.size}").flatMap { _ =>
-          events.find(_.cid === cmd.cid) match
-            case Some(evt) =>
-              val ne = events.filterNot(_.id === evt.id)
-              val nc = commands.filterNot(_.id === cmd.id)
-              tracer.trading(evt, cmd).tupleLeft(ne -> nc)
-            case None =>
-              ().pure[F].tupleLeft(events -> (commands :+ cmd))
-        }
+      case ((commands, events, alerts), cmd: TradeCommand) =>
+        (events.find(_.cid === cmd.cid), alerts.find(_.cid === cmd.cid)) match
+          case (Some(evt), Some(alt)) =>
+            val nc = commands.filterNot(_.id === cmd.id)
+            val ne = events.filterNot(_.id === evt.id)
+            val na = alerts.filterNot(_.id === alt.id)
+            tracer.trading(cmd, evt, alt).tupleLeft((nc, ne, na))
+          case (Some(evt), None) =>
+            ().pure[F].tupleLeft((commands, events :+ evt, alerts))
+          case (None, Some(alt)) =>
+            ().pure[F].tupleLeft((commands, events, alerts :+ alt))
+          case _ =>
+            ().pure[F].tupleLeft((commands, events, alerts))
 
-      case ((events, commands), evt: TradeEvent) =>
-        Logger[F].info(s"Trading >>> Events: ${events.size}, Commands: ${commands.size}").flatMap { _ =>
-          commands.find(_.cid === evt.cid) match
-            case Some(cmd) =>
-              val ne = events.filterNot(_.id === evt.id)
-              val nc = commands.filterNot(_.id === cmd.id)
-              tracer.trading(evt, cmd).tupleLeft(ne -> nc)
-            case None =>
-              ().pure[F].tupleLeft((events :+ evt) -> commands)
-        }
+      case ((commands, events, alerts), evt: TradeEvent) =>
+        (commands.find(_.cid === evt.cid), alerts.find(_.cid === evt.cid)) match
+          case (Some(cmd), Some(alt)) =>
+            val nc = commands.filterNot(_.id === cmd.id)
+            val ne = events.filterNot(_.id === evt.id)
+            val na = alerts.filterNot(_.id === alt.id)
+            tracer.trading(cmd, evt, alt).tupleLeft((nc, ne, na))
+          case _ =>
+            ().pure[F].tupleLeft((commands, events :+ evt, alerts))
+
+      case ((commands, events, alerts), alt: Alert) =>
+        (commands.find(_.cid === alt.cid), events.find(_.cid === alt.cid)) match
+          case (Some(cmd), Some(evt)) =>
+            val nc = commands.filterNot(_.id === cmd.id)
+            val ne = events.filterNot(_.id === evt.id)
+            val na = alerts.filterNot(_.id === alt.id)
+            tracer.trading(cmd, evt, alt).tupleLeft((nc, ne, na))
+          case _ =>
+            ().pure[F].tupleLeft((commands, events, alerts :+ alt))
     }
 
   type ForecastState = (List[AuthorEvent], List[ForecastEvent], List[ForecastCommand])

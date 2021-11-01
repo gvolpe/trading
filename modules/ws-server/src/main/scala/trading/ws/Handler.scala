@@ -25,8 +25,8 @@ object Handler:
       case (switch, subs, sid) =>
         new Handler[F]:
           val encode: WsOut => F[Option[WebSocketFrame]] = {
-            case out @ WsOut.Notification(TradeAlert(_, symbol, _, _, _, _)) =>
-              subs.get.map(_.find(_ === symbol).as(Text((out: WsOut).asJson.noSpaces)))
+            case out @ WsOut.Notification(t: TradeAlert) =>
+              subs.get.map(_.find(_ === t.symbol).as(Text((out: WsOut).asJson.noSpaces)))
             case out =>
               Text(out.asJson.noSpaces).some.pure[F].widen
           }

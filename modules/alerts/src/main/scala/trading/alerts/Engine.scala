@@ -13,20 +13,24 @@ import cats.MonadThrow
 import cats.syntax.all.*
 
 object Engine:
-  def fsm[F[_]: Logger: MonadThrow: Time](
+  def fsm[F[_]: GenUUID: Logger: MonadThrow: Time](
       producer: Producer[F, Alert],
       ack: Consumer.MsgId => F[Unit]
   ): FSM[F, (TradeState, DedupState), Consumer.Msg[TradeEvent], Unit] =
     FSM {
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Started(_, _, _))) =>
-        val alert = TradeUpdate(TradingStatus.On)
-        (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, _, _))) =>
-        val alert = TradeUpdate(TradingStatus.Off)
-        (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
+      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Started(_, cid, _))) =>
+        (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
+          val alert = TradeUpdate(id, cid, TradingStatus.On, ts)
+          (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
+        }
+      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, cid, _))) =>
+        (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
+          val alert = TradeUpdate(id, cid, TradingStatus.Off, ts)
+          (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
+        }
       case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandRejected(_, _, _, _, _))) =>
         ack(msgId).tupleLeft(st -> ds)
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandExecuted(_, _, command, _))) =>
+      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandExecuted(_, cid, command, _))) =>
         Conflicts.dedup(ds)(command) match
           case None =>
             Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
@@ -46,21 +50,21 @@ object Engine:
                 val low: Price  = c.map(_.low).getOrElse(Price(0.0))
 
                 // dummy logic to simulate the trading market
-                val alert: Alert =
+                def alert(id: AlertId, ts: Timestamp): Alert =
                   if (previousAskMax - currentAskMax > Price(0.3))
-                    TradeAlert(StrongBuy, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(id, cid, StrongBuy, symbol, currentAskMax, currentBidMax, high, low, ts)
                   else if (previousAskMax - currentAskMax > Price(0.2))
-                    TradeAlert(Buy, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(id, cid, Buy, symbol, currentAskMax, currentBidMax, high, low, ts)
                   else if (currentBidMax - previousBidMax > Price(0.3))
-                    TradeAlert(StrongSell, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(id, cid, StrongSell, symbol, currentAskMax, currentBidMax, high, low, ts)
                   else if (currentBidMax - previousBidMax > Price(0.2))
-                    TradeAlert(Sell, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(id, cid, Sell, symbol, currentAskMax, currentBidMax, high, low, ts)
                   else
-                    TradeAlert(Neutral, symbol, currentAskMax, currentBidMax, high, low)
+                    TradeAlert(id, cid, Neutral, symbol, currentAskMax, currentBidMax, high, low, ts)
 
-                Time[F].timestamp.flatMap { ts =>
+                (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
                   val nds = Conflicts.update(ds)(cmd, ts)
-                  (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(nst -> nds)
+                  (producer.send(alert(id, ts)) >> ack(msgId)).attempt.void.tupleLeft(nst -> nds)
                 }
               case None =>
                 ack(msgId).attempt.void.tupleLeft(st -> ds)

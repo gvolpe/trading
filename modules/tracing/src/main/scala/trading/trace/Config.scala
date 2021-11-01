@@ -14,7 +14,7 @@ import dev.profunktor.pulsar.Config as PulsarConfig
 final case class TracingConfig(
     httpPort: Port,
     pulsar: PulsarConfig,
-    honeycombApiKey: Option[Config.HoneycombApiKey]
+    honeycombApiKey: Config.HoneycombApiKey
 )
 
 object Config:
@@ -25,7 +25,7 @@ object Config:
     (
       env("HTTP_PORT").as[Port].default(port"9005"),
       env("PULSAR_URI").as[PulsarURI].fallback("pulsar://localhost:6650"),
-      env("HONEYCOMB_API_KEY").as[HoneycombApiKey].option
+      env("HONEYCOMB_API_KEY").as[HoneycombApiKey]
     ).parMapN { (port, pulsarUri, apiKey) =>
       val pulsar =
         PulsarConfig.Builder

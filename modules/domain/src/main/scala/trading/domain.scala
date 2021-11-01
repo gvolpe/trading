@@ -41,6 +41,9 @@ object Source extends Newtype[String]
 type CommandId = CommandId.Type
 object CommandId extends IdNewtype
 
+type AlertId = AlertId.Type
+object AlertId extends IdNewtype
+
 type EventId = EventId.Type
 object EventId extends IdNewtype
 
