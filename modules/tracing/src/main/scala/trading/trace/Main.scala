@@ -7,6 +7,7 @@ import trading.core.snapshots.SnapshotReader
 import trading.events.*
 import trading.lib.*
 import trading.state.{ DedupState, TradeState }
+import trading.trace.log.LogEntryPoint
 
 import cats.effect.*
 import dev.profunktor.pulsar.schema.circe.bytes.*
@@ -44,21 +45,30 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  def entryPoint(
-      apiKey: Config.HoneycombApiKey
+  def mkEntryPoint(
+      name: String,
+      apiKey: Option[Config.HoneycombApiKey]
   ): Resource[IO, EntryPoint[IO]] =
-    Honeycomb.entryPoint[IO]("trading-app") { ep =>
-      IO {
-        ep.setWriteKey(apiKey.value)
-          .setDataset("demo")
-          .build
-      }
-    }
+    apiKey match
+      case Some(key) =>
+        Honeycomb
+          .entryPoint[IO](name) { ep =>
+            IO {
+              ep.setWriteKey(key.value)
+                .setDataset("demo")
+                .build
+            }
+          }
+          .evalTap(_ => Logger[IO].info("Setting up Honeycomb as the tracer"))
+      case None =>
+        Resource.eval {
+          Logger[IO].warn("Honeycomb API Key not found, using log tracer").as(LogEntryPoint[IO](name))
+        }
 
   val sub =
     Subscription.Builder
       .withName("tracing")
-      .withType(Subscription.Type.Exclusive)
+      .withType(Subscription.Type.Shared)
       .build
 
   def resources =
@@ -66,7 +76,7 @@ object Main extends IOApp.Simple:
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(IO.println(">>> Initializing tracing service <<<"))
-      ep     <- entryPoint(config.honeycombApiKey)
+      ep     <- mkEntryPoint("trading-app", config.honeycombApiKey)
       tracer           = Tracer.make[IO](ep)
       tradingEvtTopic  = AppTopic.TradingEvents.make(config.pulsar)
       tradingCmdTopic  = AppTopic.TradingCommands.make(config.pulsar)

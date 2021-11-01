@@ -32,8 +32,10 @@ services:
     depends_on:
       pulsar:
         condition: service_healthy
+    volumes:
+      - ../pulsar-manager/application.properties:/pulsar-manager/custom.properties
     environment:
-      - SPRING_CONFIGURATION_FILE=../pulsar-manager/application.properties
+      - SPRING_CONFIGURATION_FILE=/pulsar-manager/custom.properties
 
   redis:
     restart: always
@@ -155,7 +157,7 @@ services:
     environment:
       - HTTP_PORT=9005
       - PULSAR_URI=pulsar://pulsar:6650
-      - HONEYCOMB_API_KEY=your-honeycomb-key-goes-here
+      #- HONEYCOMB_API_KEY=your-honeycomb-key-goes-here
     depends_on:
       pulsar:
         condition: service_healthy
