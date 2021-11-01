@@ -23,16 +23,14 @@ object Main extends IOApp.Simple:
       .flatMap { (server, tradingEvents, tradingCommands, authorEvents, forecastEvents, forecastCommands, tracer) =>
         val trading =
           tradingEvents
-            .either(tradingCommands)
+            .merge[IO, Engine.TradeIn](tradingCommands)
             .evalMapAccumulate(
               List.empty[TradeEvent] -> List.empty[TradeCommand]
             )(Engine.tradingFsm[IO](tracer).run)
 
         val forecasting =
           authorEvents
-            .either(
-              forecastEvents.either(forecastCommands)
-            )
+            .merge[IO, Engine.ForecastIn](forecastEvents.merge(forecastCommands))
             .evalMapAccumulate(
               (List.empty[AuthorEvent], List.empty[ForecastEvent], List.empty[ForecastCommand])
             )(Engine.forecastFsm[IO](tracer).run)
@@ -41,7 +39,7 @@ object Main extends IOApp.Simple:
           Stream.eval(server.useForever),
           trading,
           forecasting
-        ).parJoinUnbounded
+        ).parJoin(3)
       }
       .compile
       .drain
