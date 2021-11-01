@@ -37,10 +37,11 @@ object Dependencies {
     val circeCore   = "io.circe" %% "circe-core"   % V.circe
     val circeExtras = "io.circe" %% "circe-extras" % V.circe
 
-    val http4sDsl    = http4s("dsl")
-    val http4sServer = http4s("ember-server")
-    val http4sClient = http4s("ember-client")
-    val http4sCirce  = http4s("circe")
+    val http4sDsl     = http4s("dsl")
+    val http4sServer  = http4s("ember-server")
+    val http4sClient  = http4s("ember-client")
+    val http4sCirce   = http4s("circe")
+    val http4sMetrics = http4s("prometheus-metrics")
 
     val natchezCore      = "org.tpolecat" %% "natchez-core"      % V.natchez
     val natchezHoneycomb = "org.tpolecat" %% "natchez-honeycomb" % V.natchez

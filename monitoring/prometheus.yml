@@ -1,0 +1,38 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+  external_labels:
+      monitor: 'trading-app'
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+         - targets: ['localhost:9090']
+
+  - job_name: 'tracing'
+    scrape_interval: 5s
+    static_configs:
+         - targets: ['tracing:9005']
+
+  - job_name: 'alerts'
+    scrape_interval: 5s
+    static_configs:
+         - targets: ['alerts:9004']
+
+  - job_name: 'processor'
+    scrape_interval: 5s
+    static_configs:
+         - targets: ['processor:9003']
+
+  - job_name: 'snapshots'
+    scrape_interval: 5s
+    static_configs:
+         - targets: ['snapshots:9002']
+
+  - job_name: 'ws-server'
+    scrape_interval: 5s
+    static_configs:
+         - targets: ['ws-server:9001']

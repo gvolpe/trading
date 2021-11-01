@@ -4,12 +4,15 @@ networks:
   trading-net: {}
 
 services:
+
+  ################################# Persistence ###################################
+
   pulsar:
     restart: always
     image: apachepulsar/pulsar:2.8.1
     ports:
-      - "6650:6650"
-      - "8080:8080"
+      - 6650:6650
+      - 8080:8080
     command: >
       /bin/bash -c "bin/pulsar standalone"
     networks:
@@ -21,27 +24,11 @@ services:
       retries: 15
       start_period: 2m
 
-  pulsar-manager:
-    restart: always
-    image: apachepulsar/pulsar-manager:v0.2.0
-    ports:
-      - "9527:9527"
-      - "7750:7750"
-    networks:
-      - trading-net
-    depends_on:
-      pulsar:
-        condition: service_healthy
-    volumes:
-      - ../pulsar-manager/application.properties:/pulsar-manager/custom.properties
-    environment:
-      - SPRING_CONFIGURATION_FILE=/pulsar-manager/custom.properties
-
   redis:
     restart: always
     image: redis:6.0.8
     ports:
-      - "6379:6379"
+      - 6379:6379
     environment:
       - DEBUG=false
     networks:
@@ -52,11 +39,79 @@ services:
       timeout: 3s
       retries: 30
 
+  ################################# Monitoring ###################################
+
+  pulsar-manager:
+    restart: always
+    image: apachepulsar/pulsar-manager:v0.2.0
+    ports:
+      - 9527:9527
+      - 7750:7750
+    networks:
+      - trading-net
+    depends_on:
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ../pulsar-manager/application.properties:/pulsar-manager/custom.properties
+    environment:
+      - SPRING_CONFIGURATION_FILE=/pulsar-manager/custom.properties
+
+  prometheus:
+    restart: always
+    image: prom/prometheus:v2.30.3
+    ports:
+      - 9090:9090
+    networks:
+      - trading-net
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    links:
+      - alerts:alerts
+      - processor:processor
+      - snapshots:snapshots
+      - tracing:tracing
+      - ws-server:ws-server
+    healthcheck:
+      test: ["CMD", "wget", "--tries=1", "--spider", "http://localhost:9090"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  grafana:
+    restart: always
+    image: grafana/grafana:8.2.2
+    ports:
+      - 3000:3000
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    networks:
+      - trading-net
+    volumes:
+      - ../monitoring/grafana/:/etc/grafana/provisioning
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  ################################# Services ###################################
+
   ws-server:
     restart: always
     image: trading-ws:latest
     ports:
-      - "9000:9000"
+      - 9000:9000
     networks:
       - trading-net
     environment:
@@ -76,7 +131,7 @@ services:
     restart: always
     image: trading-alerts:latest
     ports:
-      - "9004:9004"
+      - 9004:9004
     networks:
       - trading-net
     environment:
@@ -101,7 +156,7 @@ services:
     restart: always
     image: trading-processor:latest
     ports:
-      - "9003:9003"
+      - 9003:9003
     networks:
       - trading-net
     environment:
@@ -126,7 +181,7 @@ services:
     restart: always
     image: trading-snapshots:latest
     ports:
-      - "9002:9002"
+      - 9002:9002
     networks:
       - trading-net
     environment:
@@ -151,7 +206,7 @@ services:
     restart: always
     image: trading-tracing:latest
     ports:
-      - "9005:9005"
+      - 9005:9005
     networks:
       - trading-net
     environment:

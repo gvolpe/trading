@@ -27,6 +27,7 @@ val commonSettings = List(
     Libraries.fs2,
     Libraries.fs2Kafka,
     Libraries.http4sDsl,
+    Libraries.http4sMetrics,
     Libraries.http4sServer,
     Libraries.kittens,
     Libraries.monocleCore,

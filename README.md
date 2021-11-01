@@ -21,7 +21,9 @@ Examples corresponding to the [Functional event-driven architecture: Powered by 
    * [Snapshots](#snapshots)
    * [Alerts](#alerts)
    * [WS Server](#ws-server)
+   * [Tracing](#tracing)
    * [X Demo](#x-demo)
+* [Monitoring](#monitoring)
 
 ## Web App
 
@@ -130,6 +132,18 @@ The alerts engine consumes `TradeEvent`s and emits `Alert` messages such as `Buy
 
 It consumes `Alert` messages and sends them over Web Sockets whenever there's an active subscription for the alert.
 
+### Tracing
+
+A decentralized application that hooks up on multiple topics and creates traces via the Open Tracing protocol, using the Natchez library and Honeycomb.
+
+![tracing](./imgs/tracing.png)
+
 ### X Demo
 
-It contains all the standalone examples shown in the book as well. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module. I
+It contains all the standalone examples shown in the book as well. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
+
+## Monitoring
+
+JVM stats are provided for every service via Prometheus and Grafana.
+
+![grafana](./imgs/grafana.png)
