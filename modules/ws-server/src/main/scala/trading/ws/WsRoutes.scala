@@ -17,7 +17,7 @@ final class WsRoutes[F[_]: Concurrent: GenUUID: Logger](
 
   // format: off
   val routes: HttpRoutes[F] = HttpRoutes.of {
-    case GET -> Root / "ws" =>
+    case GET -> Root / "v1" / "ws" =>
       Handler.make[F](topic).flatMap { h =>
         ws.build(h.send, h.receive)
       }

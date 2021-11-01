@@ -91,7 +91,7 @@ dummyAlerts =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { symbol = ""
-      , wsUrl = "ws://localhost:9000/ws"
+      , wsUrl = "ws://localhost:9000/v1/ws"
       , socketId = Nothing
       , onlineUsers = 0
       , alerts = dummyAlerts -- Dict.fromList []
