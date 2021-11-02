@@ -231,6 +231,31 @@ services:
       retries: 15
       start_period: 2m
 
+  forecasts:
+    restart: always
+    image: trading-forecasts:latest
+    ports:
+      - 9006:9006
+    networks:
+      - trading-net
+    environment:
+      - HTTP_PORT=9006
+      - PULSAR_URI=pulsar://pulsar:6650
+      - REDIS_URI=redis://redis
+    depends_on:
+      pulsar:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ws-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9006/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m
+
   # Does not work yet because of issues with sbt-native-packager (it depends on a test dependency).
   # Comment out the feed service if you don't want random data generation running in Docker
   #feed:
