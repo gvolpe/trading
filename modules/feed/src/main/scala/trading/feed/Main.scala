@@ -1,6 +1,6 @@
 package trading.feed
 
-import trading.commands.TradeCommand
+import trading.commands.*
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.lib.Producer
@@ -26,7 +26,9 @@ object Main extends IOApp.Simple:
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(IO.println(">>> Initializing feed service <<<"))
-      topic = AppTopic.TradingCommands.make(config.pulsar)
-      producer <- Producer.sharded[IO, TradeCommand](pulsar, topic)
+      trTopic = AppTopic.TradingCommands.make(config.pulsar)
+      fcTopic = AppTopic.ForecastCommands.make(config.pulsar)
+      trading     <- Producer.sharded[IO, TradeCommand](pulsar, trTopic)
+      forecasting <- Producer.pulsar[IO, ForecastCommand](pulsar, fcTopic)
       server = Ember.default[IO](config.httpPort)
-    yield server -> Feed.random(producer)
+    yield server -> Feed.random(trading, forecasting)

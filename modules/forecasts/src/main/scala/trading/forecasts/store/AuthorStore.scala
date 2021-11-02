@@ -52,17 +52,18 @@ object AuthorStore:
           }
 
         def save(author: Author): F[Unit] =
-          val key1   = s"author-${author.id.show}"
-          val key2   = s"author-forecasts-${author.id.show}"
-          val values = Map("name" -> author.name.show) ++ author.website.map("website" -> _).toMap
+          val key1 = s"author-${author.id.show}"
+          val key2 = s"author-forecasts-${author.id.show}"
+
+          val saveForecast =
+            redis.sAdd(key2, author.forecasts.map(_.show)*) *> redis.expire(key2, exp.value)
 
           for
             x <- redis.hSetNx(key1, "name", author.name.show)
             _ <- DuplicateAuthorError(author.name).raiseError.unlessA(x)
             _ <- author.website.traverse_(w => redis.hSet(key1, "website", w.show))
-            _ <- redis.sAdd(key2, author.forecasts.map(_.show)*)
             _ <- redis.expire(key1, exp.value)
-            _ <- redis.expire(key2, exp.value)
+            _ <- saveForecast.whenA(author.forecasts.nonEmpty)
           yield ()
 
         def addForecast(id: AuthorId, fid: ForecastId): F[Unit] =

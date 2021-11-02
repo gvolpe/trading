@@ -1,8 +1,8 @@
 package trading.commands
 
-import trading.domain.{*, given}
+import trading.domain.{ given, * }
 import trading.domain.ForecastTag.given // to derive Eq (should not be needed, though)
-import trading.domain.VoteResult.given // to derive Eq (should not be needed, though)
+import trading.domain.VoteResult.given  // to derive Eq (should not be needed, though)
 
 // FIXME: importing all `given` yield ambiguous implicits
 import cats.derived.semiauto.{ coproductEq, product, productEq, * }
@@ -54,3 +54,13 @@ object ForecastCommand:
             case c: Vote     => c.copy(id = newId)
         }
     }
+
+  val _CreatedAt =
+    new Traversal[ForecastCommand, Timestamp]:
+      def modifyA[F[_]: Applicative](f: Timestamp => F[Timestamp])(s: ForecastCommand): F[ForecastCommand] =
+        f(s.createdAt).map { ts =>
+          s match
+            case c: Publish  => c.copy(createdAt = ts)
+            case c: Register => c.copy(createdAt = ts)
+            case c: Vote     => c.copy(createdAt = ts)
+        }

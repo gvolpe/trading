@@ -2,13 +2,13 @@ package trading.feed
 
 import scala.concurrent.duration.*
 
-import trading.commands.TradeCommand
-import trading.commands.TradeCommand.*
+import trading.commands.*
 import trading.domain.*
 import trading.domain.TradingStatus.*
 import trading.domain.generators.*
 import trading.lib.*
 
+import cats.Parallel
 import cats.effect.kernel.{ Ref, Temporal }
 import cats.syntax.all.*
 
@@ -16,20 +16,23 @@ trait Feed[F[_]]:
   def run: F[Unit]
 
 object Feed:
-  def random[F[_]: GenUUID: Logger: Ref.Make: Temporal: Time](
-      producer: Producer[F, TradeCommand]
+  def random[F[_]: GenUUID: Logger: Parallel: Ref.Make: Temporal: Time](
+      trProducer: Producer[F, TradeCommand],
+      fcProducer: Producer[F, ForecastCommand]
   ): Feed[F] =
     new Feed[F]:
-      def run: F[Unit] =
+      val trading: F[Unit] =
         Ref.of[F, TradingStatus](TradingStatus.On).flatMap { ref =>
+          import TradeCommand.*
+
           def switch(st: TradingStatus, cmd: TradeCommand): F[Unit] =
             (Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap { (ts, cmdId) =>
               val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
               Logger[F].warn(s">>> Trading $st <<<") *>
-                producer.send(uniqueCmd) *> ref.set(On) *> Temporal[F].sleep(1.second)
+                trProducer.send(uniqueCmd) *> ref.set(On) *> Temporal[F].sleep(1.second)
             }
 
-          commandsGen.replicateA(2).flatten.traverse_ {
+          tradeCommandListGen.replicateA(2).flatten.traverse_ {
             case cmd @ TradeCommand.Start(_, _, _) =>
               switch(On, cmd)
             case cmd @ TradeCommand.Stop(_, _, _) =>
@@ -38,9 +41,22 @@ object Feed:
               (ref.get, Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap {
                 case (On, ts, cmdId) =>
                   val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
-                  Logger[F].info(cmd.show) *> producer.send(uniqueCmd) *> Temporal[F].sleep(300.millis)
+                  Logger[F].info(cmd.show) *> trProducer.send(uniqueCmd) *> Temporal[F].sleep(300.millis)
                 case (Off, _, _) =>
                   ().pure[F]
               }
           }
         }
+
+      val forecasting: F[Unit] =
+        //forecastCommandListGen.replicateA(2).flatten.traverse_ { cmd =>
+        forecastCommandListGen.traverse_ { cmd =>
+          import ForecastCommand.*
+
+          (Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap { (ts, cmdId) =>
+            val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
+            Logger[F].info(cmd.show) *> fcProducer.send(uniqueCmd) *> Temporal[F].sleep(300.millis)
+          }
+        }
+
+      def run: F[Unit] = trading &> forecasting

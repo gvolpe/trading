@@ -3,11 +3,12 @@ package trading.domain
 import java.time.Instant
 import java.util.UUID
 
-import trading.commands.TradeCommand
+import trading.commands.*
 import trading.domain.*
 import trading.state.*
 
 import cats.Order
+import cats.syntax.show.*
 import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
 object arbitraries:
@@ -63,6 +64,10 @@ object generators:
 
   val eventIdGen: Gen[EventId] = Gen.uuid.map(id => EventId(id))
 
+  val authorIdGen: Gen[AuthorId] = Gen.uuid.map(id => AuthorId(id))
+
+  val forecastIdGen: Gen[ForecastId] = Gen.uuid.map(id => ForecastId(id))
+
   val symbolGen: Gen[Symbol] =
     Gen
       .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
@@ -79,6 +84,77 @@ object generators:
 
   val timestampGen: Gen[Timestamp] =
     Gen.const(Timestamp(Instant.parse("2021-09-16T14:00:00.00Z")))
+
+  // ------ ForecastCommand ------
+
+  def forecastDescriptionGen(symbol: Symbol): Gen[ForecastDescription] =
+    Gen
+      .oneOf(
+        s"${symbol.show} to break under support",
+        s"${symbol.show} selling trend continues!",
+        s"${symbol.show} is on fire!",
+        s"${symbol.show} new supports and resistances",
+        s"${symbol.show} short trading opportunity",
+        s"${symbol.show} before the next big move"
+      )
+      .map(ForecastDescription(_))
+
+  val authorNameGen: Gen[AuthorName] =
+    Gen
+      .oneOf("Gabriel", "Steven", "Richard", "Martin")
+      .map(AuthorName(_))
+
+  val authorWebsiteGen: Gen[Option[Website]] =
+    Gen.option(Gen.oneOf("www.foobar.com", "www.trading.com").map(Website(_)))
+
+  val forecastTagGen: Gen[ForecastTag] =
+    import ForecastTag.*
+    Gen.frequency(
+      1 -> Gen.const(Unknown),
+      9 -> Gen.oneOf(Long, Short)
+    )
+
+  val voteResultGen: Gen[VoteResult] =
+    import VoteResult.*
+    Gen.oneOf(Up, Down)
+
+  val publishCommandGen: Gen[ForecastCommand.Publish] =
+    for
+      i <- commandIdGen
+      c <- correlationIdGen
+      a <- authorIdGen
+      f <- forecastIdGen
+      s <- symbolGen
+      d <- forecastDescriptionGen(s)
+      g <- forecastTagGen
+      t <- timestampGen
+    yield ForecastCommand.Publish(i, c, a, f, s, d, g, t)
+
+  val registerCommandGen: Gen[ForecastCommand.Register] =
+    for
+      i <- commandIdGen
+      c <- correlationIdGen
+      a <- authorNameGen
+      w <- authorWebsiteGen
+      t <- timestampGen
+    yield ForecastCommand.Register(i, c, a, w, t)
+
+  val voteCommandGen: Gen[ForecastCommand.Vote] =
+    for
+      i <- commandIdGen
+      c <- correlationIdGen
+      f <- forecastIdGen
+      v <- voteResultGen
+      t <- timestampGen
+    yield ForecastCommand.Vote(i, c, f, v, t)
+
+  val forecastCommandGen: Gen[ForecastCommand] =
+    Gen.oneOf(publishCommandGen, registerCommandGen, voteCommandGen)
+
+  val forecastCommandListGen: List[ForecastCommand] =
+    Gen.listOfN(10, forecastCommandGen).sample.toList.flatten
+
+  // ------ TradeCommand ------
 
   val createCommandGen: Gen[TradeCommand.Create] =
     for
@@ -135,7 +211,7 @@ object generators:
       9 -> Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
     )
 
-  def commandsGen: List[TradeCommand] =
+  def tradeCommandListGen: List[TradeCommand] =
     Gen.listOfN(10, tradeCommandGen).sample.toList.flatten
 
   // ------ TradeState ------
