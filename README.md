@@ -59,7 +59,7 @@ $ xdg-open index.html # or specify browser
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
 
 ```shell
-$ docker-compose up
+$ docker-compose up -d pulsar redis
 ```
 
 ![pulsar](./imgs/pulsar.png)
@@ -72,9 +72,24 @@ $ docker-compose -f kafka.yml up
 
 ### Running application
 
-Notice that there's also another `docker-compose.yml` under `modules/` that starts both Pulsar and Redis, as well as all the services except `feed` in its own network, if you're only after running the entire application instead of doing local development.
+If we don't specify any arguments, then all the containers will be started, including all our services (except `feed`), Prometheus, Grafana, and Pulsar Manager.
 
-It is recommended to run the `feed` service directly from `sbt` whenever necessary, to avoid random data from polluting the topics.
+```shell
+$ docker-compose up
+Creating network "trading_trading-net" with the default driver
+Creating trading_pulsar_1 ... done
+Creating trading_redis_1  ... done
+Creating trading_ws-server_1      ... done
+Creating trading_pulsar-manager_1 ... done
+Creating trading_alerts_1         ... done
+Creating trading_processor_1      ... done
+Creating trading_snapshots_1      ... done
+Creating trading_tracing_1        ... done
+Creating trading_prometheus_1     ... done
+Creating trading_grafana_1        ... done
+```
+
+It is recommended to run the `feed` service directly from `sbt` whenever necessary, which publishes random data to the topics where other services are consuming messages from.
 
 ## Services
 
@@ -90,6 +105,7 @@ modules
 ├── lib
 ├── processor
 ├── snapshots
+├── tracing
 ├── ws-server
 └── x-demo
 ```
