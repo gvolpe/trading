@@ -39,12 +39,16 @@ object Consumer:
       sub: Subscription,
       settings: Option[PulsarConsumer.Settings[F, A]] = None
   ): Resource[F, Consumer[F, A]] =
-    val _settings = settings
-      .getOrElse(PulsarConsumer.Settings[F, A]())
-      .withMessageDecoder(bs => Async[F].fromEither(jsonDecode[A](new String(bs, "UTF-8"))))
-      .withDecodingErrorHandler(e => Logger[F].error(e.getMessage).as(PulsarConsumer.OnFailure.Ack))
+    val _settings = settings.getOrElse(PulsarConsumer.Settings[F, A]())
     //.withLogger(m => t => Logger[F].info(s">>> RECEIVED: $m - Topic: $t"))
-    PulsarConsumer.make[F, A](client, topic, sub, _settings).map { c =>
+
+    val decoder: Array[Byte] => F[A] =
+      bs => Async[F].fromEither(jsonDecode[A](new String(bs, "UTF-8")))
+
+    val handler: Throwable => F[PulsarConsumer.OnFailure] =
+      e => Logger[F].error(e.getMessage).as(PulsarConsumer.OnFailure.Ack)
+
+    PulsarConsumer.make[F, A](client, topic, sub, decoder, handler, _settings).map { c =>
       new Consumer[F, A]:
         def receiveM: Stream[F, Msg[A]] = c.subscribe.map(m => Msg(new String(m.id.toByteArray(), UTF_8), m.payload))
         def receive: Stream[F, A]       = c.autoSubscribe

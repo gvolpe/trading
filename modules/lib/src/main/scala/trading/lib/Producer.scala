@@ -31,10 +31,11 @@ object Producer:
       PulsarProducer
         .Settings[F, A]()
         .withShardKey(Shard[A].key)
-        .withMessageEncoder(_.asJson.noSpaces.getBytes(UTF_8))
     //.withLogger(m => t => Logger[F].info(s"SENT: $m - Topic: $t"))
 
-    PulsarProducer.make[F, A](client, topic, settings).map { p =>
+    val encoder: A => Array[Byte] = _.asJson.noSpaces.getBytes(UTF_8)
+
+    PulsarProducer.make[F, A](client, topic, encoder, settings).map { p =>
       new Producer[F, A]:
         def send(a: A): F[Unit] = p.send_(a)
     }

@@ -13,7 +13,7 @@ object Dependencies {
     val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
     val natchez    = "0.1.4"
-    val neutron    = "0.1.0+27-f2344b08-SNAPSHOT"
+    val neutron    = "0.1.0+32-d4d87718-SNAPSHOT"
     val redis4cats = "1.0.0+62-618c9d75-SNAPSHOT"
     val refined    = "0.9.27"
 
@@ -35,6 +35,7 @@ object Dependencies {
     val ciris = "is.cir" %% "ciris" % V.ciris
 
     val circeCore   = "io.circe" %% "circe-core"   % V.circe
+    val circeParser = "io.circe" %% "circe-parser" % V.circe
     val circeExtras = "io.circe" %% "circe-extras" % V.circe
 
     val http4sDsl     = http4s("dsl")
@@ -47,7 +48,6 @@ object Dependencies {
     val natchezHoneycomb = "org.tpolecat" %% "natchez-honeycomb" % V.natchez
 
     val neutronCore       = "dev.profunktor" %% "neutron-core"       % V.neutron
-    val neutronCirce      = "dev.profunktor" %% "neutron-circe"      % V.neutron
     val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
     val monocleCore = "dev.optics" %% "monocle-core" % V.monocle
