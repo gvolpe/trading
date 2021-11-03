@@ -1,12 +1,15 @@
 package trading.lib
 
+import java.nio.charset.StandardCharsets.UTF_8
+
 import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.{ Console, Queue }
 import cats.syntax.all.*
 import cats.{ Parallel, Show }
-import dev.profunktor.pulsar.schema.Schema
 import dev.profunktor.pulsar.{ Producer as PulsarProducer, * }
 import fs2.kafka.{ KafkaProducer, ProducerSettings }
+import io.circe.Encoder
+import io.circe.syntax.*
 
 trait Producer[F[_], A]:
   def send(a: A): F[Unit]
@@ -20,25 +23,23 @@ object Producer:
     new Producer[F, A]:
       def send(a: A): F[Unit] = Console[F].println(a)
 
-  def sharded[F[_]: Async: Logger: Parallel, A: Schema: Shard](
+  def sharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
       client: Pulsar.T,
       topic: Topic.Single
   ): Resource[F, Producer[F, A]] =
-    PulsarProducer
-      .make[F, A](
-        client,
-        topic,
-        PulsarProducer
-          .Options[F, A]()
-          .withShardKey(Shard[A].key)
-        //.withLogger(m => t => Logger[F].info(s"SENT: $m - Topic: $t"))
-      )
-      .map { p =>
-        new Producer[F, A]:
-          def send(a: A): F[Unit] = p.send_(a)
-      }
+    val settings =
+      PulsarProducer
+        .Settings[F, A]()
+        .withShardKey(Shard[A].key)
+        .withMessageEncoder(_.asJson.noSpaces.getBytes(UTF_8))
+    //.withLogger(m => t => Logger[F].info(s"SENT: $m - Topic: $t"))
 
-  def pulsar[F[_]: Async: Logger: Parallel, A: Schema](
+    PulsarProducer.make[F, A](client, topic, settings).map { p =>
+      new Producer[F, A]:
+        def send(a: A): F[Unit] = p.send_(a)
+    }
+
+  def pulsar[F[_]: Async: Logger: Parallel, A: Encoder](
       client: Pulsar.T,
       topic: Topic.Single
   ): Resource[F, Producer[F, A]] =

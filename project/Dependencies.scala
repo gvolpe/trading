@@ -13,7 +13,7 @@ object Dependencies {
     val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
     val natchez    = "0.1.4"
-    val neutron    = "0.1.0"
+    val neutron    = "0.1.0+27-f2344b08-SNAPSHOT"
     val redis4cats = "1.0.0+62-618c9d75-SNAPSHOT"
     val refined    = "0.9.27"
 

@@ -6,7 +6,6 @@ import trading.domain.Alert
 import trading.lib.Consumer
 
 import cats.effect.*
-import dev.profunktor.pulsar.schema.circe.bytes.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import fs2.Stream
 import fs2.concurrent.Topic

@@ -5,10 +5,12 @@ import java.nio.charset.StandardCharsets.UTF_8
 import cats.Applicative
 import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.Queue
-import dev.profunktor.pulsar.schema.Schema
+import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, * }
 import fs2.Stream
 import fs2.kafka.{ ConsumerSettings, KafkaConsumer }
+import io.circe.Decoder
+import io.circe.parser.decode as jsonDecode
 import org.apache.pulsar.client.api.MessageId
 
 trait Consumer[F[_], A]:
@@ -31,16 +33,18 @@ object Consumer:
       def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
       def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
 
-  def pulsar[F[_]: Async: Logger, A: Schema](
+  def pulsar[F[_]: Async: Logger, A: Decoder](
       client: Pulsar.T,
       topic: Topic,
       sub: Subscription,
-      opts: PulsarConsumer.Options[F, A] = null // default value does not work
+      settings: Option[PulsarConsumer.Settings[F, A]] = None
   ): Resource[F, Consumer[F, A]] =
-    val _opts = Option(opts)
-      .getOrElse(PulsarConsumer.Options[F, A]())
+    val _settings = settings
+      .getOrElse(PulsarConsumer.Settings[F, A]())
+      .withMessageDecoder(bs => Async[F].fromEither(jsonDecode[A](new String(bs, "UTF-8"))))
+      .withDecodingErrorHandler(e => Logger[F].error(e.getMessage).as(PulsarConsumer.OnFailure.Ack))
     //.withLogger(m => t => Logger[F].info(s">>> RECEIVED: $m - Topic: $t"))
-    PulsarConsumer.make[F, A](client, topic, sub, _opts).map { c =>
+    PulsarConsumer.make[F, A](client, topic, sub, _settings).map { c =>
       new Consumer[F, A]:
         def receiveM: Stream[F, Msg[A]] = c.subscribe.map(m => Msg(new String(m.id.toByteArray(), UTF_8), m.payload))
         def receive: Stream[F, A]       = c.autoSubscribe

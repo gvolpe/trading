@@ -8,7 +8,6 @@ import trading.lib.Consumer
 import trading.state.TradeState
 
 import cats.effect.*
-import dev.profunktor.pulsar.schema.circe.bytes.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
