@@ -1,7 +1,7 @@
 package trading.events
 
 import trading.commands.TradeCommand
-import trading.domain.*
+import trading.domain.{ given, * }
 
 import cats.syntax.all.*
 import io.circe.Codec

@@ -29,33 +29,30 @@ object Engine:
         ).tupled.flatMap { (aid, eid, ts) =>
           cmd match
             case ForecastCommand.Publish(_, cid, aid, fid, symbol, desc, tag, _) =>
-              Logger[F].info(">>> Publish") *>
-                atStore
-                  .addForecast(aid, fid)
-                  .flatMap { _ =>
-                    val fc = Forecast(fid, symbol, tag, desc, ForecastScore(0))
-                    val ev = ForecastEvent.Published(eid, cid, aid, fid, symbol, ts)
-                    fcStore.save(fc).as(ev)
-                  }
-                  .handleError { case AuthorStore.AuthorNotFound =>
-                    ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
-                  }
-                  .flatMap(forecasts.send)
-                  .handleErrorWith(e => Logger[F].error(s">>> Publish: $e"))
+              atStore
+                .addForecast(aid, fid)
+                .flatMap { _ =>
+                  val fc = Forecast(fid, symbol, tag, desc, ForecastScore(0))
+                  val ev = ForecastEvent.Published(eid, cid, aid, fid, symbol, ts)
+                  fcStore.save(fc).as(ev)
+                }
+                .handleError { case AuthorStore.AuthorNotFound =>
+                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
+                }
+                .flatMap(forecasts.send)
+                .handleErrorWith(e => Logger[F].error(s">>> Publish: $e"))
             case ForecastCommand.Register(_, cid, name, website, _) =>
-              Logger[F].info(">>> Register") *>
-                atStore
-                  .save(Author(aid, name, website, List.empty))
-                  .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
-                  .handleError { case AuthorStore.DuplicateAuthorError(_) =>
-                    AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
-                  }
-                  .flatMap(authors.send)
-                  .handleErrorWith(e => Logger[F].error(s">>> Register: $e"))
+              atStore
+                .save(Author(aid, name, website, List.empty))
+                .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
+                .handleError { case AuthorStore.DuplicateAuthorError(_) =>
+                  AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
+                }
+                .flatMap(authors.send)
+                .handleErrorWith(e => Logger[F].error(s">>> Register: $e"))
             case ForecastCommand.Vote(_, cid, fid, res, _) =>
               val ev = ForecastEvent.Voted(eid, cid, fid, res, ts)
-              Logger[F].info(">>> Vote") *>
-                (fcStore.castVote(fid, res) *> forecasts.send(ev))
-                  .handleErrorWith(e => Logger[F].error(s">>> Vote:$e"))
+              (fcStore.castVote(fid, res) *> forecasts.send(ev))
+                .handleErrorWith(e => Logger[F].error(s">>> Vote:$e"))
 
         }

@@ -49,8 +49,7 @@ object Feed:
         }
 
       val forecasting: F[Unit] =
-        //forecastCommandListGen.replicateA(2).flatten.traverse_ { cmd =>
-        forecastCommandListGen.traverse_ { cmd =>
+        forecastCommandListGen.replicateA(2).flatten.traverse_ { cmd =>
           import ForecastCommand.*
 
           (Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap { (ts, cmdId) =>

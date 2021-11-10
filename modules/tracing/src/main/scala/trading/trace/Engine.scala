@@ -32,8 +32,8 @@ object Engine:
             ().pure[F].tupleLeft((commands, events :+ evt, alerts))
           case (None, Some(alt)) =>
             ().pure[F].tupleLeft((commands, events, alerts :+ alt))
-          case _ =>
-            ().pure[F].tupleLeft((commands, events, alerts))
+          case (None, None) =>
+            ().pure[F].tupleLeft((commands :+ cmd, events, alerts))
 
       case ((commands, events, alerts), evt: TradeEvent) =>
         (commands.find(_.cid === evt.cid), alerts.find(_.cid === evt.cid)) match
