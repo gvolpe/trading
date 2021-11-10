@@ -15,13 +15,11 @@ trait Producer[F[_], A]:
   def send(a: A): F[Unit]
 
 object Producer:
-  def local[F[_], A](queue: Queue[F, Option[A]]): Producer[F, A] =
-    new Producer[F, A]:
-      def send(a: A): F[Unit] = queue.offer(Some(a))
+  def local[F[_], A](queue: Queue[F, Option[A]]): Producer[F, A] = new:
+    def send(a: A): F[Unit] = queue.offer(Some(a))
 
-  def stdout[F[_]: Console, A: Show]: Producer[F, A] =
-    new Producer[F, A]:
-      def send(a: A): F[Unit] = Console[F].println(a)
+  def stdout[F[_]: Console, A: Show]: Producer[F, A] = new:
+    def send(a: A): F[Unit] = Console[F].println(a)
 
   def sharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
       client: Pulsar.T,
@@ -36,7 +34,7 @@ object Producer:
     val encoder: A => Array[Byte] = _.asJson.noSpaces.getBytes(UTF_8)
 
     PulsarProducer.make[F, A](client, topic, encoder, settings).map { p =>
-      new Producer[F, A]:
+      new:
         def send(a: A): F[Unit] = p.send_(a)
     }
 
@@ -52,6 +50,6 @@ object Producer:
       topic: String
   ): Resource[F, Producer[F, A]] =
     KafkaProducer.resource(settings).map { p =>
-      new Producer[F, A]:
+      new:
         def send(a: A): F[Unit] = p.produceOne_(topic, "key", a).flatten.void
     }

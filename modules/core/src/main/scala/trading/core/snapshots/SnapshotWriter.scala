@@ -21,7 +21,7 @@ object SnapshotWriter:
       exp: KeyExpiration
   ): Resource[F, SnapshotWriter[F]] =
     Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
-      new SnapshotWriter[F]:
+      new:
         def save(state: TradeState): F[Unit] =
           state.prices.toList.traverse_ { case (symbol, prices) =>
             val key1 = s"snapshot-$symbol"

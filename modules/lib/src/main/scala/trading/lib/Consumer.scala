@@ -26,12 +26,11 @@ object Consumer:
 
   def local[F[_]: Applicative, A](
       queue: Queue[F, Option[A]]
-  ): Consumer[F, A] =
-    new Consumer[F, A]:
-      def receiveM: Stream[F, Msg[A]]       = ???
-      def receive: Stream[F, A]             = Stream.fromQueueNoneTerminated(queue)
-      def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
-      def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
+  ): Consumer[F, A] = new:
+    def receiveM: Stream[F, Msg[A]]       = ???
+    def receive: Stream[F, A]             = Stream.fromQueueNoneTerminated(queue)
+    def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
+    def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
 
   def pulsar[F[_]: Async: Logger, A: Decoder](
       client: Pulsar.T,
@@ -43,13 +42,13 @@ object Consumer:
     //.withLogger(m => t => Logger[F].info(s">>> RECEIVED: $m - Topic: $t"))
 
     val decoder: Array[Byte] => F[A] =
-      bs => Async[F].fromEither(jsonDecode[A](new String(bs, "UTF-8")))
+      bs => Async[F].fromEither(jsonDecode[A](new String(bs, UTF_8)))
 
     val handler: Throwable => F[PulsarConsumer.OnFailure] =
       e => Logger[F].error(e.getMessage).as(PulsarConsumer.OnFailure.Ack)
 
     PulsarConsumer.make[F, A](client, topic, sub, decoder, handler, _settings).map { c =>
-      new Consumer[F, A]:
+      new:
         def receiveM: Stream[F, Msg[A]] = c.subscribe.map(m => Msg(new String(m.id.toByteArray(), UTF_8), m.payload))
         def receive: Stream[F, A]       = c.autoSubscribe
         def ack(id: Consumer.MsgId): F[Unit]  = c.ack(MessageId.fromByteArray(id.getBytes(UTF_8)))
@@ -64,7 +63,7 @@ object Consumer:
       .resource[F, String, A](settings.withEnableAutoCommit(true))
       .evalTap(_.subscribeTo(topic))
       .map { c =>
-        new Consumer[F, A]:
+        new:
           // for receiveM we need to disable auto-commit, so this might not be the best abstraction
           def receiveM: Stream[F, Msg[A]]       = ???
           def receive: Stream[F, A]             = c.stream.map(_.record.value)

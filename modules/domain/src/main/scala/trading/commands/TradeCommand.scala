@@ -59,29 +59,27 @@ object TradeCommand:
       createdAt: Timestamp
   ) extends TradeCommand
 
-  val _CommandId =
-    new Traversal[TradeCommand, CommandId]:
-      def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
-        f(s.id).map { newId =>
-          s match
-            case c: Create => c.copy(id = newId)
-            case c: Update => c.copy(id = newId)
-            case c: Delete => c.copy(id = newId)
-            case c: Start  => c.copy(id = newId)
-            case c: Stop   => c.copy(id = newId)
-        }
+  val _CommandId: Traversal[TradeCommand, CommandId] = new:
+    def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
+      f(s.id).map { newId =>
+        s match
+          case c: Create => c.copy(id = newId)
+          case c: Update => c.copy(id = newId)
+          case c: Delete => c.copy(id = newId)
+          case c: Start  => c.copy(id = newId)
+          case c: Stop   => c.copy(id = newId)
+      }
 
-  val _CreatedAt =
-    new Traversal[TradeCommand, Timestamp]:
-      def modifyA[F[_]: Applicative](f: Timestamp => F[Timestamp])(s: TradeCommand): F[TradeCommand] =
-        f(s.createdAt).map { ts =>
-          s match
-            case c: Create => c.copy(createdAt = ts)
-            case c: Update => c.copy(createdAt = ts)
-            case c: Delete => c.copy(createdAt = ts)
-            case c: Start  => c.copy(createdAt = ts)
-            case c: Stop   => c.copy(createdAt = ts)
-        }
+  val _CreatedAt: Traversal[TradeCommand, Timestamp] = new:
+    def modifyA[F[_]: Applicative](f: Timestamp => F[Timestamp])(s: TradeCommand): F[TradeCommand] =
+      f(s.createdAt).map { ts =>
+        s match
+          case c: Create => c.copy(createdAt = ts)
+          case c: Update => c.copy(createdAt = ts)
+          case c: Delete => c.copy(createdAt = ts)
+          case c: Start  => c.copy(createdAt = ts)
+          case c: Stop   => c.copy(createdAt = ts)
+      }
 
   val _Symbol =
     Getter[TradeCommand, Option[Symbol]] {

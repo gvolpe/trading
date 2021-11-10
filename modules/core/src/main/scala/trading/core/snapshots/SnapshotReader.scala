@@ -23,7 +23,7 @@ object SnapshotReader:
       client: RedisClient
   ): Resource[F, SnapshotReader[F]] =
     Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
-      new SnapshotReader[F]:
+      new:
         def latest: F[Option[TradeState]] =
           (redis.get("trading-status"), redis.keys("snapshot*")).tupled.flatMap { (st, sn) =>
             sn.traverseFilter { key =>

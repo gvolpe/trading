@@ -44,23 +44,20 @@ object ForecastCommand:
       createdAt: Timestamp
   ) extends ForecastCommand
 
-  val _CommandId =
-    new Traversal[ForecastCommand, CommandId] {
-      def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: ForecastCommand): F[ForecastCommand] =
-        f(s.id).map { newId =>
-          s match
-            case c: Publish  => c.copy(id = newId)
-            case c: Register => c.copy(id = newId)
-            case c: Vote     => c.copy(id = newId)
-        }
-    }
+  val _CommandId: Traversal[ForecastCommand, CommandId] = new:
+    def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: ForecastCommand): F[ForecastCommand] =
+      f(s.id).map { newId =>
+        s match
+          case c: Publish  => c.copy(id = newId)
+          case c: Register => c.copy(id = newId)
+          case c: Vote     => c.copy(id = newId)
+      }
 
-  val _CreatedAt =
-    new Traversal[ForecastCommand, Timestamp]:
-      def modifyA[F[_]: Applicative](f: Timestamp => F[Timestamp])(s: ForecastCommand): F[ForecastCommand] =
-        f(s.createdAt).map { ts =>
-          s match
-            case c: Publish  => c.copy(createdAt = ts)
-            case c: Register => c.copy(createdAt = ts)
-            case c: Vote     => c.copy(createdAt = ts)
-        }
+  val _CreatedAt: Traversal[ForecastCommand, Timestamp] = new:
+    def modifyA[F[_]: Applicative](f: Timestamp => F[Timestamp])(s: ForecastCommand): F[ForecastCommand] =
+      f(s.createdAt).map { ts =>
+        s match
+          case c: Publish  => c.copy(createdAt = ts)
+          case c: Register => c.copy(createdAt = ts)
+          case c: Vote     => c.copy(createdAt = ts)
+      }

@@ -29,7 +29,7 @@ object ForecastStore:
       exp: Config.ForecastExpiration
   ): Resource[F, ForecastStore[F]] =
     Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
-      new ForecastStore[F]:
+      new:
         def fetch(fid: ForecastId): F[Option[Forecast]] =
           val fields = List("desc", "tag", "score", "symbol")
           redis.hmGet(s"forecast-${fid.show}", fields*).map { kv =>

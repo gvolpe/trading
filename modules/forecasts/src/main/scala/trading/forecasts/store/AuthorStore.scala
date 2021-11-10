@@ -32,7 +32,7 @@ object AuthorStore:
       exp: Config.AuthorExpiration
   ): Resource[F, AuthorStore[F]] =
     Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
-      new AuthorStore[F]:
+      new:
         def fetch(id: AuthorId): F[Option[Author]] =
           val key1   = s"author-${id.show}"
           val key2   = s"author-forecasts-${id.show}"

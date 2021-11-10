@@ -23,7 +23,7 @@ object Handler:
   ): F[Handler[F]] =
     (Deferred[F, Either[Throwable, Unit]], Ref.of[F, Set[Symbol]](Set.empty), GenUUID[F].make[SocketId]).mapN {
       case (switch, subs, sid) =>
-        new Handler[F]:
+        new:
           val encode: WsOut => F[Option[WebSocketFrame]] = {
             case out @ WsOut.Notification(t: TradeAlert) =>
               subs.get.map(_.find(_ === t.symbol).as(Text((out: WsOut).asJson.noSpaces)))
