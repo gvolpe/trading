@@ -20,11 +20,12 @@ object Dependencies {
     val scalacheck = "1.15.4"
     val weaver     = "0.7.6"
 
-    val organizeImports = "0.5.0+42-7e4a4f8a-SNAPSHOT"
+    val organizeImports = "0.6.0"
     val semanticDB      = "4.4.28"
   }
 
   object Libraries {
+    def circe(artifact: String): ModuleID  = "io.circe"   %% s"circe-$artifact"  % V.circe
     def http4s(artifact: String): ModuleID = "org.http4s" %% s"http4s-$artifact" % V.http4s
 
     val cats       = "org.typelevel" %% "cats-core"   % V.cats
@@ -34,9 +35,9 @@ object Dependencies {
 
     val ciris = "is.cir" %% "ciris" % V.ciris
 
-    val circeCore   = "io.circe" %% "circe-core"   % V.circe
-    val circeParser = "io.circe" %% "circe-parser" % V.circe
-    val circeExtras = "io.circe" %% "circe-extras" % V.circe
+    val circeCore   = circe("core")
+    val circeParser = circe("parser")
+    val circeExtras = circe("extras")
 
     val http4sDsl     = http4s("dsl")
     val http4sServer  = http4s("ember-server")
