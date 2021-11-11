@@ -7,21 +7,20 @@ object Dependencies {
     val catsEffect = "3.2.9"
     val circe      = "0.14.1"
     val ciris      = "2.2.0"
-    val fs2        = "3.1.5"
+    val fs2        = "3.2.2"
     val fs2Kafka   = "2.2.0"
-    val http4s     = "1.0.0-M28"
+    val http4s     = "1.0.0-M29"
     val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
     val natchez    = "0.1.4"
-    val neutron    = "0.1.0+32-d4d87718-SNAPSHOT"
+    val neutron    = "0.2.0"
     val redis4cats = "1.0.0+62-618c9d75-SNAPSHOT"
     val refined    = "0.9.27"
 
     val scalacheck = "1.15.4"
-    val weaver     = "0.7.6"
+    val weaver     = "0.7.7"
 
     val organizeImports = "0.6.0"
-    val semanticDB      = "4.4.28"
   }
 
   object Libraries {
@@ -67,12 +66,6 @@ object Dependencies {
 
     // scalafix rules
     val organizeImports = "com.github.liancheng" %% "organize-imports" % V.organizeImports
-  }
-
-  object CompilerPlugins {
-    val semanticDB = compilerPlugin(
-      "org.scalameta" % "semanticdb-scalac" % V.semanticDB cross CrossVersion.full
-    )
   }
 
 }
