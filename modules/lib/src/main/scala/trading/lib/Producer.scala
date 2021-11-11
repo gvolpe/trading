@@ -2,7 +2,7 @@ package trading.lib
 
 import java.nio.charset.StandardCharsets.UTF_8
 
-import cats.effect.kernel.{ Async, Resource }
+import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.{ Console, Queue }
 import cats.syntax.all.*
 import cats.{ Parallel, Show }
@@ -17,6 +17,9 @@ trait Producer[F[_], A]:
 object Producer:
   def local[F[_], A](queue: Queue[F, Option[A]]): Producer[F, A] = new:
     def send(a: A): F[Unit] = queue.offer(Some(a))
+
+  def test[F[_], A](ref: Ref[F, Option[A]]): Producer[F, A] = new:
+    def send(a: A): F[Unit] = ref.set(Some(a))
 
   def stdout[F[_]: Console, A: Show]: Producer[F, A] = new:
     def send(a: A): F[Unit] = Console[F].println(a)
