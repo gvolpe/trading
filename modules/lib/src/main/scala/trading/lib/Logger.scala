@@ -1,5 +1,6 @@
 package trading.lib
 
+import cats.Applicative
 import cats.effect.std.Console
 
 trait Logger[F[_]]:
@@ -9,6 +10,12 @@ trait Logger[F[_]]:
 
 object Logger:
   def apply[F[_]: Logger]: Logger[F] = summon
+
+  object NoOp:
+    given [F[_]: Applicative]: Logger[F] with
+      def info(str: => String): F[Unit]  = Applicative[F].unit
+      def error(str: => String): F[Unit] = Applicative[F].unit
+      def warn(str: => String): F[Unit]  = Applicative[F].unit
 
   given [F[_]: Console]: Logger[F] with
     def info(str: => String): F[Unit]  = Console[F].println(s"[info] - $str")
