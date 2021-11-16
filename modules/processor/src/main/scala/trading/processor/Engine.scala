@@ -20,11 +20,11 @@ object Engine:
         case None =>
           Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
         case Some(cmd) =>
-          val (nst, events) = TradeEngine.fsm.run(st, cmd)
+          val (nst, event) = TradeEngine.fsm.run(st, cmd)
           for
-            evs <- events.traverse((GenUUID[F].make[EventId], Time[F].timestamp).mapN(_))
-            _   <- evs.traverse(producer.send)
-            ecs = evs.flatMap(e => TradeEvent._Command.get(e).toList)
+            evt <- (GenUUID[F].make[EventId], Time[F].timestamp).mapN(event)
+            _   <- producer.send(evt)
+            ecs = TradeEvent._Command.get(evt).toList
             nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(ecs, _))
             _ <- ack(msgId).attempt.void // don't care if this fails (de-dup)
           yield (nst -> nds) -> ()

@@ -27,7 +27,7 @@ object Consumer:
   def local[F[_]: Applicative, A](
       queue: Queue[F, Option[A]]
   ): Consumer[F, A] = new:
-    def receiveM: Stream[F, Msg[A]]       = ???
+    def receiveM: Stream[F, Msg[A]]       = receive.map(Msg("N/A", _))
     def receive: Stream[F, A]             = Stream.fromQueueNoneTerminated(queue)
     def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
     def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit

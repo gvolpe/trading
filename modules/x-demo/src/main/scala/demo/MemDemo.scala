@@ -10,13 +10,25 @@ import fs2.Stream
 
 object MemDemo extends IOApp.Simple:
   def run: IO[Unit] =
-    for
-      _     <- IO.println(">>> Initializing in-memory demo <<<")
-      queue <- Queue.bounded[IO, Option[String]](500)
-      consumer = Consumer.local(queue)
-      producer = Producer.local(queue)
-      _ <- Stream(
-        consumer.receive.evalMap(s => IO.println(s">>> CONSUMED: $s")),
-        Stream.awakeEvery[IO](100.millis).as("test").evalMap(producer.send)
-      ).parJoin(2).interruptAfter(3.seconds).compile.drain
-    yield ()
+    Queue.bounded[IO, Option[String]](500).flatMap { queue =>
+      val consumer = Consumer.local(queue)
+      val producer = Producer.local(queue)
+
+      val p1 =
+        consumer.receive
+          .evalMap(s => IO.println(s">>> GOT: $s"))
+
+      val p2 =
+        Stream
+          .resource(producer)
+          .flatMap { p =>
+            Stream
+              .sleep[IO](100.millis)
+              .as("test")
+              .repeatN(3)
+              .evalMap(p.send)
+          }
+
+      IO.println(">>> Initializing in-memory demo <<<") *>
+        p1.concurrently(p2).compile.drain
+    }

@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.{ Console, Queue }
 import cats.syntax.all.*
-import cats.{ Parallel, Show }
+import cats.{ Applicative, Parallel, Show }
 import dev.profunktor.pulsar.{ Producer as PulsarProducer, * }
 import fs2.kafka.{ KafkaProducer, ProducerSettings }
 import io.circe.Encoder
@@ -15,8 +15,13 @@ trait Producer[F[_], A]:
   def send(a: A): F[Unit]
 
 object Producer:
-  def local[F[_], A](queue: Queue[F, Option[A]]): Producer[F, A] = new:
-    def send(a: A): F[Unit] = queue.offer(Some(a))
+  def local[F[_]: Applicative, A](queue: Queue[F, Option[A]]): Resource[F, Producer[F, A]] =
+    Resource.make[F, Producer[F, A]](
+      Applicative[F].pure(
+        new:
+          def send(a: A): F[Unit] = queue.offer(Some(a))
+      )
+    )(_ => queue.offer(None))
 
   def test[F[_], A](ref: Ref[F, Option[A]]): Producer[F, A] = new:
     def send(a: A): F[Unit] = ref.set(Some(a))

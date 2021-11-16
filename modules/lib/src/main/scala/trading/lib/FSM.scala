@@ -8,4 +8,4 @@ case class FSM[F[_], S, I, O](run: (S, I) => F[(S, O)]):
     (s, i) => run(s, i).map(_._1)
 
 object FSM:
-  def identity[S, I, O](run: (S, I) => Id[(S, O)]) = FSM(run)
+  def id[S, I, O](run: (S, I) => Id[(S, O)]) = FSM(run)
