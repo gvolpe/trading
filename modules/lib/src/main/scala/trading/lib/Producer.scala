@@ -3,7 +3,7 @@ package trading.lib
 import java.nio.charset.StandardCharsets.UTF_8
 
 import cats.effect.kernel.{ Async, Ref, Resource }
-import cats.effect.std.{ Console, Queue }
+import cats.effect.std.Queue
 import cats.syntax.all.*
 import cats.{ Applicative, Parallel, Show }
 import dev.profunktor.pulsar.{ Producer as PulsarProducer, * }
@@ -26,9 +26,6 @@ object Producer:
   def test[F[_], A](ref: Ref[F, Option[A]]): Producer[F, A] = new:
     def send(a: A): F[Unit] = ref.set(Some(a))
 
-  def stdout[F[_]: Console, A: Show]: Producer[F, A] = new:
-    def send(a: A): F[Unit] = Console[F].println(a)
-
   def sharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
       client: Pulsar.T,
       topic: Topic.Single
@@ -37,7 +34,7 @@ object Producer:
       PulsarProducer
         .Settings[F, A]()
         .withShardKey(Shard[A].key)
-    //.withLogger(m => t => Logger[F].info(s"SENT: $m - Topic: $t"))
+        .withLogger(Logger.pulsar[F, A]("out"))
 
     val encoder: A => Array[Byte] = _.asJson.noSpaces.getBytes(UTF_8)
 

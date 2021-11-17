@@ -2,6 +2,9 @@ package trading.lib
 
 import cats.Applicative
 import cats.effect.std.Console
+import dev.profunktor.pulsar.Topic
+import io.circe.{ Encoder, Json }
+import io.circe.syntax.*
 
 trait Logger[F[_]]:
   def info(str: => String): F[Unit]
@@ -10,6 +13,18 @@ trait Logger[F[_]]:
 
 object Logger:
   def apply[F[_]: Logger]: Logger[F] = summon
+
+  def pulsar[F[_]: Logger, A: Encoder](
+      flow: "in" | "out"
+  ): A => Topic.URL => F[Unit] =
+    p => t => Logger[F].info {
+      Json.obj(
+        "flow"    -> flow.asJson,
+        "payload" -> p.asJson,
+        "topic"   -> t.value.asJson
+      )
+      .noSpaces
+    }
 
   object NoOp:
     given [F[_]: Applicative]: Logger[F] with

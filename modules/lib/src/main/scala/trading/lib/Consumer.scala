@@ -9,7 +9,7 @@ import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, * }
 import fs2.Stream
 import fs2.kafka.{ ConsumerSettings, KafkaConsumer }
-import io.circe.Decoder
+import io.circe.{ Decoder, Encoder }
 import io.circe.parser.decode as jsonDecode
 import org.apache.pulsar.client.api.MessageId
 
@@ -32,14 +32,16 @@ object Consumer:
     def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
     def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
 
-  def pulsar[F[_]: Async: Logger, A: Decoder](
+  def pulsar[F[_]: Async: Logger, A: Decoder: Encoder](
       client: Pulsar.T,
       topic: Topic,
       sub: Subscription,
       settings: Option[PulsarConsumer.Settings[F, A]] = None
   ): Resource[F, Consumer[F, A]] =
-    val _settings = settings.getOrElse(PulsarConsumer.Settings[F, A]())
-    //.withLogger(m => t => Logger[F].info(s">>> RECEIVED: $m - Topic: $t"))
+    val _settings =
+      settings
+        .getOrElse(PulsarConsumer.Settings[F, A]())
+        .withLogger(Logger.pulsar[F, A]("in"))
 
     val decoder: Array[Byte] => F[A] =
       bs => Async[F].fromEither(jsonDecode[A](new String(bs, UTF_8)))

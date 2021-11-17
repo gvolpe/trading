@@ -13,17 +13,19 @@ trait Shard[A]:
 object Shard:
   def apply[A: Shard]: Shard[A] = summon
 
-  def default[A]: Shard[A] =
-    new Shard[A]:
-      val key: A => ShardKey = _ => ShardKey.Default
+  def default[A]: Shard[A] = new:
+    val key: A => ShardKey = _ => ShardKey.Default
+
+  given Shard[String] with
+    val key: String => ShardKey =
+      str => ShardKey.Of(str.getBytes(UTF_8))
 
   given Shard[TradeCommand] with
     val key: TradeCommand => ShardKey =
       cmd =>
-        ShardKey.Of {
+        Shard[String].key {
           TradeCommand._Symbol
             .get(cmd)
             .map(_.value)
             .getOrElse(cmd.id.show)
-            .getBytes(UTF_8)
         }
