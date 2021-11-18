@@ -1,5 +1,7 @@
 package demo
 
+import java.nio.charset.StandardCharsets.UTF_8
+
 import scala.concurrent.duration.*
 
 import trading.domain.generators.*
@@ -10,6 +12,7 @@ import cats.effect.*
 import cats.syntax.all.*
 import fs2.Stream
 import fs2.kafka.*
+import io.circe.parser.decode as jsonDecode
 import io.circe.syntax.*
 
 object KafkaDemo extends IOApp.Simple:
@@ -24,21 +27,28 @@ object KafkaDemo extends IOApp.Simple:
     Stream
       .resource(resources)
       .flatMap { (consumer, producer) =>
-        Stream(
-          Stream.awakeEvery[IO](1.second).as(event).evalMap(_.traverse_(producer.send)),
-          consumer.receive.evalMap(e => IO.println(s">>> KAFKA: $e"))
-        ).parJoin(2)
+        val p1 =
+          consumer.receive
+            .evalMap(e => IO.println(s">>> KAFKA: $e"))
+
+        val p2 =
+          Stream
+            .awakeEvery[IO](1.second)
+            .as(event)
+            .evalMap(_.traverse_(producer.send))
+
+        p1.concurrently(p2)
       }
       .interruptAfter(5.seconds)
       .compile
       .drain
 
   given Deserializer[IO, TradeEvent] = Deserializer.lift[IO, TradeEvent] { bs =>
-    IO.fromEither(io.circe.parser.decode[TradeEvent](new String(bs, "UTF-8")))
+    IO.fromEither(jsonDecode[TradeEvent](new String(bs, UTF_8)))
   }
 
   given Serializer[IO, TradeEvent] = Serializer.lift[IO, TradeEvent] { e =>
-    IO.pure(e.asJson.noSpaces.getBytes("UTF-8"))
+    IO.pure(e.asJson.noSpaces.getBytes(UTF_8))
   }
 
   val consumerSettings =

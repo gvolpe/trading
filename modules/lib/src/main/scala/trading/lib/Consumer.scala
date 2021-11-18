@@ -3,7 +3,7 @@ package trading.lib
 import java.nio.charset.StandardCharsets.UTF_8
 
 import cats.Applicative
-import cats.effect.kernel.{ Async, Resource }
+import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.Queue
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, * }
@@ -11,6 +11,8 @@ import fs2.Stream
 import fs2.kafka.{ ConsumerSettings, KafkaConsumer }
 import io.circe.{ Decoder, Encoder }
 import io.circe.parser.decode as jsonDecode
+import org.apache.kafka.clients.consumer.OffsetAndMetadata
+import org.apache.kafka.common.TopicPartition
 import org.apache.pulsar.client.api.MessageId
 
 trait Consumer[F[_], A]:
@@ -57,18 +59,27 @@ object Consumer:
         def nack(id: Consumer.MsgId): F[Unit] = c.nack(MessageId.fromByteArray(id.getBytes(UTF_8)))
     }
 
+  type KafkaOffset = Map[TopicPartition, OffsetAndMetadata]
+
   def kafka[F[_]: Async, A](
       settings: ConsumerSettings[F, String, A],
       topic: String
   ): Resource[F, Consumer[F, A]] =
-    KafkaConsumer
-      .resource[F, String, A](settings.withEnableAutoCommit(true))
-      .evalTap(_.subscribeTo(topic))
-      .map { c =>
-        new:
-          // for receiveM we need to disable auto-commit, so this might not be the best abstraction
-          def receiveM: Stream[F, Msg[A]]       = ???
-          def receive: Stream[F, A]             = c.stream.map(_.record.value)
-          def ack(id: MsgId): F[Unit]           = Applicative[F].unit
-          def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
-      }
+    Resource.eval(Ref.of[F, KafkaOffset](Map.empty)).flatMap { ref =>
+      KafkaConsumer
+        .resource[F, String, A](settings.withEnableAutoCommit(false))
+        .evalTap(_.subscribeTo(topic))
+        .map { c =>
+          new:
+            def receiveM: Stream[F, Msg[A]] =
+              c.stream.evalMap { c =>
+                ref.set(c.offset.offsets).as(Msg("N/A", c.record.value))
+              }
+            def receive: Stream[F, A] =
+              c.stream.evalMap(c => c.offset.commit.as(c.record.value))
+            def ack(id: MsgId): F[Unit] =
+              ref.get >>= c.commitAsync
+            def nack(id: Consumer.MsgId): F[Unit] =
+              Applicative[F].unit
+        }
+    }
