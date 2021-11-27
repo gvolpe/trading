@@ -25,7 +25,7 @@ val commonSettings = List(
     Libraries.circeParser,
     Libraries.circeExtras,
     Libraries.ciris,
-    Libraries.fs2,
+    Libraries.fs2Core,
     Libraries.fs2Kafka,
     Libraries.http4sDsl,
     Libraries.http4sMetrics,

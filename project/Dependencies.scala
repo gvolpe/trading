@@ -7,7 +7,7 @@ object Dependencies {
     val catsEffect = "3.2.9"
     val circe      = "0.14.1"
     val ciris      = "2.2.0"
-    val fs2        = "3.2.2"
+    val fs2Core    = "3.2.2"
     val fs2Kafka   = "2.2.0"
     val http4s     = "1.0.0-M29"
     val kittens    = "3.0.0-M1"
@@ -29,7 +29,7 @@ object Dependencies {
 
     val cats       = "org.typelevel" %% "cats-core"   % V.cats
     val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
-    val fs2        = "co.fs2"        %% "fs2-core"    % V.fs2
+    val fs2Core    = "co.fs2"        %% "fs2-core"    % V.fs2Core
     val kittens    = "org.typelevel" %% "kittens"     % V.kittens
 
     val ciris = "is.cir" %% "ciris" % V.ciris
