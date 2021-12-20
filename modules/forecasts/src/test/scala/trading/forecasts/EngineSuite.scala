@@ -11,14 +11,15 @@ import trading.events.*
 import trading.forecasts.store.AuthorStore.{ AuthorNotFound, DuplicateAuthorError }
 import trading.forecasts.store.*
 import trading.lib.*
+import trading.lib.Logger.NoOp.given
 import trading.state.*
 
 import cats.data.NonEmptyList
 import cats.effect.IO
+import cats.effect.kernel.Ref
 import cats.syntax.all.*
 import weaver.SimpleIOSuite
 import weaver.scalacheck.Checkers
-import cats.effect.kernel.Ref
 
 object EngineSuite extends SimpleIOSuite with Checkers:
   val id  = CommandId(UUID.randomUUID())

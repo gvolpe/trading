@@ -33,6 +33,7 @@ val commonSettings = List(
     Libraries.kittens,
     Libraries.monocleCore,
     Libraries.neutronCore,
+    Libraries.odin,
     Libraries.redis4catsEffects,
     Libraries.refinedCore,
     Libraries.monocleLaw       % Test,

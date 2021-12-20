@@ -14,6 +14,7 @@ object Dependencies {
     val monocle    = "3.1.0"
     val natchez    = "0.1.4"
     val neutron    = "0.2.0"
+    val odin       = "0.13.0"
     val redis4cats = "1.0.0+62-618c9d75-SNAPSHOT"
     val refined    = "0.9.27"
 
@@ -51,6 +52,8 @@ object Dependencies {
     val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
     val monocleCore = "dev.optics" %% "monocle-core" % V.monocle
+
+    val odin = "com.github.valskalla" %% "odin-core" % V.odin
 
     val refinedCore = "eu.timepit" %% "refined" % V.refined
 

@@ -8,6 +8,7 @@ import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.TradeEvent
 import trading.lib.*
+import trading.lib.Logger.NoOp.given
 import trading.state.*
 
 import cats.data.NonEmptyList
