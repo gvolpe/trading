@@ -1,9 +1,7 @@
 package trading.lib
 
 import cats.Applicative
-import cats.effect.IO
 import cats.effect.kernel.Sync
-import cats.effect.std.Console
 import dev.profunktor.pulsar.Topic
 import io.circe.{ Encoder, Json }
 import io.circe.syntax.*
@@ -45,7 +43,7 @@ object Logger:
     from[F] {
       consoleLogger[F](Formatter.colorful)
         .contramap { msg =>
-          msg.copy(position = msg.position.copy(enclosureName = "trading.lib.Logger", line = 0))
+          msg.copy(position = msg.position.copy(enclosureName = "trading.lib.Logger", line = -1))
         }
     }
 
@@ -55,10 +53,3 @@ object Logger:
       def error(str: => String): F[Unit] = info(str)
       def debug(str: => String): F[Unit] = info(str)
       def warn(str: => String): F[Unit]  = info(str)
-
-  object StdOut:
-    given [F[_]: Console]: Logger[F] with
-      def info(str: => String): F[Unit]  = Console[F].println(s"[info] - $str")
-      def error(str: => String): F[Unit] = Console[F].errorln(s"[error] - $str")
-      def debug(str: => String): F[Unit] = Console[F].errorln(s"[debug] - $str")
-      def warn(str: => String): F[Unit]  = Console[F].println(s"[warn] - $str")
