@@ -23,9 +23,9 @@ object Engine:
           val (nst, event) = TradeEngine.fsm.run(st, cmd)
           for
             evt <- (GenUUID[F].make[EventId], Time[F].timestamp).mapN(event)
-            _   <- producer.send(evt)
             ecs = TradeEvent._Command.get(evt).toList
             nds <- Time[F].timestamp.map(Conflicts.updateMany(ds)(ecs, _))
+            _   <- producer.send(evt)
             _ <- ack(msgId).attempt.void // don't care if this fails (de-dup)
           yield (nst -> nds) -> ()
     }
