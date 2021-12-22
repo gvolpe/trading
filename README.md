@@ -84,6 +84,7 @@ Creating trading_pulsar-manager_1 ... done
 Creating trading_alerts_1         ... done
 Creating trading_processor_1      ... done
 Creating trading_snapshots_1      ... done
+Creating trading_forecasts_1      ... done
 Creating trading_tracing_1        ... done
 Creating trading_prometheus_1     ... done
 Creating trading_grafana_1        ... done
@@ -114,7 +115,7 @@ modules
 
 ### Lib
 
-Capability traits such as `Time`, `GenUUID`, and potential library abstractions such as `Consumer` and `Producer`, which abstract over different implementations such as Kafka and Pulsar.
+Capability traits such as `Logger`, `Time`, `GenUUID`, and potential library abstractions such as `Consumer` and `Producer`, which abstract over different implementations such as Kafka and Pulsar.
 
 ### Domain
 

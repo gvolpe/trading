@@ -6,7 +6,6 @@ import trading.state.{ DedupState, IdRegistry }
 
 import cats.syntax.all.*
 
-// TODO: we should probably deduplicate TradeEvent, not only commands
 object Conflicts:
   def dedup(st: DedupState)(command: TradeCommand): Option[TradeCommand] =
     (!st.ids.map(_.id).contains(command.id)).guard[Option].as(command)
