@@ -104,7 +104,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       res1 = NonEmptyList
         .of(
           expect.same(ae1, Some(AuthorEvent.Registered(eventId, cid, authorId, authorName, ts))),
-          expect.same(as1, List(Author(authorId, authorName, None, Nil))),
+          expect.same(as1, List(Author(authorId, authorName, None, Set.empty))),
           expect.same(afs1, Map(authorId -> Nil)),
           expect(fe1.isEmpty),
           expect(fs1.isEmpty),
@@ -124,7 +124,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       res2 = NonEmptyList
         .of(
           expect.same(ae2, Some(AuthorEvent.NotRegistered(eventId, cid, authorName, Reason("Duplicate username"), ts))),
-          expect.same(as2, List(Author(authorId, authorName, None, Nil))),
+          expect.same(as2, List(Author(authorId, authorName, None, Set.empty))),
           expect.same(afs2, Map(authorId -> Nil)),
           expect(fe2.isEmpty),
           expect(fs2.isEmpty),

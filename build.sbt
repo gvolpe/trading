@@ -134,6 +134,13 @@ lazy val ws = (project in file("modules/ws-server"))
   )
   .dependsOn(core)
 
+// integration tests
+lazy val it = (project in file("modules/it"))
+  .settings(commonSettings: _*)
+  .dependsOn(core)
+  .dependsOn(domain % "compile->compile;compile->test")
+  .dependsOn(forecasts)
+
 // extension demo
 lazy val demo = (project in file("modules/x-demo"))
   .settings(commonSettings: _*)

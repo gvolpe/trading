@@ -16,24 +16,26 @@ trait SnapshotWriter[F[_]]:
   def save(state: TradeState): F[Unit]
 
 object SnapshotWriter:
+  def from[F[_]: MonadThrow](
+      redis: RedisCommands[F, String, String],
+      exp: KeyExpiration
+  ): SnapshotWriter[F] = new:
+    def save(state: TradeState): F[Unit] =
+      redis.set(s"trading-status", state.status.show) *>
+        state.prices.toList.traverse_ { case (symbol, prices) =>
+          val key = s"snapshot-$symbol"
+          redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces) *>
+            redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces) *>
+            redis.hSet(key, "high", prices.high.show) *>
+            redis.hSet(key, "low", prices.low.show) *>
+            redis.expire(key, exp.value)
+        }
+
   def fromClient[F[_]: MkRedis: MonadThrow](
       client: RedisClient,
       exp: KeyExpiration
   ): Resource[F, SnapshotWriter[F]] =
-    Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
-      new:
-        def save(state: TradeState): F[Unit] =
-          state.prices.toList.traverse_ { case (symbol, prices) =>
-            val key1 = s"snapshot-$symbol"
-            val key2 = s"trading-status"
-            redis.hSet(key1, "ask", prices.ask.toList.asJson.noSpaces) *>
-              redis.hSet(key1, "bid", prices.bid.toList.asJson.noSpaces) *>
-              redis.hSet(key1, "high", prices.high.show) *>
-              redis.hSet(key1, "low", prices.low.show) *>
-              redis.expire(key1, exp.value) *>
-              redis.set(key2, state.status.show)
-          }
-    }
+    Redis[F].fromClient(client, RedisCodec.Utf8).map(from(_, exp))
 
   def make[F[_]: Async: Log: MonadThrow](
       uri: RedisURI,

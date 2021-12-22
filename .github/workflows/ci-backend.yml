@@ -26,6 +26,9 @@ jobs:
       - name: "Cache for sbt & coursier ♨️"
         uses: coursier/cache-action@v4.1
 
+      - name: "Starting up Redis 🐳"
+        run: docker-compose up -d redis
+
       - name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v14.1
 
@@ -36,4 +39,7 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: "Run with ${{ matrix.java }} 🚀"
-        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt test"
+        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt 'test;it/test'"
+
+      - name: "Shutting down Redis 🐳"
+        run: docker-compose down
