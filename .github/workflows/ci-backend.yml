@@ -1,7 +1,14 @@
 name: Scala
 
 on:
-  pull_request: {}
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'web-app/**'
+      - 'imgs/**'
+      - 'README.md'
+      - 'kafka.yml'
   push:
     branches:
       - main
