@@ -40,7 +40,7 @@ object Engine:
             case ForecastCommand.Register(_, cid, name, website, _) =>
               GenUUID[F].make[AuthorId].flatMap { aid =>
                 atStore
-                  .save(Author(aid, name, website, List.empty))
+                  .save(Author(aid, name, website, Set.empty))
                   .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
                   .handleError { case AuthorStore.DuplicateAuthorError(_) =>
                     AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)

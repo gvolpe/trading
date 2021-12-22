@@ -19,33 +19,35 @@ trait SnapshotReader[F[_]]:
   * Failover subscription mode and it's recommended to run two instances: a main one, and a failover one.
   */
 object SnapshotReader:
+  def from[F[_]: MonadThrow](
+      redis: RedisCommands[F, String, String]
+  ): SnapshotReader[F] = new:
+    def latest: F[Option[TradeState]] =
+      (redis.get("trading-status"), redis.keys("snapshot*")).tupled.flatMap { (st, sn) =>
+        sn.traverseFilter { key =>
+          redis.hGetAll(key).map { kv =>
+            val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
+            val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
+            val high = Price(kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0))
+            val low  = Price(kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0))
+
+            Either
+              .catchNonFatal(key.split("-").apply(1)) // get symbol
+              .toOption
+              .map(Symbol(_) -> Prices(ask.toMap, bid.toMap, high, low))
+          }
+        }.map {
+          case Nil => None
+          case xs =>
+            val ts = st.flatMap(TradingStatus.from).getOrElse(TradingStatus.On)
+            TradeState(ts, xs.toMap).some
+        }
+      }
+
   def fromClient[F[_]: MkRedis: MonadThrow](
       client: RedisClient
   ): Resource[F, SnapshotReader[F]] =
-    Redis[F].fromClient(client, RedisCodec.Utf8).map { redis =>
-      new:
-        def latest: F[Option[TradeState]] =
-          (redis.get("trading-status"), redis.keys("snapshot*")).tupled.flatMap { (st, sn) =>
-            sn.traverseFilter { key =>
-              redis.hGetAll(key).map { kv =>
-                val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
-                val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
-                val high = Price(kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0))
-                val low  = Price(kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0))
-
-                Either
-                  .catchNonFatal(key.split("-").apply(1)) // get symbol
-                  .toOption
-                  .map(Symbol(_) -> Prices(ask.toMap, bid.toMap, high, low))
-              }
-            }.map {
-              case Nil => None
-              case xs =>
-                val ts = st.flatMap(TradingStatus.from).getOrElse(TradingStatus.On)
-                TradeState(ts, xs.toMap).some
-            }
-          }
-    }
+    Redis[F].fromClient(client, RedisCodec.Utf8).map(from)
 
   def make[F[_]: Async: Log: MonadThrow](uri: RedisURI): Resource[F, SnapshotReader[F]] =
     RedisClient[F].from(uri.value).flatMap(fromClient[F])
