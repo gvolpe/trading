@@ -126,7 +126,7 @@ Core functionality that needs to be shared across different modules such as snap
 
 ### Feed
 
-Generates random `TradeCommand`s such as `Create` or `Delete` and publishes them to the `trading-commands` topic.
+Generates random `TradeCommand`s and `ForecastCommand`s followed by publishing them to the corresponding topics. In the absence of real input data, this random feed puts the entire system to work.
 
 ### Forecasts
 

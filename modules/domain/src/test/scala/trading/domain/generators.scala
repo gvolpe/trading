@@ -64,9 +64,18 @@ object generators:
 
   val eventIdGen: Gen[EventId] = Gen.uuid.map(id => EventId(id))
 
-  val authorIdGen: Gen[AuthorId] = Gen.uuid.map(id => AuthorId(id))
+  val authorIdGen: Gen[AuthorId] =
+    Gen.oneOf(
+      "059480cc-1686-43a1-80b6-3ef0a822b725",
+      "9a3b1a22-d81d-4ff4-9f01-c2b21214d8a5"
+    ).map(id => AuthorId(UUID.fromString(id)))
 
-  val forecastIdGen: Gen[ForecastId] = Gen.uuid.map(id => ForecastId(id))
+  val forecastIdGen: Gen[ForecastId] =
+    Gen.oneOf(
+      "b8f7470e-34d0-467f-a5a7-0eedb496ef1a",
+      "db12c580-4856-4e9b-ae57-711f5887368d",
+      "64cc2cd7-51b0-4252-9f5d-7c5c656a049a"
+    ).map(id => ForecastId(UUID.fromString(id)))
 
   val symbolGen: Gen[Symbol] =
     Gen

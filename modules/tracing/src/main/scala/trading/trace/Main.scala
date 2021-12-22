@@ -6,12 +6,11 @@ import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
 import trading.domain.Alert
 import trading.events.*
-import trading.lib.*
+import trading.lib.{ given, * }
 import trading.state.{ DedupState, TradeState }
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
-import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 import natchez.EntryPoint
 import natchez.honeycomb.Honeycomb
@@ -66,7 +65,7 @@ object Main extends IOApp.Simple:
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
-      _      <- Resource.eval(IO.println(">>> Initializing tracing service <<<"))
+      _      <- Resource.eval(Logger[IO].info("Initializing tracing service"))
       ep     <- mkEntryPoint(config.honeycombApiKey)
       tracer           = Tracer.make[IO](ep)
       alertsTopic      = AppTopic.Alerts.make(config.pulsar)

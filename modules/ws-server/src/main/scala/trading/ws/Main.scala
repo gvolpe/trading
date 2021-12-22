@@ -41,7 +41,7 @@ object Main extends IOApp.Simple:
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
-      _      <- Resource.eval(IO.println(">>> Initializing ws-server service <<<"))
+      _      <- Resource.eval(Logger[IO].info("Initializing ws-server service"))
       ptopic = AppTopic.Alerts.make(config.pulsar)
       consumer <- Consumer.pulsar[IO, Alert](pulsar, ptopic, sub)
       topic    <- Resource.eval(Topic[IO, Alert])

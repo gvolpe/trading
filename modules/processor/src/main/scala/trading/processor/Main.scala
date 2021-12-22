@@ -5,12 +5,11 @@ import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
 import trading.events.TradeEvent
-import trading.lib.*
+import trading.lib.{given, *}
 import trading.state.{ DedupState, TradeState }
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
-import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -21,7 +20,7 @@ object Main extends IOApp.Simple:
         Stream.eval(server.useForever).concurrently {
           Stream
             .eval(snapshots.latest.map(_.getOrElse(TradeState.empty)))
-            .evalTap(latest => Logger[IO].info(s">>> SNAPSHOTS: $latest"))
+            .evalTap(latest => Logger[IO].debug(s"SNAPSHOTS: $latest"))
             .flatMap { latest =>
               consumer.receiveM.evalMapAccumulate(latest -> DedupState.empty)(fsm.run)
             }
@@ -40,7 +39,7 @@ object Main extends IOApp.Simple:
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
-      _      <- Resource.eval(IO.println(">>> Initializing processor service <<<"))
+      _      <- Resource.eval(Logger[IO].info("Initializing processor service"))
       server   = Ember.default[IO](config.httpPort)
       cmdTopic = AppTopic.TradingCommands.make(config.pulsar)
       evtTopic = AppTopic.TradingEvents.make(config.pulsar)

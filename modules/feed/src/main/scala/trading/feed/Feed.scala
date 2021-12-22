@@ -12,14 +12,11 @@ import cats.Parallel
 import cats.effect.kernel.{ Ref, Temporal }
 import cats.syntax.all.*
 
-trait Feed[F[_]]:
-  def run: F[Unit]
-
 object Feed:
-  def random[F[_]: GenUUID: Logger: Parallel: Ref.Make: Temporal: Time](
+  def random[F[_]: GenUUID: Logger: Parallel: Temporal: Time](
       trProducer: Producer[F, TradeCommand],
       fcProducer: Producer[F, ForecastCommand]
-  ): Feed[F] = new:
+  ): F[Unit] =
     val trading: F[Unit] =
       Ref.of[F, TradingStatus](TradingStatus.On).flatMap { ref =>
         import TradeCommand.*
@@ -57,4 +54,4 @@ object Feed:
         }
       }
 
-    def run: F[Unit] = trading &> forecasting
+    trading &> forecasting

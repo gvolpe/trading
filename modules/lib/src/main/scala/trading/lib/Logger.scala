@@ -3,6 +3,7 @@ package trading.lib
 import cats.Applicative
 import cats.effect.kernel.Sync
 import dev.profunktor.pulsar.Topic
+import dev.profunktor.redis4cats.effect.Log
 import io.circe.{ Encoder, Json }
 import io.circe.syntax.*
 import io.odin.{ Logger as OdinLogger, consoleLogger }
@@ -46,6 +47,11 @@ object Logger:
           msg.copy(position = msg.position.copy(enclosureName = "trading.lib.Logger", line = -1))
         }
     }
+
+  given redisLog[F[_]](using L: Logger[F]): Log[F] = new:
+    def debug(msg: => String): F[Unit] = L.debug(msg)
+    def error(msg: => String): F[Unit] = L.error(msg)
+    def info(msg: => String): F[Unit]  = L.info(msg)
 
   object NoOp:
     given [F[_]: Applicative]: Logger[F] with

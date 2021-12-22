@@ -5,12 +5,11 @@ import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.events.*
 import trading.forecasts.store.*
-import trading.lib.{ Consumer, Producer }
+import trading.lib.{ given, * }
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import dev.profunktor.redis4cats.connection.RedisClient
-import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -37,7 +36,7 @@ object Main extends IOApp.Simple:
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
-      _      <- Resource.eval(IO.println(">>> Initializing forecasts service <<<"))
+      _      <- Resource.eval(Logger[IO].info("Initializing forecasts service"))
       cmdTopic      = AppTopic.ForecastCommands.make(config.pulsar)
       authorTopic   = AppTopic.AuthorEvents.make(config.pulsar)
       forecastTopic = AppTopic.ForecastEvents.make(config.pulsar)
