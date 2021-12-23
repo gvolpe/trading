@@ -22,6 +22,7 @@ Examples corresponding to the [Functional event-driven architecture: Powered by 
    * [Alerts](#alerts)
    * [WS Server](#ws-server)
    * [Tracing](#tracing)
+   * [Tests](#tests)
    * [X Demo](#x-demo)
 * [Monitoring](#monitoring)
 
@@ -154,6 +155,10 @@ It consumes `Alert` messages and sends them over Web Sockets whenever there's an
 A decentralized application that hooks up on multiple topics and creates traces via the Open Tracing protocol, using the Natchez library and Honeycomb.
 
 ![tracing](./imgs/tracing.png)
+
+### Tests
+
+All unit tests can be executed via `sbt test`. There's also a small suite of integration tests that can be executed via `sbt it/test` (it requires Redis to be up).
 
 ### X Demo
 
