@@ -95,7 +95,7 @@ It is recommended to run the `feed` service directly from `sbt` whenever necessa
 
 ## Services
 
-The back-end application consists of 8 modules, from which 5 are deployable applications, and 3 are just shared modules. There's also a demo module and a web application.
+The back-end application consists of 9 modules, from which 5 are deployable applications, and 3 are just shared modules. There's also a demo module and a web application.
 
 ```
 modules
@@ -104,6 +104,7 @@ modules
 ├── domain
 ├── feed
 ├── forecasts
+├── it
 ├── lib
 ├── processor
 ├── snapshots
