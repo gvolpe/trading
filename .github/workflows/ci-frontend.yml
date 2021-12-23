@@ -1,7 +1,11 @@
 name: Elm
 
 on:
-  pull_request: {}
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'web-app/**'
   push:
     branches:
       - main

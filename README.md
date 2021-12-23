@@ -162,7 +162,7 @@ All unit tests can be executed via `sbt test`. There's also a small suite of int
 
 ### X Demo
 
-It contains all the standalone examples shown in the book as well. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
+It contains all the standalone examples shown in the book. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
 
 ## Monitoring
 
