@@ -57,14 +57,12 @@ object HandlerSuite extends SimpleIOSuite with Checkers:
       IO.deferred[Either[Throwable, Unit]] // to know when there is an active subscription
     ).tupled
       .flatMap { (topic, out, switch, connected) =>
-        ignore("flaky test") *> Handler.make(topic).flatMap { h =>
+        Handler.make(topic).flatMap { h =>
           val recv =
             Stream
               .emits(input)
               .append {
-                Stream.eval(switch.get).flatMap { _ =>
-                  Stream.sleep[IO](10.millis).as(Text(WsIn.Close.asJson.noSpaces))
-                }
+                Stream.eval(switch.get.as(Text(WsIn.Close.asJson.noSpaces)))
               }
               .through(h.receive)
               .void
@@ -73,13 +71,16 @@ object HandlerSuite extends SimpleIOSuite with Checkers:
             topic.subscribers
               .evalMap(s => connected.complete(().asRight).whenA(s >= 1))
               .interruptWhen(connected.get)
-              .append {
-                Stream.emits(alerts).through(topic.publish)
+              .onFinalize {
+                Stream
+                  .emits(alerts)
+                  .through(topic.publish)
+                  .compile
+                  .drain
               }
 
           val send =
             h.send
-              .metered(50.millis)
               .evalMap(wsf => out.update(_ :+ wsf))
               .onFinalize(switch.complete(()).void)
 
