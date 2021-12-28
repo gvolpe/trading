@@ -5,7 +5,7 @@ trading
 [![CI Scala](https://github.com/gvolpe/trading/workflows/Scala/badge.svg)](https://github.com/gvolpe/trading/actions)
 [![MergifyStatus](https://img.shields.io/endpoint.svg?url=https://gh.mergify.io/badges/gvolpe/trading&style=flat)](https://mergify.io)
 
-Examples corresponding to the [Functional event-driven architecture: Powered by Scala 3](https://leanpub.com/feda) book.
+Reference application developed in the [Functional event-driven architecture: Powered by Scala 3](https://leanpub.com/feda) book.
 
 ## Table of contents
 
@@ -77,7 +77,7 @@ If we don't specify any arguments, then all the containers will be started, incl
 
 ```shell
 $ docker-compose up
-Creating network "trading_trading-net" with the default driver
+Creating network "trading_app" with the default driver
 Creating trading_pulsar_1 ... done
 Creating trading_redis_1  ... done
 Creating trading_ws-server_1      ... done

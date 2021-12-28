@@ -1,7 +1,7 @@
 version: '3.6'
 
 networks:
-  trading-net: {}
+  app: {}
 
 services:
 
@@ -16,7 +16,7 @@ services:
     command: >
       /bin/bash -c "bin/pulsar standalone"
     networks:
-      - trading-net
+      - app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers/health"]
       interval: 2s
@@ -32,7 +32,7 @@ services:
     environment:
       - DEBUG=false
     networks:
-      - trading-net
+      - app
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1s
@@ -48,7 +48,7 @@ services:
       - 9527:9527
       - 7750:7750
     networks:
-      - trading-net
+      - app
     depends_on:
       pulsar:
         condition: service_healthy
@@ -63,7 +63,7 @@ services:
     ports:
       - 9090:9090
     networks:
-      - trading-net
+      - app
     volumes:
       - ./monitoring/prometheus/config.yml:/etc/prometheus/prometheus.yml
     command:
@@ -93,7 +93,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     networks:
-      - trading-net
+      - app
     volumes:
       - ./monitoring/grafana/:/etc/grafana/provisioning
     depends_on:
@@ -113,7 +113,7 @@ services:
     ports:
       - 9000:9000
     networks:
-      - trading-net
+      - app
     environment:
       - HTTP_PORT=9000
       - PULSAR_URI=pulsar://pulsar:6650
@@ -133,7 +133,7 @@ services:
     ports:
       - 9004:9004
     networks:
-      - trading-net
+      - app
     environment:
       - HTTP_PORT=9004
       - REDIS_URI=redis://redis
@@ -158,7 +158,7 @@ services:
     ports:
       - 9003:9003
     networks:
-      - trading-net
+      - app
     environment:
       - HTTP_PORT=9003
       - REDIS_URI=redis://redis
@@ -183,7 +183,7 @@ services:
     ports:
       - 9002:9002
     networks:
-      - trading-net
+      - app
     environment:
       - HTTP_PORT=9002
       - REDIS_URI=redis://redis
@@ -208,11 +208,11 @@ services:
     ports:
       - 9005:9005
     networks:
-      - trading-net
+      - app
     environment:
       - HTTP_PORT=9005
       - PULSAR_URI=pulsar://pulsar:6650
-      #- HONEYCOMB_API_KEY=your-honeycomb-key-goes-here
+      - HONEYCOMB_API_KEY=${HONEYCOMB_API_KEY}
     depends_on:
       pulsar:
         condition: service_healthy
@@ -237,7 +237,7 @@ services:
     ports:
       - 9006:9006
     networks:
-      - trading-net
+      - app
     environment:
       - HTTP_PORT=9006
       - PULSAR_URI=pulsar://pulsar:6650
@@ -264,7 +264,7 @@ services:
     #ports:
       #- "9001:9001"
     #networks:
-      #- trading-net
+      #- app
     #environment:
       #- HTTP_PORT=9001
       #- PULSAR_URI=pulsar://pulsar:6650
