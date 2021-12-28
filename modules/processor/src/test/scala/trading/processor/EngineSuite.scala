@@ -4,6 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import trading.commands.TradeCommand
+import trading.core.dedup.DedupRegistry
 import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.TradeEvent
@@ -33,12 +34,16 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   given Time[IO] with
     def timestamp: IO[Timestamp] = IO.pure(ts)
 
+  val registry: DedupRegistry[IO] = new:
+    def get: IO[DedupState]               = IO.pure(DedupState.empty)
+    def save(state: DedupState): IO[Unit] = IO.unit
+
   test("Processor engine fsm") {
     for
       evts <- IO.ref(none[TradeEvent])
       acks <- IO.ref(none[Consumer.MsgId])
       prod = Producer.test(evts)
-      fsm  = Engine.fsm(prod, i => acks.set(i.some))
+      fsm  = Engine.fsm(prod, registry, i => acks.set(i.some))
       (tst1, dst1) <- fsm.runS(
         TradeState.empty -> DedupState.empty,
         Consumer.Msg("id1", TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts))
