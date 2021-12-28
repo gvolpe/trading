@@ -289,3 +289,12 @@ object generators:
           TradeState(st, kv)
         }
       }
+
+  val idRegistryGen: Gen[IdRegistry] =
+    for
+      i <- commandIdGen
+      t <- timestampGen
+    yield IdRegistry(i, t)
+
+  val dedupStateGen: Gen[DedupState] =
+    Gen.nonEmptyListOf(idRegistryGen).map(xs => DedupState(xs.toSet))

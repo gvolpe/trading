@@ -2,8 +2,11 @@ package trading.it
 
 import scala.concurrent.duration.*
 
+import java.util.UUID
+
+import trading.core.dedup.DedupRegistry
 import trading.core.snapshots.*
-import trading.domain.KeyExpiration
+import trading.domain.{ AppId, KeyExpiration }
 import trading.domain.generators.*
 import trading.forecasts.Config.{ AuthorExpiration, ForecastExpiration }
 import trading.forecasts.store.*
@@ -83,4 +86,42 @@ object RedisSuite extends ResourceSuite:
         )
       }
       .map(_.flatten.reduce)
+  }
+
+  test("dedup registry") { redis =>
+    def makeRegistry = DedupRegistry.from(redis, AppId("test-app", UUID.randomUUID()), KeyExpiration(30.seconds))
+
+    val reg1 = makeRegistry
+    val reg2 = makeRegistry
+    val reg3 = makeRegistry
+
+    val st1 = dedupStateGen.sample.replicateA(3).toList.flatten.last
+    val st2 = dedupStateGen.sample.replicateA(3).toList.flatten.last
+    val st3 = dedupStateGen.sample.replicateA(3).toList.flatten.last
+
+    val union12  = st1.ids.map(_.id).union(st2.ids.map(_.id))
+    val union123 = union12.union(st3.ids.map(_.id))
+
+    for
+      x1 <- reg1.get
+      x2 <- reg2.get
+      x3 <- reg2.get
+      _  <- reg1.save(st1)
+      y1 <- reg1.get
+      _  <- reg2.save(st2)
+      y2 <- reg1.get
+      y3 <- reg3.get
+      _  <- reg3.save(st3)
+      y4 <- reg2.get
+    yield NonEmptyList
+      .of(
+        expect(x1.ids.isEmpty),
+        expect(x2.ids.isEmpty),
+        expect(x3.ids.isEmpty),
+        expect.same(st1.ids.map(_.id), y1.ids.map(_.id)),
+        expect.same(union12, y2.ids.map(_.id)),
+        expect.same(y2.ids.map(_.id), y3.ids.map(_.id)),
+        expect.same(union123, y4.ids.map(_.id))
+      )
+      .reduce
   }
