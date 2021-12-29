@@ -2,6 +2,8 @@ package trading.lib
 
 import fs2.{ Pull, Stream }
 
+export Logger.redisLog
+
 extension [F[_], A](src: Stream[F, A])
   /* Perform an action when we get the first message without consuming it twice */
   def onFirstMessage(action: F[Unit]): Stream[F, A] =

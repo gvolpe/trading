@@ -21,6 +21,14 @@ object Handler:
   def make[F[_]: Concurrent: GenUUID: Logger](
       topic: Topic[F, Alert]
   ): F[Handler[F]] =
+    make[F](topic.subscribers, topic.subscribe, topic.close.void)
+
+  // alternative constructor to show a different way of testing this impl
+  def make[F[_]: Concurrent: GenUUID: Logger](
+      subscribers: Stream[F, Int],
+      subscribe: Int => Stream[F, Alert],
+      close: F[Unit]
+  ): F[Handler[F]] =
     (
       Deferred[F, Either[Throwable, Unit]], // syncs the termination of the handler
       Deferred[F, Unit],                    // syncs the first received message to avoid losing subscriptions
@@ -42,12 +50,11 @@ object Handler:
         }
 
         val send: Stream[F, WebSocketFrame] =
-          topic.subscribers
+          subscribers
             .take(1)
             .evalMap(n => encode(WsOut.Attached(sid, n + 1)))
             .append {
-              topic
-                .subscribe(100)
+              subscribe(100)
                 .evalMap(x => fuze.get *> encode(x.wsOut))
                 .interruptWhen(switch)
             }
@@ -62,7 +69,7 @@ object Handler:
                 ().pure[F]
               case Right(WsIn.Close) =>
                 Logger[F].info(s"[$sid] - Closing WS connection") *>
-                  topic.close *> switch.complete(().asRight).void
+                  close *> switch.complete(().asRight).void
               case Right(WsIn.Subscribe(symbol)) =>
                 Logger[F].info(s"[$sid] - Subscribing to $symbol alerts") *>
                   subs.update(_ + symbol)
