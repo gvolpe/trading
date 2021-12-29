@@ -55,6 +55,15 @@ $ elm make src/Main.elm --output=Main.js
 $ xdg-open index.html # or specify browser
 ```
 
+## Overview
+
+Here's an overview of all the components of the system.
+
+![overview](./imgs/system-overview.png)
+
+- Dotted lines: Pulsar messages such as commands and events.
+- Bold lines: read and writes from / to external component such as Redis.
+
 ## Requirements
 
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
@@ -70,15 +79,6 @@ To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
 ```shell
 $ docker-compose -f kafka.yml up
 ```
-
-### Overview
-
-Here's an overview of all the components of the system.
-
-![overview](./imgs/overview.png)
-
-- Dotted lines: Pulsar messages such as commands and events.
-- Bold lines: read and writes from / to external storage such as Redis.
 
 ### Running application
 
