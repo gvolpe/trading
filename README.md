@@ -71,6 +71,15 @@ To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
 $ docker-compose -f kafka.yml up
 ```
 
+### Overview
+
+Here's an overview of all the components of the system.
+
+![overview](./imgs/overview.png)
+
+- Dotted lines: Pulsar messages such as commands and events.
+- Bold lines: read and writes from / to external storage such as Redis.
+
 ### Running application
 
 If we don't specify any arguments, then all the containers will be started, including all our services (except `feed`), Prometheus, Grafana, and Pulsar Manager.
