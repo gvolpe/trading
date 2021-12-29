@@ -10,6 +10,7 @@ Reference application developed in the [Functional event-driven architecture: Po
 ## Table of contents
 
 * [Web App](#web-app)
+* [Overview](#overview)
 * [Requirements](#requirements)
 * [Services](#services)
    * [Lib](#lib)
