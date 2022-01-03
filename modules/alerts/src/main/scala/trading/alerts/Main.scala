@@ -20,6 +20,7 @@ object Main extends IOApp.Simple:
         Stream.eval(server.useForever).concurrently {
           Stream.eval(snapshots.latest).flatMap { maybeSt =>
             consumer.receiveM.evalMapAccumulate(
+              // could use DedupRegistry here as we do in processor
               maybeSt.getOrElse(TradeState.empty) -> DedupState.empty
             )(fsm.run)
           }

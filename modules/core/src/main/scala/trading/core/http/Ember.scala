@@ -1,8 +1,7 @@
 package trading.core.http
 
-import trading.lib.Logger
-
 import cats.effect.kernel.{ Async, Resource }
+import cats.effect.std.Console
 import cats.syntax.all.*
 import com.comcast.ip4s.*
 import org.http4s.*
@@ -15,8 +14,8 @@ import org.http4s.server.defaults.Banner
 import org.http4s.server.websocket.WebSocketBuilder
 
 object Ember:
-  private def showBanner[F[_]: Logger](s: Server): F[Unit] =
-    Logger[F].info(s"\n${Banner.mkString("\n")}\nHTTP Server started at ${s.address}")
+  private def showBanner[F[_]: Console](s: Server): F[Unit] =
+    Console[F].println(s"\n${Banner.mkString("\n")}\nHTTP Server started at ${s.address}")
 
   private def make[F[_]: Async](port: Port) =
     EmberServerBuilder
@@ -30,7 +29,7 @@ object Ember:
       ops <- Prometheus.metricsOps[F](prt.collectorRegistry)
     yield rts => Metrics[F](ops)(prt.routes <+> rts)
 
-  def websocket[F[_]: Async: Logger](
+  def websocket[F[_]: Async: Console](
       port: Port,
       f: WebSocketBuilder[F] => HttpRoutes[F]
   ): Resource[F, Server] =
@@ -43,7 +42,7 @@ object Ember:
         .evalTap(showBanner[F])
     }
 
-  def default[F[_]: Async: Logger](port: Port): Resource[F, Server] =
+  def default[F[_]: Async: Console](port: Port): Resource[F, Server] =
     metrics[F].flatMap { mid =>
       make[F](port)
         .withHttpApp(mid(HealthRoutes[F].routes).orNotFound)
