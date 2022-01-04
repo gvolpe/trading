@@ -9,23 +9,26 @@ Reference application developed in the [Functional event-driven architecture: Po
 
 ## Table of contents
 
-* [Web App](#web-app)
-* [Overview](#overview)
-* [Requirements](#requirements)
-* [Services](#services)
-   * [Lib](#lib)
-   * [Domain](#domain)
-   * [Core](#core)
-   * [Feed](#feed)
-   * [Forecasts](#forecasts)
-   * [Processor](#processor)
-   * [Snapshots](#snapshots)
-   * [Alerts](#alerts)
-   * [WS Server](#ws-server)
-   * [Tracing](#tracing)
-   * [Tests](#tests)
-   * [X Demo](#x-demo)
-* [Monitoring](#monitoring)
+- [trading](#trading)
+  - [Table of contents](#table-of-contents)
+  - [Web App](#web-app)
+  - [Overview](#overview)
+  - [Requirements](#requirements)
+    - [Running application](#running-application)
+  - [Services](#services)
+    - [Lib](#lib)
+    - [Domain](#domain)
+    - [Core](#core)
+    - [Feed](#feed)
+    - [Forecasts](#forecasts)
+    - [Processor](#processor)
+    - [Snapshots](#snapshots)
+    - [Alerts](#alerts)
+    - [WS Server](#ws-server)
+    - [Tracing](#tracing)
+    - [Tests](#tests)
+    - [X Demo](#x-demo)
+  - [Monitoring](#monitoring)
 
 ## Web App
 
@@ -68,6 +71,9 @@ Here's an overview of all the components of the system.
 ## Requirements
 
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
+
+Note: The `docker-compose` file depends on declared services to be published on the local docker server. All docker builds are handled within the `build.sbt` using `sbt-native-packager`. To build all of the service images,
+run `sbt docker:publishLocal`.
 
 ```shell
 $ docker-compose up -d pulsar redis
