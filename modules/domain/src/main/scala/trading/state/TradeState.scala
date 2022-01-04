@@ -14,8 +14,8 @@ final case class TradeState(
     prices: TradeState.SymbolPrices
 ) derives Eq, Show:
   def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState = {
-    val h = Prices._High.modify(p => if (price > p) price else p)(_)
-    val l = Prices._Low.modify(p => if (price < p || p === Price(0.0)) price else p)(_)
+    val h = Prices._High.modify(p => if price > p then price else p)(_)
+    val l = Prices._Low.modify(p => if price < p || p === Price(0.0) then price else p)(_)
 
     action match
       case TradeAction.Ask =>

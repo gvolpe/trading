@@ -50,13 +50,13 @@ object Engine:
 
               // dummy logic to simulate the trading market
               def alert(id: AlertId, ts: Timestamp): Alert =
-                if (previousAskMax - currentAskMax > Price(0.3))
+                if previousAskMax - currentAskMax > Price(0.3) then
                   TradeAlert(id, cid, StrongBuy, symbol, currentAskMax, currentBidMax, high, low, ts)
-                else if (previousAskMax - currentAskMax > Price(0.2))
+                else if previousAskMax - currentAskMax > Price(0.2) then
                   TradeAlert(id, cid, Buy, symbol, currentAskMax, currentBidMax, high, low, ts)
-                else if (currentBidMax - previousBidMax > Price(0.3))
+                else if currentBidMax - previousBidMax > Price(0.3) then
                   TradeAlert(id, cid, StrongSell, symbol, currentAskMax, currentBidMax, high, low, ts)
-                else if (currentBidMax - previousBidMax > Price(0.2))
+                else if currentBidMax - previousBidMax > Price(0.2) then
                   TradeAlert(id, cid, Sell, symbol, currentAskMax, currentBidMax, high, low, ts)
                 else
                   TradeAlert(id, cid, Neutral, symbol, currentAskMax, currentBidMax, high, low, ts)
