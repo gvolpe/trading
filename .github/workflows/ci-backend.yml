@@ -23,10 +23,6 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        java:
-          - jdk17
     steps:
       - uses: actions/checkout@v2.3.2
 
@@ -37,7 +33,7 @@ jobs:
         run: docker-compose up -d redis
 
       - name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v14.1
+        uses: cachix/install-nix-action@v16
 
       - name: "Install Cachix ❄️"
         uses: cachix/cachix-action@v10
@@ -45,8 +41,8 @@ jobs:
           name: feda
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      - name: "Run with ${{ matrix.java }} 🚀"
-        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt 'test;it/test'"
+      - name: "Run trading tests 🚀"
+        run: nix develop -c sbt 'test;it/test'
 
       - name: "Shutting down Redis 🐳"
         run: docker-compose down
