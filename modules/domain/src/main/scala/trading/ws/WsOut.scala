@@ -10,4 +10,5 @@ enum WsOut derives Codec.AsObject:
   case Notification(alert: Alert)
 
 object WsOut:
+  // typeclass derivation does not work
   given Show[WsOut] = Show.fromToString
