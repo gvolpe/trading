@@ -20,7 +20,10 @@ object Engine:
     FSM { case ((st, ds), Consumer.Msg(msgId, command)) =>
       Conflicts.dedup(ds)(command) match
         case None =>
-          Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
+          for
+            _ <- Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}")
+            _ <- ack(msgId)
+          yield (st -> ds) -> ()
         case Some(cmd) =>
           val (nst, event) = TradeEngine.fsm.run(st, cmd)
           for
