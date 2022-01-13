@@ -1,9 +1,9 @@
 package trading.domain
 
-import cats.syntax.all.*
 import cats.{ Eq, Show }
 // FIXME: importing * does not work
 import cats.derived.semiauto.{ derived, product, productOrder }
+import cats.syntax.all.*
 import io.circe.{ Decoder, Encoder, Json }
 
 enum TradingStatus derives Eq, Show:

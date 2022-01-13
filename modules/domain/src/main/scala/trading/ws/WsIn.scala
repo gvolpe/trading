@@ -3,8 +3,7 @@ package trading.ws
 import trading.domain.*
 
 import cats.Show
-// FIXME: importing * does not work
-import cats.derived.semiauto.{ derived, product }
+import cats.derived.semiauto.{ given, * }
 import io.circe.Codec
 
 enum WsIn derives Codec.AsObject, Show:
