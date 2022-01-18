@@ -18,8 +18,8 @@ object Alert:
       symbol: Symbol,
       askPrice: AskPrice,
       bidPrice: BidPrice,
-      high: Price,
-      low: Price,
+      high: HighPrice,
+      low: LowPrice,
       createdAt: Timestamp
   ) extends Alert
 

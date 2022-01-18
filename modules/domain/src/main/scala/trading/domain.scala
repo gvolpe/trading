@@ -79,3 +79,6 @@ object Price extends NumNewtype[BigDecimal]
 
 type AskPrice = Price
 type BidPrice = Price
+
+type HighPrice = Price
+type LowPrice  = Price
