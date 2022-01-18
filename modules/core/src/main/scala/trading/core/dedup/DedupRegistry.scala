@@ -34,15 +34,14 @@ object DedupRegistry:
       exp: KeyExpiration
   ): DedupRegistry[F] = new:
     def get: F[DedupState] =
-      Time[F].timestamp.flatMap { now =>
-        redis.keys(s"${appId.name}-*").flatMap {
-          case Nil =>
-            DedupState.empty.pure[F]
-          case keys =>
-            redis.sUnion(keys*).map { ids =>
-              DedupState(ids.map(id => IdRegistry(CommandId.unsafeFrom(id), now)))
-            }
-        }
+      redis.keys(s"${appId.name}-*").flatMap {
+        case Nil =>
+          DedupState.empty.pure[F]
+        case keys =>
+          for
+            ids <- redis.sUnion(keys*)
+            now <- Time[F].timestamp
+          yield DedupState(ids.map(id => IdRegistry(CommandId.unsafeFrom(id), now)))
       }
 
     def save(state: DedupState): F[Unit] =
