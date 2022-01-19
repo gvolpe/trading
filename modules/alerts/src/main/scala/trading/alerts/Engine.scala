@@ -4,6 +4,7 @@ import trading.commands.TradeCommand
 import trading.core.{ Conflicts, TradeEngine }
 import trading.domain.Alert.{ TradeAlert, TradeUpdate }
 import trading.domain.AlertType.*
+import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.TradeEvent
 import trading.lib.*
@@ -18,16 +19,20 @@ object Engine:
       ack: Consumer.MsgId => F[Unit]
   ): FSM[F, (TradeState, DedupState), Consumer.Msg[TradeEvent], Unit] =
     FSM {
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Started(_, cid, _))) =>
+      case ((st @ TradeState(Off, _), ds), Consumer.Msg(msgId, TradeEvent.Started(_, cid, _))) =>
         (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
           val alert = TradeUpdate(id, cid, TradingStatus.On, ts)
-          (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
+          (producer.send(alert) *> ack(msgId)).attempt.void.tupleLeft(st -> ds)
         }
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, cid, _))) =>
+      case ((st @ TradeState(On, _), ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, cid, _))) =>
         (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
           val alert = TradeUpdate(id, cid, TradingStatus.Off, ts)
-          (producer.send(alert) >> ack(msgId)).attempt.void.tupleLeft(st -> ds)
+          (producer.send(alert) *> ack(msgId)).attempt.void.tupleLeft(st -> ds)
         }
+      case ((st @ TradeState(On, _), ds), Consumer.Msg(msgId, TradeEvent.Started(_, _, _))) =>
+        (Logger[F].warn(s"Status already On") *> ack(msgId)).tupleLeft(st -> ds)
+      case ((st @ TradeState(Off, _), ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, _, _))) =>
+        (Logger[F].warn(s"Status already Off") *> ack(msgId)).tupleLeft(st -> ds)
       case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandRejected(_, _, _, _, _))) =>
         ack(msgId).tupleLeft(st -> ds)
       case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandExecuted(_, cid, command, _))) =>
@@ -63,7 +68,7 @@ object Engine:
 
               (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
                 val nds = Conflicts.update(ds)(cmd, ts)
-                (producer.send(alert(id, ts)) >> ack(msgId)).attempt.void.tupleLeft(nst -> nds)
+                (producer.send(alert(id, ts)) *> ack(msgId)).attempt.void.tupleLeft(nst -> nds)
               }
             }
     }
