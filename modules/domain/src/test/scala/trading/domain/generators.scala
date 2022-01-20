@@ -6,6 +6,7 @@ import java.util.UUID
 import trading.commands.*
 import trading.domain.*
 import trading.state.*
+import trading.ws.*
 
 import cats.Order
 import cats.syntax.show.*
@@ -298,3 +299,64 @@ object generators:
 
   val dedupStateGen: Gen[DedupState] =
     Gen.nonEmptyListOf(idRegistryGen).map(xs => DedupState(xs.toSet))
+
+  /* WsOut messages */
+
+  val alertIdGen: Gen[AlertId] =
+    Gen.uuid.map(id => AlertId(id))
+
+  val socketIdGen: Gen[SocketId] =
+    Gen.uuid.map(id => SocketId(id))
+
+  val alertTypeGen: Gen[AlertType] =
+    Gen.oneOf(AlertType.values.toSeq)
+
+  val tradeAlertGen: Gen[Alert] =
+    for
+      i <- alertIdGen
+      c <- correlationIdGen
+      t <- alertTypeGen
+      s <- symbolGen
+      a <- priceGen
+      b <- priceGen
+      h <- priceGen
+      l <- priceGen
+      p <- timestampGen
+    yield Alert.TradeAlert(i, c, t, s, a, b, h, l, p)
+
+  val tradeUpdateGen: Gen[Alert] =
+    for
+      i <- alertIdGen
+      c <- correlationIdGen
+      s <- tradingStatusGen
+      t <- timestampGen
+    yield Alert.TradeUpdate(i, c, s, t)
+
+  val wsAttachedGen: Gen[WsOut] =
+    for
+      i <- socketIdGen
+      l <- Gen.choose(1L, 500L)
+    yield WsOut.Attached(i, l)
+
+  val wsNotificationGen: Gen[WsOut] =
+    Gen.oneOf(tradeAlertGen, tradeUpdateGen).map(WsOut.Notification(_))
+
+  val wsOutGen: Gen[WsOut] =
+    Gen.oneOf(wsAttachedGen, wsNotificationGen)
+
+  /* WsIn messages */
+
+  val wsCloseGen: Gen[WsIn] =
+    Gen.const(WsIn.Close)
+
+  val wsHeartbeatGen: Gen[WsIn] =
+    Gen.const(WsIn.Heartbeat)
+
+  val wsSubscribeGen: Gen[WsIn] =
+    symbolGen.map(WsIn.Subscribe(_))
+
+  val wsUnsubscribeGen: Gen[WsIn] =
+    symbolGen.map(WsIn.Unsubscribe(_))
+
+  val wsInGen: Gen[WsIn] =
+    Gen.oneOf(wsCloseGen, wsHeartbeatGen, wsSubscribeGen, wsUnsubscribeGen)
