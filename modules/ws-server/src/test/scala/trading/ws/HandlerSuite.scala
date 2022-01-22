@@ -103,10 +103,11 @@ object HandlerSuite extends SimpleIOSuite with Checkers:
       IO.deferred[Either[Throwable, Unit]] // to know when there is an active subscription
     ).tupled
       .flatMap { (out, switch, connected) =>
-        val subscribers                         = Stream.constant[IO, Int](0)
-        val subscribe: Int => Stream[IO, Alert] = _ => Stream.emits(alerts)
+        val close       = IO.unit
+        val subscribers = Stream.constant[IO, Int](0)
+        val subscribe   = (_: Int) => Stream.emits(alerts)
 
-        Handler.make(subscribers, subscribe, IO.unit).flatMap { h =>
+        Handler.make(subscribers, subscribe, close).flatMap { h =>
           val recv =
             Stream
               .emits(input)
