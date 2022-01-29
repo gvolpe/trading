@@ -63,8 +63,7 @@ object Engine:
                   TradeAlert(id, cid, StrongSell, symbol, currentAskMax, currentBidMax, high, low, ts)
                 else if currentBidMax - previousBidMax > Price(0.2) then
                   TradeAlert(id, cid, Sell, symbol, currentAskMax, currentBidMax, high, low, ts)
-                else
-                  TradeAlert(id, cid, Neutral, symbol, currentAskMax, currentBidMax, high, low, ts)
+                else TradeAlert(id, cid, Neutral, symbol, currentAskMax, currentBidMax, high, low, ts)
 
               (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
                 val nds = Conflicts.update(ds)(cmd, ts)

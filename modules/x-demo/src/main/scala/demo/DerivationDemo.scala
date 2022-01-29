@@ -13,7 +13,7 @@ import io.circe.syntax.*
 
 @main def jsonDerivationDemo =
   val address = Address("Baker", 221, Some("B"))
-  val json = address.asJson.spaces2
+  val json    = address.asJson.spaces2
   println(json)
   assert(jsonDecode[Address](json) == Right(address))
 
@@ -24,7 +24,9 @@ import cats.syntax.all.*
 case class Person(
     name: String,
     age: Int
-) derives Eq, Order, Show
+) derives Eq,
+      Order,
+      Show
 
 @main def derivationDemo =
   val p1 = Person("Joe", 33)

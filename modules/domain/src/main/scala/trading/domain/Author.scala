@@ -9,4 +9,5 @@ final case class Author(
     name: AuthorName,
     website: Option[Website],
     forecasts: Set[ForecastId]
-) derives Codec.AsObject, Show
+) derives Codec.AsObject,
+      Show

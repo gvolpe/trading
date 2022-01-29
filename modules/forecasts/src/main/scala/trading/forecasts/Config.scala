@@ -3,7 +3,7 @@ package trading.forecasts
 import scala.concurrent.duration.*
 
 import trading.Newtype
-import trading.domain.{*, given}
+import trading.domain.{ given, * }
 
 import cats.effect.kernel.Async
 import cats.syntax.all.*

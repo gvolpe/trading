@@ -12,7 +12,8 @@ import monocle.{ Focus, Optional }
 final case class TradeState(
     status: TradingStatus,
     prices: TradeState.SymbolPrices
-) derives Eq, Show:
+) derives Eq,
+      Show:
   def modify(symbol: Symbol)(action: TradeAction, price: Price, quantity: Quantity): TradeState = {
     val h = Prices._High.modify(p => if price > p then price else p)(_)
     val l = Prices._Low.modify(p => if price < p || p === Price(0.0) then price else p)(_)
@@ -67,7 +68,8 @@ final case class Prices(
     bid: Prices.Bid,
     high: Price,
     low: Price
-) derives Eq, Show
+) derives Eq,
+      Show
 
 object Prices:
   def empty: Prices = Prices(Map.empty, Map.empty, Price(0.0), Price(0.0))

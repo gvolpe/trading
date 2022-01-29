@@ -2,7 +2,7 @@ package trading.snapshots
 
 import scala.concurrent.duration.*
 
-import trading.domain.{*, given}
+import trading.domain.{ given, * }
 
 import cats.effect.kernel.Async
 import cats.syntax.all.*

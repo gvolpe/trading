@@ -10,4 +10,5 @@ final case class Forecast(
     tag: ForecastTag,
     description: ForecastDescription,
     score: ForecastScore
-) derives Codec.AsObject, Show
+) derives Codec.AsObject,
+      Show
