@@ -8,7 +8,7 @@ object Dependencies {
     val circe      = "0.14.1"
     val ciris      = "2.2.0"
     val fs2Core    = "3.2.4"
-    val fs2Kafka   = "2.2.0"
+    val fs2Kafka   = "2.3.0"
     val http4s     = "1.0.0-M30"
     val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
@@ -16,10 +16,10 @@ object Dependencies {
     val neutron    = "0.2.0+41-af6d6bc4-SNAPSHOT"
     val odin       = "0.13.0"
     val redis4cats = "1.0.0+62-618c9d75-SNAPSHOT"
-    val refined    = "0.9.27"
+    val refined    = "0.9.28"
 
     val scalacheck = "1.15.4"
-    val weaver     = "0.7.7"
+    val weaver     = "0.7.9"
 
     val organizeImports = "0.6.0"
   }
