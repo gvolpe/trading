@@ -6,7 +6,7 @@ object Dependencies {
     val cats       = "2.7.0"
     val catsEffect = "3.3.5"
     val circe      = "0.14.1"
-    val ciris      = "2.2.1"
+    val ciris      = "2.3.2"
     val fs2Core    = "3.2.4"
     val fs2Kafka   = "2.3.0"
     val http4s     = "1.0.0-M30"
