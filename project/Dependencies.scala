@@ -19,7 +19,7 @@ object Dependencies {
     val refined    = "0.9.27"
 
     val scalacheck = "1.15.4"
-    val weaver     = "0.7.7"
+    val weaver     = "0.7.9"
 
     val organizeImports = "0.6.0"
   }
