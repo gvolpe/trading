@@ -16,7 +16,7 @@ object Dependencies {
     val neutron    = "0.2.0+41-af6d6bc4-SNAPSHOT"
     val odin       = "0.13.0"
     val redis4cats = "1.0.0+62-618c9d75-SNAPSHOT"
-    val refined    = "0.9.27"
+    val refined    = "0.9.28"
 
     val scalacheck = "1.15.4"
     val weaver     = "0.7.9"
