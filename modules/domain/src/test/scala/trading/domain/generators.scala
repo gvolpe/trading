@@ -85,7 +85,7 @@ object generators:
   val symbolGen: Gen[Symbol] =
     Gen
       .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
-      .map(s => Symbol.apply(s))
+      .map(s => Symbol.unsafeFrom(s))
 
   val priceGen: Gen[Price] =
     Gen.choose(0.78346, 4.78341).map(x => Price(x))

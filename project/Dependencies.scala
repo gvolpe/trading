@@ -33,11 +33,13 @@ object Dependencies {
     val fs2Core    = "co.fs2"        %% "fs2-core"    % V.fs2Core
     val kittens    = "org.typelevel" %% "kittens"     % V.kittens
 
-    val ciris = "is.cir" %% "ciris" % V.ciris
+    val cirisCore    = "is.cir" %% "ciris"         % V.ciris
+    val cirisRefined = "is.cir" %% "ciris-refined" % V.ciris
 
-    val circeCore   = circe("core")
-    val circeParser = circe("parser")
-    val circeExtras = circe("extras")
+    val circeCore    = circe("core")
+    val circeParser  = circe("parser")
+    val circeExtras  = circe("extras")
+    val circeRefined = circe("refined")
 
     val http4sDsl     = http4s("dsl")
     val http4sServer  = http4s("ember-server")
@@ -55,7 +57,8 @@ object Dependencies {
 
     val odin = "com.github.valskalla" %% "odin-core" % V.odin
 
-    val refinedCore = "eu.timepit" %% "refined" % V.refined
+    val refinedCore = "eu.timepit" %% "refined"      % V.refined
+    val refinedCats = "eu.timepit" %% "refined-cats" % V.refined
 
     // test
     val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle
