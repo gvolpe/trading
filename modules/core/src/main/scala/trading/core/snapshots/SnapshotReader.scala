@@ -34,7 +34,7 @@ object SnapshotReader:
             Either
               .catchNonFatal(key.split("-").apply(1)) // get symbol
               .toOption
-              .map(Symbol(_) -> Prices(ask.toMap, bid.toMap, high, low))
+              .map(Symbol.unsafeFrom(_) -> Prices(ask.toMap, bid.toMap, high, low))
           }
         }.map {
           case Nil => None

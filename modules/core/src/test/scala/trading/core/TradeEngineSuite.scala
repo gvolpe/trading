@@ -18,7 +18,7 @@ object TradeEngineSuite extends FunSuite with Checkers:
   val id  = CommandId(UUID.randomUUID())
   val eid = EventId(UUID.randomUUID())
   val cid = CorrelationId(UUID.randomUUID())
-  val s   = Symbol("EURUSD")
+  val s   = Symbol.EURUSD
   val ts  = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
 
   val p1 = Price(1.1987)

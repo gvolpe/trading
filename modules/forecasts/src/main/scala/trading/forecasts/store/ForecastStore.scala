@@ -35,7 +35,7 @@ object ForecastStore:
           val d = ForecastDescription(kv.getOrElse(fields(0), ""))
           val t = kv.get(fields(1)).map(ForecastTag.from).getOrElse(ForecastTag.Unknown)
           val c = ForecastScore(kv.get(fields(2)).flatMap(_.toIntOption).getOrElse(0))
-          val s = Symbol(kv.getOrElse(fields(3), ""))
+          val s = kv.get(fields(3)).flatMap(s => Symbol.from(s).toOption).getOrElse(Symbol.XXXXXX)
           Forecast(fid, s, t, d, c)
         }
       }
