@@ -16,24 +16,13 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { (server, consumer, reader, writer) =>
+      .flatMap { (server, consumer, reader, fsm) =>
         Stream.eval(server.useForever).concurrently {
           Stream
             .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
             .evalTap(latest => Logger[IO].debug(s"SNAPSHOTS: $latest"))
-            .flatMap { latest =>
-              consumer.receiveM
-                .mapAccumulate(latest) { case (st, Consumer.Msg(msgId, evt)) =>
-                  TradeEvent._Command.get(evt) match
-                    case Some(cmd) =>
-                      TradeEngine.fsm.runS(st, cmd) -> (msgId -> evt.id)
-                    case None =>
-                      st -> (msgId -> evt.id)
-                }
-                .evalMap { case (st, (msdId, evId)) =>
-                  Logger[IO].debug(s"Event ID: ${evId}") *>
-                    writer.save(st) *> consumer.ack(msdId)
-                }
+            .flatMap {
+              consumer.receiveM.evalMapAccumulate(_)(fsm.run)
             }
         }
       }
@@ -57,5 +46,6 @@ object Main extends IOApp.Simple:
       reader   <- SnapshotReader.fromClient[IO](redis)
       writer   <- SnapshotWriter.fromClient[IO](redis, config.keyExpiration)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
+      fsm    = Engine.fsm(writer, consumer)
       server = Ember.default[IO](config.httpPort)
-    yield (server, consumer, reader, writer)
+    yield (server, consumer, reader, fsm)
