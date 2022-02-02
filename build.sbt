@@ -103,6 +103,7 @@ lazy val snapshots = (project in file("modules/snapshots"))
   .settings(commonSettings: _*)
   .settings(dockerSettings("snapshots"))
   .dependsOn(core)
+  .dependsOn(domain % "compile->compile;test->test")
 
 lazy val processor = (project in file("modules/processor"))
   .enablePlugins(DockerPlugin)

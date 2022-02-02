@@ -3,11 +3,14 @@ package trading.events
 import trading.commands.TradeCommand
 import trading.domain.{ given, * }
 
+import cats.Show
+// FIXME: importing all `given` yield ambiguous implicits
+import cats.derived.semiauto.{ derived, product }
 import cats.syntax.all.*
 import io.circe.Codec
 import monocle.Getter
 
-sealed trait TradeEvent derives Codec.AsObject:
+sealed trait TradeEvent derives Codec.AsObject, Show:
   def id: EventId
   def cid: CorrelationId
   def createdAt: Timestamp
