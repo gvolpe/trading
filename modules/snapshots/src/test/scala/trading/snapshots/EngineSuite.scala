@@ -28,14 +28,12 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   val failingWriter: SnapshotWriter[IO] = new:
     def save(state: TradeState): IO[Unit] = IO.raiseError(new Exception("boom"))
 
-  def mkConsumer(
+  def mkAcker(
       acks: Ref[IO, Option[MsgId]],
       nacks: Ref[IO, Option[MsgId]]
-  ): Consumer[IO, TradeEvent] = new:
-    def ack(id: MsgId): IO[Unit]              = acks.set(id.some)
-    def nack(id: MsgId): IO[Unit]             = nacks.set(id.some)
-    def receiveM: Stream[IO, Msg[TradeEvent]] = ???
-    def receive: Stream[IO, TradeEvent]       = ???
+  ): Acker[IO, TradeEvent] = new:
+    def ack(id: MsgId): IO[Unit]  = acks.set(id.some)
+    def nack(id: MsgId): IO[Unit] = nacks.set(id.some)
 
   val msgId: MsgId = UUID.randomUUID().toString
 
@@ -51,7 +49,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
         writes <- IO.ref(none[TradeState])
         acks   <- IO.ref(none[MsgId])
         nacks  <- IO.ref(none[MsgId])
-        fsm = Engine.fsm[IO](mkWriter(writes), mkConsumer(acks, nacks))
+        fsm = Engine.fsm[IO](mkAcker(acks, nacks), mkWriter(writes))
         nst  <- fsm.runS(TradeState.empty, Msg(msgId, evt))
         res1 <- writes.get
         res2 <- acks.get

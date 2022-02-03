@@ -2,7 +2,8 @@ package trading.snapshots
 
 import trading.core.TradeEngine
 import trading.core.snapshots.SnapshotWriter
-import trading.lib.{ Consumer, FSM, Logger }
+import trading.lib.{ Acker, FSM, Logger }
+import trading.lib.Consumer.Msg
 import trading.events.TradeEvent
 import trading.state.TradeState
 
@@ -11,21 +12,21 @@ import cats.syntax.all.*
 
 object Engine:
   def fsm[F[_]: MonadThrow: Logger](
-      writer: SnapshotWriter[F],
-      consumer: Consumer[F, TradeEvent]
-  ): FSM[F, TradeState, Consumer.Msg[TradeEvent], Unit] =
+      acker: Acker[F, TradeEvent],
+      writer: SnapshotWriter[F]
+  ): FSM[F, TradeState, Msg[TradeEvent], Unit] =
     FSM {
-      case (st, Consumer.Msg(msgId, TradeEvent.CommandExecuted(eid, _, cmd, _))) =>
+      case (st, Msg(msgId, TradeEvent.CommandExecuted(eid, _, cmd, _))) =>
         val nst = TradeEngine.fsm.runS(st, cmd)
         writer.save(nst).attempt.flatMap {
           case Left(e) =>
             Logger[F].warn(s"Failed to persist state for event ID: $eid") *>
-              consumer.nack(msgId).tupleLeft(st)
+              acker.nack(msgId).tupleLeft(st)
           case Right(_) =>
             Logger[F].debug(s"State persisted for event ID: $eid") *>
-              consumer.ack(msgId).attempt.void.tupleLeft(nst)
+              acker.ack(msgId).attempt.void.tupleLeft(nst)
         }
-      case (st, Consumer.Msg(msgId, evt)) =>
+      case (st, Msg(msgId, evt)) =>
         Logger[F].debug(s"Event ID: ${evt.id}, no persistence") *>
-          consumer.ack(msgId).attempt.void.tupleLeft(st)
+          acker.ack(msgId).attempt.void.tupleLeft(st)
     }

@@ -18,9 +18,7 @@ object Main extends IOApp.Simple:
       .resource(resources)
       .flatMap { (server, consumer, engine) =>
         Stream.eval(server.useForever).concurrently {
-          consumer.receiveM.evalMap { case Consumer.Msg(id, cmd) =>
-            engine.run(cmd) *> consumer.ack(id)
-          }
+          consumer.receiveM.evalMap(engine.run)
         }
       }
       .compile
@@ -46,5 +44,6 @@ object Main extends IOApp.Simple:
       redis     <- RedisClient[IO].from(config.redisUri.value)
       atStore   <- AuthorStore.make[IO](redis, config.authorExp)
       fcStore   <- ForecastStore.make[IO](redis, config.forecastExp)
+      acker  = Acker.from(consumer)
       server = Ember.default[IO](config.httpPort)
-    yield (server, consumer, Engine.make(authors, forecasts, atStore, fcStore))
+    yield (server, consumer, Engine.make(authors, forecasts, atStore, fcStore, acker))

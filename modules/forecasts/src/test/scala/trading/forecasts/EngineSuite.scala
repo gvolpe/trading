@@ -77,6 +77,15 @@ object EngineSuite extends SimpleIOSuite with Checkers:
         case None     => Some(List(res))
       })
 
+  val dummyAcker: Acker[IO, ForecastCommand] = new:
+    def ack(id: Consumer.MsgId): IO[Unit]  = IO.unit
+    def nack(id: Consumer.MsgId): IO[Unit] = IO.unit
+
+  val msgId: Consumer.MsgId = UUID.randomUUID().toString
+
+  extension (cmd: ForecastCommand)
+    def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
+
   // TODO: add other events and make it property-based
   test("Forecasts engine") {
     for
@@ -90,10 +99,10 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       fcvtRef <- IO.ref(Map.empty[ForecastId, List[VoteResult]])
       atStore = mkAuthorStore(atRef, atfcRef)
       fcStore = mkForecastStore(fcRef, fcvtRef)
-      engine  = Engine.make(p1, p2, atStore, fcStore)
+      engine  = Engine.make(p1, p2, atStore, fcStore, dummyAcker)
 
       // register author
-      _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts))
+      _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts).asMsg)
       ae1  <- authors.get
       fe1  <- forecasts.get
       as1  <- atRef.get
@@ -113,7 +122,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
         .reduce
 
       // try to register same author again
-      _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts))
+      _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts).asMsg)
       ae2  <- authors.get
       fe2  <- forecasts.get
       as2  <- atRef.get
