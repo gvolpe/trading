@@ -95,6 +95,12 @@ lazy val forecasts = (project in file("modules/forecasts"))
   .enablePlugins(AshScriptPlugin)
   .settings(commonSettings: _*)
   .settings(dockerSettings("forecasts"))
+  .settings(
+    libraryDependencies ++= List(
+      Libraries.doobieH2,
+      Libraries.flyway
+    )
+  )
   .dependsOn(core)
 
 lazy val snapshots = (project in file("modules/snapshots"))

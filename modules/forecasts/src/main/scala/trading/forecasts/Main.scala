@@ -42,8 +42,9 @@ object Main extends IOApp.Simple:
       forecasts <- Producer.pulsar[IO, ForecastEvent](pulsar, forecastTopic)
       consumer  <- Consumer.pulsar[IO, ForecastCommand](pulsar, cmdTopic, sub)
       redis     <- RedisClient[IO].from(config.redisUri.value)
-      atStore   <- AuthorStore.make[IO](redis, config.authorExp)
-      fcStore   <- ForecastStore.make[IO](redis, config.forecastExp)
+      xa        <- DB.makeTransactor
+      atStore = AuthorStore.from(xa)
+      fcStore <- ForecastStore.make[IO](redis, config.forecastExp)
       acker  = Acker.from(consumer)
       server = Ember.default[IO](config.httpPort)
     yield (server, consumer, Engine.make(authors, forecasts, atStore, fcStore, acker))
