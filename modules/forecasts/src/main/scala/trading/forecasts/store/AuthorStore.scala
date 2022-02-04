@@ -26,6 +26,19 @@ object AuthorStore:
   case object DuplicateForecastError extends NoStackTrace
   case object DuplicateAuthorError   extends NoStackTrace
 
+  extension [F[_]: MonadThrow, A](fa: F[A])
+    /* duplicate key violates unique constraint */
+    def onDuplicate(err: Throwable): F[A] =
+      fa.adaptError {
+        case e: SQLException if e.getSQLState == "23505" => err
+      }
+
+    /* referential integrity constraint violation */
+    def onConstraintViolation(err: Throwable): F[A] =
+      fa.adaptError {
+        case e: SQLException if e.getSQLState == "23506" => err
+      }
+
   def from[F[_]: MonadCancelThrow](
       xa: H2Transactor[F]
   ): AuthorStore[F] = new:
@@ -36,25 +49,25 @@ object AuthorStore:
       }
 
     def save(author: Author): F[Unit] =
-      val saveAuthor = SQL.insertAuthor(author).run.transact(xa).void.adaptError {
-        case e: SQLException if e.getSQLState == "23505" => DuplicateAuthorError
-      }
+      val saveAuthor =
+        SQL.insertAuthor(author).run.transact(xa).void.onDuplicate(DuplicateAuthorError)
 
       val saveForecasts = SQL
         .insertForecasts(author)
         .transact(xa)
         .whenA(author.forecasts.nonEmpty)
-        .handleError {
-          case e: SQLException if e.getSQLState === "23505" => ()
-        }
+        .onDuplicate(DuplicateForecastError)
 
       saveAuthor *> saveForecasts
 
     def addForecast(id: AuthorId, fid: ForecastId): F[Unit] =
-      SQL.updateForecast(id, fid).run.transact(xa).void.adaptError {
-        case e: SQLException if e.getSQLState === "23506" => AuthorNotFound
-        case e: SQLException if e.getSQLState === "23505" => DuplicateForecastError
-      }
+      SQL
+        .updateForecast(id, fid)
+        .run
+        .transact(xa)
+        .void
+        .onDuplicate(DuplicateForecastError)
+        .onConstraintViolation(AuthorNotFound)
 
 object SQL:
   given Meta[UUID] = Meta[String].imap[UUID](UUID.fromString)(_.toString)
