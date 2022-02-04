@@ -83,8 +83,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
 
   val msgId: Consumer.MsgId = UUID.randomUUID().toString
 
-  extension (cmd: ForecastCommand)
-    def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
+  extension (cmd: ForecastCommand) def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
 
   // TODO: add other events and make it property-based
   test("Forecasts engine") {
