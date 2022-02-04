@@ -48,7 +48,7 @@ object ForecastStore:
         "score"  -> fc.score.show,
         "symbol" -> fc.symbol.show
       )
-      redis.hmSet(key, values) <* redis.expire(key, exp.value)
+      redis.hSet(key, values) *> redis.expire(key, exp.value).void
 
     def castVote(fid: ForecastId, res: VoteResult): F[Unit] =
       redis.hIncrBy(s"forecast-${fid.show}", "score", res.asInt).void
