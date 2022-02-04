@@ -23,8 +23,8 @@ import weaver.scalacheck.Checkers
 object HandlerSuite extends SimpleIOSuite with Checkers:
   val id  = AlertId(UUID.randomUUID())
   val cid = CorrelationId(UUID.randomUUID())
-  val sl1 = Symbol("EURUSD")
-  val sl2 = Symbol("CHFEUR")
+  val sl1 = Symbol.EURUSD
+  val sl2 = Symbol.CHFEUR
   val ts  = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
   val p1  = Price(1.1987)
   val q1  = Quantity(10)

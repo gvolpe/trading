@@ -12,7 +12,7 @@ import weaver.discipline.Discipline
 object TradeStateSuite extends FunSuite with Discipline:
   import Prices.*, TradeState.*
 
-  val symbol: Symbol     = Symbol("EURUSD")
+  val symbol: Symbol     = Symbol.EURUSD
   val price: Price       = Price(1.5123)
   val askPrice: AskPrice = Price(1.6537)
   val bidPrice: BidPrice = Price(1.3908)

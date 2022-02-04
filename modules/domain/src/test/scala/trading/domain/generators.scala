@@ -5,6 +5,7 @@ import java.util.UUID
 
 import trading.commands.*
 import trading.domain.*
+import trading.events.TradeEvent
 import trading.state.*
 import trading.ws.*
 
@@ -85,7 +86,7 @@ object generators:
   val symbolGen: Gen[Symbol] =
     Gen
       .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
-      .map(s => Symbol.apply(s))
+      .map(s => Symbol.unsafeFrom(s))
 
   val priceGen: Gen[Price] =
     Gen.choose(0.78346, 4.78341).map(x => Price(x))
@@ -247,6 +248,44 @@ object generators:
 
   def tradeCommandListGen: List[TradeCommand] =
     Gen.listOfN(10, tradeCommandGen).sample.toList.flatten
+
+  // ------ TradeEvent ------
+  val genCommandExecEvt: Gen[TradeEvent] =
+    for
+      i <- eventIdGen
+      d <- correlationIdGen
+      c <- tradeCommandGen
+      t <- timestampGen
+    yield TradeEvent.CommandExecuted(i, d, c, t)
+
+  val reasonGen: Gen[Reason] =
+    Gen.const(Reason("test"))
+
+  val genCommandRejEvt: Gen[TradeEvent] =
+    for
+      i <- eventIdGen
+      d <- correlationIdGen
+      c <- tradeCommandGen
+      r <- reasonGen
+      t <- timestampGen
+    yield TradeEvent.CommandRejected(i, d, c, r, t)
+
+  val genStartedEvt: Gen[TradeEvent] =
+    for
+      i <- eventIdGen
+      d <- correlationIdGen
+      t <- timestampGen
+    yield TradeEvent.Started(i, d, t)
+
+  val genStoppedEvt: Gen[TradeEvent] =
+    for
+      i <- eventIdGen
+      d <- correlationIdGen
+      t <- timestampGen
+    yield TradeEvent.Stopped(i, d, t)
+
+  val genTradeEventNoCmdExec: Gen[TradeEvent] =
+    Gen.oneOf(genCommandRejEvt, genStartedEvt, genStoppedEvt)
 
   // ------ TradeState ------
 

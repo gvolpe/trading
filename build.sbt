@@ -1,6 +1,6 @@
 import Dependencies._
 
-ThisBuild / scalaVersion     := "3.1.0"
+ThisBuild / scalaVersion     := "3.1.1"
 ThisBuild / version          := "0.1.0"
 ThisBuild / organization     := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
@@ -24,7 +24,9 @@ val commonSettings = List(
     Libraries.circeCore,
     Libraries.circeParser,
     Libraries.circeExtras,
-    Libraries.ciris,
+    Libraries.circeRefined,
+    Libraries.cirisCore,
+    Libraries.cirisRefined,
     Libraries.fs2Core,
     Libraries.fs2Kafka,
     Libraries.http4sDsl,
@@ -36,6 +38,7 @@ val commonSettings = List(
     Libraries.odin,
     Libraries.redis4catsEffects,
     Libraries.refinedCore,
+    Libraries.refinedCats,
     Libraries.monocleLaw       % Test,
     Libraries.scalacheck       % Test,
     Libraries.weaverCats       % Test,
@@ -100,6 +103,7 @@ lazy val snapshots = (project in file("modules/snapshots"))
   .settings(commonSettings: _*)
   .settings(dockerSettings("snapshots"))
   .dependsOn(core)
+  .dependsOn(domain % "compile->compile;test->test")
 
 lazy val processor = (project in file("modules/processor"))
   .enablePlugins(DockerPlugin)

@@ -26,6 +26,6 @@ object Shard:
         Shard[String].key {
           TradeCommand._Symbol
             .get(cmd)
-            .map(_.value)
+            .map(_.show)
             .getOrElse(cmd.id.show)
         }

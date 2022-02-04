@@ -26,9 +26,6 @@ object RedisURI extends Newtype[String]
 type KeyExpiration = KeyExpiration.Type
 object KeyExpiration extends Newtype[FiniteDuration]
 
-type Symbol = Symbol.Type
-object Symbol extends Newtype[String]
-
 type Timestamp = Timestamp.Type
 object Timestamp extends Newtype[Instant]
 
