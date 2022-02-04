@@ -9,7 +9,7 @@ object Dependencies {
     val ciris      = "2.3.2"
     val fs2Core    = "3.2.4"
     val fs2Kafka   = "2.3.0"
-    val http4s     = "1.0.0-M30"
+    val http4s     = "1.0.0-M31"
     val kittens    = "3.0.0-M1"
     val monocle    = "3.1.0"
     val natchez    = "0.1.6"
