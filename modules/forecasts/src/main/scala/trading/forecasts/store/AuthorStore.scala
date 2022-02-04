@@ -1,5 +1,8 @@
 package trading.forecasts.store
 
+import java.sql.SQLException
+import java.util.UUID
+
 import scala.concurrent.duration.*
 import scala.util.control.NoStackTrace
 
@@ -7,80 +10,81 @@ import trading.domain.*
 import trading.forecasts.Config
 
 import cats.MonadThrow
-import cats.effect.kernel.{ Async, Resource }
+import cats.effect.kernel.{ Async, MonadCancelThrow, Resource }
 import cats.syntax.all.*
-import dev.profunktor.redis4cats.connection.RedisClient
-import dev.profunktor.redis4cats.data.RedisCodec
-import dev.profunktor.redis4cats.effect.{ Log, MkRedis }
-import dev.profunktor.redis4cats.effects.{ SetArg, SetArgs }
-import dev.profunktor.redis4cats.{ Redis, RedisCommands }
-import io.circe.parser.decode as jsonDecode
-import io.circe.syntax.*
+import doobie.*
+import doobie.h2.*
+import doobie.implicits.*
 
 trait AuthorStore[F[_]]:
   def fetch(id: AuthorId): F[Option[Author]]
   def save(author: Author): F[Unit]
   def addForecast(id: AuthorId, fid: ForecastId): F[Unit]
 
-// Ideally this should be persisted in a proper database such as PostgreSQL but to keep things simple we use Redis.
 object AuthorStore:
-  case object AuthorNotFound                              extends NoStackTrace
-  final case class DuplicateAuthorError(name: AuthorName) extends NoStackTrace
+  case object AuthorNotFound         extends NoStackTrace
+  case object DuplicateForecastError extends NoStackTrace
+  case object DuplicateAuthorError   extends NoStackTrace
 
-  def from[F[_]: MonadThrow](
-      redis: RedisCommands[F, String, String],
-      exp: Config.AuthorExpiration
+  def from[F[_]: MonadCancelThrow](
+      xa: H2Transactor[F]
   ): AuthorStore[F] = new:
     def fetch(id: AuthorId): F[Option[Author]] =
-      val key1   = s"author-${id.show}"
-      val key2   = s"author-forecasts-${id.show}"
-      val fields = List("name", "website")
-      redis.hmGet(key1, fields*).flatMap { kv =>
-        kv.nonEmpty
-          .guard[Option]
-          .as {
-            redis.sMembers(key2).map { fc =>
-              val n = AuthorName(kv.getOrElse(fields(0), ""))
-              val w = kv.get(fields(1)).map(Website(_))
-              val f = fc.map(ForecastId.unsafeFrom)
-              Author(id, n, w, f)
-            }
-          }
-          .sequence
+      SQL.selectAuthor(id).accumulate[List].transact(xa).map {
+        case Nil       => None
+        case (x :: xs) => x.copy(forecasts = x.forecasts.union(xs.toSet.flatMap(_.forecasts))).some
       }
 
     def save(author: Author): F[Unit] =
-      val key1 = s"author-${author.id.show}"
-      val key2 = s"author-forecasts-${author.id.show}"
+      val saveAuthor = SQL.insertAuthor(author).run.transact(xa).void.adaptError {
+        case e: SQLException if e.getSQLState == "23505" => DuplicateAuthorError
+      }
 
-      val saveForecast =
-        redis.sAdd(key2, author.forecasts.map(_.show).toSeq*) *> redis.expire(key2, exp.value)
+      val saveForecasts = SQL
+        .insertForecasts(author.forecasts.toList.map(fid => author.id -> fid))
+        .transact(xa)
+        .whenA(author.forecasts.nonEmpty)
+        .handleError {
+          case e: SQLException if e.getSQLState === "23505" => ()
+        }
 
-      for
-        x <- redis.hSetNx(key1, "name", author.name.show)
-        _ <- DuplicateAuthorError(author.name).raiseError.unlessA(x)
-        _ <- author.website.traverse_(w => redis.hSet(key1, "website", w.show))
-        _ <- redis.expire(key1, exp.value)
-        _ <- saveForecast.whenA(author.forecasts.nonEmpty)
-      yield ()
+      saveAuthor *> saveForecasts
 
     def addForecast(id: AuthorId, fid: ForecastId): F[Unit] =
-      for
-        kv <- redis.hGetAll(s"author-${id.show}")
-        _  <- AuthorNotFound.raiseError.whenA(kv.isEmpty)
-        key = s"author-forecasts-${id.show}"
-        _ <- redis.sAdd(key, fid.show)
-        _ <- redis.expire(key, exp.value)
-      yield ()
+      SQL.updateForecast(id, fid).run.transact(xa).void.adaptError {
+        case e: SQLException if e.getSQLState === "23506" => AuthorNotFound
+        case e: SQLException if e.getSQLState === "23505" => DuplicateForecastError
+      }
 
-  def make[F[_]: MkRedis: MonadThrow](
-      client: RedisClient,
-      exp: Config.AuthorExpiration
-  ): Resource[F, AuthorStore[F]] =
-    Redis[F].fromClient(client, RedisCodec.Utf8).map(from(_, exp))
+object SQL:
+  given Meta[UUID] = Meta[String].imap[UUID](UUID.fromString)(_.toString)
 
-  def make[F[_]: Async: Log](
-      uri: RedisURI,
-      exp: Config.AuthorExpiration
-  ): Resource[F, AuthorStore[F]] =
-    RedisClient[F].from(uri.value).flatMap(make[F](_, exp))
+  given Read[Author] = Read[(UUID, String, Option[String], Option[UUID])].map { (id, name, website, fid) =>
+    Author(AuthorId(id), AuthorName(name), website.map(Website(_)), fid.toSet.map(ForecastId(_)))
+  }
+
+  given Write[Author] = Write[(UUID, String, Option[String])].contramap { a =>
+    (a.id.value, a.name.value, a.website.map(_.value))
+  }
+
+  val selectAuthor: AuthorId => Query0[Author] = id => sql"""
+      SELECT a.id, a.name, a.website, f.id FROM authors AS a
+      LEFT JOIN forecasts AS f ON a.id=f.author_id
+      WHERE a.id=${id.show}
+    """.query[Author]
+
+  val insertAuthor: Author => Update0 = a => sql"""
+      INSERT INTO authors (id, name, website)
+      VALUES (${a.id.value}, ${a.name.value}, ${a.website.map(_.value)})
+    """.update
+
+  def insertForecasts(ids: List[(AuthorId, ForecastId)]) =
+    val sql = "INSERT INTO forecasts (id, author_id) VALUES (?, ?)"
+    val xs  = ids.toList.map(f => (f._2.value, f._1.value))
+    Update[(UUID, UUID)](sql).updateMany(xs)
+
+  def updateForecast(id: AuthorId, fid: ForecastId): Update0 =
+    sql"""
+      INSERT INTO forecasts (id, author_id)
+      VALUES (${fid.value}, ${id.value})
+    """.update

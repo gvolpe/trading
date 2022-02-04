@@ -33,8 +33,11 @@ object Engine:
                 val ev = ForecastEvent.Published(eid, cid, aid, fid, symbol, ts)
                 fcStore.save(fc).as(ev)
               }
-              .handleError { case AuthorStore.AuthorNotFound =>
-                ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
+              .handleError {
+                case AuthorStore.AuthorNotFound =>
+                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
+                case AuthorStore.DuplicateForecastError =>
+                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Duplicate forecast id"), ts)
               }
               .flatMap(e => forecasts.send(e) *> acker.ack(msgId))
               .handleErrorWith(e => Logger[F].error(s"Publish: $e") *> acker.nack(msgId))
@@ -43,7 +46,7 @@ object Engine:
               atStore
                 .save(Author(aid, name, website, Set.empty))
                 .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
-                .handleError { case AuthorStore.DuplicateAuthorError(_) =>
+                .handleError { case AuthorStore.DuplicateAuthorError =>
                   AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
                 }
                 .flatMap(e => authors.send(e) *> acker.ack(msgId))

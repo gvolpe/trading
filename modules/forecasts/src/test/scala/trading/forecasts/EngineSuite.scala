@@ -48,7 +48,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
 
     def save(author: Author): IO[Unit] =
       atRef.modify {
-        case xs if xs.find(_.name === author.name).nonEmpty => xs -> DuplicateAuthorError(author.name).raiseError
+        case xs if xs.find(_.name === author.name).nonEmpty => xs -> DuplicateAuthorError.raiseError
         case xs => (xs :+ author) -> fcRef.update(_.updated(author.id, List.empty))
       }.flatten
 
@@ -83,8 +83,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
 
   val msgId: Consumer.MsgId = UUID.randomUUID().toString
 
-  extension (cmd: ForecastCommand)
-    def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
+  extension (cmd: ForecastCommand) def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
 
   // TODO: add other events and make it property-based
   test("Forecasts engine") {

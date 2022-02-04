@@ -7,6 +7,8 @@ object Dependencies {
     val catsEffect = "3.3.5"
     val circe      = "0.14.1"
     val ciris      = "2.3.2"
+    val doobie     = "1.0.0-RC2"
+    val flyway     = "8.4.4"
     val fs2Core    = "3.2.4"
     val fs2Kafka   = "2.3.0"
     val http4s     = "1.0.0-M31"
@@ -40,6 +42,9 @@ object Dependencies {
     val circeParser  = circe("parser")
     val circeExtras  = circe("extras")
     val circeRefined = circe("refined")
+
+    val doobieH2 = "org.tpolecat" %% "doobie-h2"   % V.doobie
+    val flyway   = "org.flywaydb"  % "flyway-core" % V.flyway
 
     val http4sDsl     = http4s("dsl")
     val http4sServer  = http4s("ember-server")
