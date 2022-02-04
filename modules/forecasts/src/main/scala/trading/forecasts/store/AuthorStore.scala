@@ -41,7 +41,7 @@ object AuthorStore:
       }
 
       val saveForecasts = SQL
-        .insertForecasts(author.forecasts.toList.map(fid => author.id -> fid))
+        .insertForecasts(author)
         .transact(xa)
         .whenA(author.forecasts.nonEmpty)
         .handleError {
@@ -78,10 +78,10 @@ object SQL:
       VALUES (${a.id.value}, ${a.name.value}, ${a.website.map(_.value)})
     """.update
 
-  def insertForecasts(ids: List[(AuthorId, ForecastId)]) =
+  def insertForecasts(a: Author) =
     val sql = "INSERT INTO forecasts (id, author_id) VALUES (?, ?)"
-    val xs  = ids.toList.map(f => (f._2.value, f._1.value))
-    Update[(UUID, UUID)](sql).updateMany(xs)
+    val ids = a.forecasts.toList.map(_.value -> a.id.value)
+    Update[(UUID, UUID)](sql).updateMany(ids)
 
   def updateForecast(id: AuthorId, fid: ForecastId): Update0 =
     sql"""
