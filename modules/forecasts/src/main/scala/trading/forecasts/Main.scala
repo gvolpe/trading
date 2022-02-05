@@ -9,7 +9,6 @@ import trading.lib.{ given, * }
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
-import dev.profunktor.redis4cats.connection.RedisClient
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -41,10 +40,9 @@ object Main extends IOApp.Simple:
       authors   <- Producer.pulsar[IO, AuthorEvent](pulsar, authorTopic)
       forecasts <- Producer.pulsar[IO, ForecastEvent](pulsar, forecastTopic)
       consumer  <- Consumer.pulsar[IO, ForecastCommand](pulsar, cmdTopic, sub)
-      redis     <- RedisClient[IO].from(config.redisUri.value)
-      xa        <- DB.makeTransactor
+      xa        <- DB.init[IO]
       atStore = AuthorStore.from(xa)
-      fcStore <- ForecastStore.make[IO](redis, config.forecastExp)
-      acker  = Acker.from(consumer)
-      server = Ember.default[IO](config.httpPort)
+      fcStore = ForecastStore.from(xa)
+      acker   = Acker.from(consumer)
+      server  = Ember.default[IO](config.httpPort)
     yield (server, consumer, Engine.make(authors, forecasts, atStore, fcStore, acker))

@@ -8,7 +8,6 @@ import trading.commands.ForecastCommand
 import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.*
-import trading.forecasts.store.AuthorStore.{ AuthorNotFound, DuplicateAuthorError }
 import trading.forecasts.store.*
 import trading.lib.*
 import trading.lib.Logger.NoOp.given
