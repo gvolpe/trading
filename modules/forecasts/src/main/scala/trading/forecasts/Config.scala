@@ -2,7 +2,6 @@ package trading.forecasts
 
 import scala.concurrent.duration.*
 
-import trading.Newtype
 import trading.domain.{ given, * }
 
 import cats.effect.kernel.Async
@@ -13,27 +12,20 @@ import dev.profunktor.pulsar.Config as PulsarConfig
 
 final case class ForecastsConfig(
     httpPort: Port,
-    pulsar: PulsarConfig,
-    redisUri: RedisURI,
-    forecastExp: Config.ForecastExpiration
+    pulsar: PulsarConfig
 )
 
 object Config:
-  type ForecastExpiration = ForecastExpiration.Type
-  object ForecastExpiration extends Newtype[FiniteDuration]
-
   def load[F[_]: Async]: F[ForecastsConfig] =
     (
       env("HTTP_PORT").as[Port].default(port"9006"),
-      env("PULSAR_URI").as[PulsarURI].fallback("pulsar://localhost:6650"),
-      env("REDIS_URI").as[RedisURI].fallback("redis://localhost"),
-      env("FORECAST_EXPIRATION").as[ForecastExpiration].fallback(90.days).covary[F]
-    ).parMapN { (port, pulsarUri, redisUri, fcExp) =>
+      env("PULSAR_URI").as[PulsarURI].fallback("pulsar://localhost:6650").covary[F]
+    ).parMapN { (port, pulsarUri) =>
       val pulsar =
         PulsarConfig.Builder
           .withTenant("public")
           .withNameSpace("default")
           .withURL(pulsarUri.value)
           .build
-      ForecastsConfig(port, pulsar, redisUri, fcExp)
+      ForecastsConfig(port, pulsar)
     }.load[F]

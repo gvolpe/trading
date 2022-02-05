@@ -1,6 +1,6 @@
 package trading.forecasts.store
 
-import cats.effect.*
+import cats.effect.kernel.{ Async, Resource }
 import cats.syntax.all.*
 import doobie.ExecutionContexts
 import doobie.h2.H2Transactor
@@ -9,14 +9,14 @@ import org.flywaydb.core.Flyway
 object DB:
   private val uri = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
 
-  val makeTransactor: Resource[IO, H2Transactor[IO]] =
+  def init[F[_]: Async]: Resource[F, H2Transactor[F]] =
     ExecutionContexts
-      .fixedThreadPool[IO](32)
+      .fixedThreadPool[F](32)
       .flatMap { ce =>
-        H2Transactor.newH2Transactor[IO](uri, "sa", "", ce)
+        H2Transactor.newH2Transactor[F](uri, "sa", "", ce)
       }
       .evalTap {
         _.configure { ds =>
-          IO(Flyway.configure().dataSource(ds).load().migrate())
+          Async[F].delay(Flyway.configure().dataSource(ds).load().migrate())
         }
       }

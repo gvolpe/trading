@@ -3,7 +3,7 @@ package trading.forecasts
 import trading.commands.ForecastCommand
 import trading.domain.*
 import trading.events.{ AuthorEvent, ForecastEvent }
-import trading.forecasts.store.{ AuthorStore, ForecastStore }
+import trading.forecasts.store.*
 import trading.lib.*
 import trading.lib.Consumer.{ Msg, MsgId }
 
@@ -34,9 +34,9 @@ object Engine:
                 fcStore.save(fc).as(ev)
               }
               .handleError {
-                case AuthorStore.AuthorNotFound =>
-                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
-                case AuthorStore.DuplicateForecastError =>
+                case AuthorOrForecastNotFound =>
+                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author or forecast not found"), ts)
+                case DuplicateForecastError =>
                   ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Duplicate forecast id"), ts)
               }
               .flatMap(e => forecasts.send(e) *> acker.ack(msgId))
@@ -46,8 +46,11 @@ object Engine:
               atStore
                 .save(Author(aid, name, website, Set.empty))
                 .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
-                .handleError { case AuthorStore.DuplicateAuthorError =>
-                  AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
+                .handleError {
+                  case DuplicateAuthorError =>
+                    AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
+                  case ForecastNotFound =>
+                    AuthorEvent.NotRegistered(eid, cid, name, Reason("Forecast not found"), ts)
                 }
                 .flatMap(e => authors.send(e) *> acker.ack(msgId))
                 .handleErrorWith(e => Logger[F].error(s"Register: $e") *> acker.nack(msgId))

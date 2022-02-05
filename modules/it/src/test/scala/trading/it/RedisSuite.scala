@@ -8,7 +8,6 @@ import trading.core.dedup.DedupRegistry
 import trading.core.snapshots.*
 import trading.domain.{ AppId, KeyExpiration }
 import trading.domain.generators.*
-import trading.forecasts.Config.ForecastExpiration
 import trading.forecasts.store.*
 import trading.lib.{ given, * }
 import trading.lib.Logger.NoOp.given
@@ -50,24 +49,6 @@ object RedisSuite extends ResourceSuite:
       }
       .map(_.flatten.reduce)
 
-  }
-
-  test("forecast store") { redis =>
-    val store = ForecastStore.from(redis, ForecastExpiration(30.seconds))
-
-    NonEmptyList
-      .of(forecastGen.sample.replicateA(3).toList.flatten.last)
-      .traverse { fc =>
-        for
-          x <- store.fetch(fc.id)
-          _ <- store.save(fc)
-          y <- store.fetch(fc.id)
-        yield NonEmptyList.of(
-          expect.same(None, x),
-          expect.same(Some(fc), y)
-        )
-      }
-      .map(_.flatten.reduce)
   }
 
   test("dedup registry") { redis =>
