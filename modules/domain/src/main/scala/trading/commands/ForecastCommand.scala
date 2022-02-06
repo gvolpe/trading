@@ -29,7 +29,6 @@ object ForecastCommand:
       id: CommandId,
       cid: CorrelationId,
       authorId: AuthorId,
-      forecastId: ForecastId,
       symbol: Symbol,
       description: ForecastDescription,
       tag: ForecastTag,

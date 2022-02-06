@@ -51,12 +51,6 @@ object EngineSuite extends SimpleIOSuite with Checkers:
         case xs => (xs :+ author) -> fcRef.update(_.updated(author.id, List.empty))
       }.flatten
 
-    def addForecast(id: AuthorId, fid: ForecastId): IO[Unit] =
-      fcRef.update(_.updatedWith(id) {
-        case Some(xs) => Some(xs :+ fid)
-        case None     => Some(List(fid))
-      })
-
   def mkForecastStore(
       fcRef: Ref[IO, List[Forecast]],
       vtRef: Ref[IO, Map[ForecastId, List[VoteResult]]]
@@ -64,10 +58,10 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     def fetch(fid: ForecastId): IO[Option[Forecast]] =
       fcRef.get.map(_.collectFirstSome(fc => (fc.id === fid).guard[Option].as(fc)))
 
-    def save(forecast: Forecast): IO[Unit] =
+    def save(aid: AuthorId, fc: Forecast): IO[Unit] =
       fcRef.modify {
-        case xs if xs.contains(forecast) => xs               -> IO.unit
-        case xs                          => (xs :+ forecast) -> vtRef.update(_.updated(forecast.id, List.empty))
+        case xs if xs.contains(fc) => xs         -> IO.unit
+        case xs                    => (xs :+ fc) -> vtRef.update(_.updated(fc.id, List.empty))
       }.flatten
 
     def castVote(fid: ForecastId, res: VoteResult): IO[Unit] =
@@ -85,6 +79,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   extension (cmd: ForecastCommand) def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
 
   // TODO: add other events and make it property-based
+  // FIXME: cover all edge cases
   test("Forecasts engine") {
     for
       authors   <- IO.ref(none[AuthorEvent])

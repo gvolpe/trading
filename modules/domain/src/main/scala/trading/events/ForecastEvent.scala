@@ -37,3 +37,11 @@ object ForecastEvent:
       result: VoteResult,
       createdAt: Timestamp
   ) extends ForecastEvent
+
+  final case class NotVoted(
+      id: EventId,
+      cid: CorrelationId,
+      forecastId: ForecastId,
+      reason: Reason,
+      createdAt: Timestamp
+  ) extends ForecastEvent

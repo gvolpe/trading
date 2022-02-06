@@ -6,6 +6,7 @@ import trading.domain.*
 
 import cats.data.NonEmptyList
 import cats.effect.*
+import cats.syntax.all.*
 import doobie.h2.H2Transactor
 import weaver.IOSuite
 
@@ -27,43 +28,40 @@ object SQLSuite extends IOSuite:
     val fc = ForecastStore.from(xa)
 
     for
-      // author and forecast do not exist yet: AuthorOrForecastNotFound
-      a <- at.addForecast(aid, fid).attempt
       // forecast does not exist yet: ForecastNotFound
-      b <- at.save(Author(aid, AuthorName("gvolpe"), None, Set(fid))).attempt
+      a <- at.save(Author(aid, AuthorName("gvolpe"), None, Set(fid))).attempt
       // registering a new author without any forecast succeeds
       _ <- at.save(Author(aid, AuthorName("gvolpe"), None, Set()))
-      // forecast does not exist yet: AuthorOrForecastNotFound
-      c <- at.addForecast(aid, fid).attempt
-      // create forecast successfully
-      _ <- fc.save(Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1)))
-      // now linking it to the author succeeds
-      _ <- at.addForecast(aid, fid)
+      // create forecast with non-existing Author ID
+      b <- fc.save(aid2, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1))).attempt
+      // create forecast successfully with existing Author ID
+      _ <- fc.save(aid, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1)))
       // fetching the author record
-      d <- at.fetch(aid)
+      c <- at.fetch(aid)
       // trying to register a new author using the same name fails due to the unique constraint
-      e <- at.save(Author(aid2, AuthorName("gvolpe"), None, Set())).attempt
-      // the forecast is already registered to `aid`: DuplicateForecastError
-      f <- at.addForecast(aid2, fid).attempt
+      d <- at.save(Author(aid2, AuthorName("gvolpe"), None, Set())).attempt
       // fetching the forecast record
-      g <- fc.fetch(fid)
+      e <- fc.fetch(fid)
       // cast a vote to non-existing forecast
-      h <- fc.castVote(fid2, VoteResult.Up).attempt
+      f <- fc.castVote(fid2, VoteResult.Up).attempt
       // cast a vote on legit forecast
       _ <- fc.castVote(fid, VoteResult.Up)
       // fetching the forecast record once again, which should have a raised score
-      i <- fc.fetch(fid)
+      g <- fc.fetch(fid)
+      // cast a down-vote three times
+      _ <- fc.castVote(fid, VoteResult.Down).replicateA(3).void
+      // fetching the forecast record once again, which should have a negative score
+      h <- fc.fetch(fid)
     yield NonEmptyList
       .of(
-        expect.same(a, Left(AuthorOrForecastNotFound)),
-        expect.same(b, Left(ForecastNotFound)),
-        expect.same(c, Left(AuthorOrForecastNotFound)),
-        expect.same(d.map(_.id), Some(aid)),
-        expect.same(e, Left(DuplicateAuthorError)),
-        expect.same(f, Left(DuplicateForecastError)),
-        expect(g.nonEmpty),
-        expect.same(h, Left(ForecastNotFound)),
-        expect.same(g.map(_.score.value + 1), i.map(_.score.value))
+        expect.same(a, Left(ForecastNotFound)),
+        expect.same(b, Left(AuthorNotFound)),
+        expect.same(c.map(_.id), Some(aid)),
+        expect.same(d, Left(DuplicateAuthorError)),
+        expect(e.nonEmpty),
+        expect.same(f, Left(ForecastNotFound)),
+        expect.same(e.map(_.score.value + 1), g.map(_.score.value)),
+        expect.same(e.map(_.score.value - 2), h.map(_.score.value))
       )
       .reduce
   }

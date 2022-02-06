@@ -25,41 +25,36 @@ object Engine:
     def run: Msg[ForecastCommand] => F[Unit] = { case Msg(msgId, cmd) =>
       (GenUUID[F].make[EventId], Time[F].timestamp).tupled.flatMap { (eid, ts) =>
         cmd match
-          case ForecastCommand.Publish(_, cid, aid, fid, symbol, desc, tag, _) =>
-            atStore
-              .addForecast(aid, fid)
-              .flatMap { _ =>
-                val fc = Forecast(fid, symbol, tag, desc, ForecastScore(0))
-                val ev = ForecastEvent.Published(eid, cid, aid, fid, symbol, ts)
-                fcStore.save(fc).as(ev)
-              }
-              .handleError {
-                case AuthorOrForecastNotFound =>
-                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author or forecast not found"), ts)
-                case DuplicateForecastError =>
-                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Duplicate forecast id"), ts)
-              }
-              .flatMap(e => forecasts.send(e) *> acker.ack(msgId))
-              .handleErrorWith(e => Logger[F].error(s"Publish: $e") *> acker.nack(msgId))
+          case ForecastCommand.Publish(_, cid, aid, symbol, desc, tag, _) =>
+            GenUUID[F].make[ForecastId].flatMap { fid =>
+              fcStore
+                .save(aid, Forecast(fid, symbol, tag, desc, ForecastScore(0)))
+                .as(ForecastEvent.Published(eid, cid, aid, fid, symbol, ts))
+                .handleError { case AuthorNotFound =>
+                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
+                }
+                .flatMap(e => forecasts.send(e) *> acker.ack(msgId))
+                .handleErrorWith(e => Logger[F].error(s"Publish: $e") *> acker.nack(msgId))
+            }
           case ForecastCommand.Register(_, cid, name, website, _) =>
             GenUUID[F].make[AuthorId].flatMap { aid =>
               atStore
                 .save(Author(aid, name, website, Set.empty))
                 .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
-                .handleError {
-                  case DuplicateAuthorError =>
-                    AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
-                  case ForecastNotFound =>
-                    AuthorEvent.NotRegistered(eid, cid, name, Reason("Forecast not found"), ts)
+                .handleError { case DuplicateAuthorError =>
+                  AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
                 }
                 .flatMap(e => authors.send(e) *> acker.ack(msgId))
                 .handleErrorWith(e => Logger[F].error(s"Register: $e") *> acker.nack(msgId))
             }
           case ForecastCommand.Vote(_, cid, fid, res, _) =>
-            val ev = ForecastEvent.Voted(eid, cid, fid, res, ts)
             fcStore
               .castVote(fid, res)
-              .flatMap(_ => (forecasts.send(ev) *> acker.ack(msgId)).attempt.void)
+              .as(ForecastEvent.Voted(eid, cid, fid, res, ts))
+              .handleError { case ForecastNotFound =>
+                ForecastEvent.NotVoted(eid, cid, fid, Reason("Forecast not found"), ts)
+              }
+              .flatMap(ev => (forecasts.send(ev) *> acker.ack(msgId)).attempt.void)
               .handleErrorWith(e => Logger[F].error(s"Vote:$e") *> acker.nack(msgId))
 
       }

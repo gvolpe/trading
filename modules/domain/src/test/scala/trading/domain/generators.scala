@@ -158,12 +158,11 @@ object generators:
       i <- commandIdGen
       c <- correlationIdGen
       a <- authorIdGen
-      f <- forecastIdGen
       s <- symbolGen
       d <- forecastDescriptionGen(s)
       g <- forecastTagGen
       t <- timestampGen
-    yield ForecastCommand.Publish(i, c, a, f, s, d, g, t)
+    yield ForecastCommand.Publish(i, c, a, s, d, g, t)
 
   val registerCommandGen: Gen[ForecastCommand.Register] =
     for

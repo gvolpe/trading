@@ -10,7 +10,6 @@ import doobie.implicits.*
 trait AuthorStore[F[_]]:
   def fetch(id: AuthorId): F[Option[Author]]
   def save(author: Author): F[Unit]
-  def addForecast(id: AuthorId, fid: ForecastId): F[Unit]
 
 object AuthorStore:
   def from[F[_]: MonadCancelThrow](
@@ -29,6 +28,7 @@ object AuthorStore:
           .run
           .onDuplicate(DuplicateAuthorError)
 
+      // this is not used in Engine but it's here to demonstrate batch inserts
       val saveForecasts =
         SQL
           .insertAuthorForecasts(author)
@@ -37,12 +37,3 @@ object AuthorStore:
           .onConstraintViolation(ForecastNotFound)
 
       (saveAuthor *> saveForecasts).transact(xa)
-
-    def addForecast(id: AuthorId, fid: ForecastId): F[Unit] =
-      SQL
-        .updateAuthorForecast(id, fid)
-        .run
-        .void
-        .onDuplicate(DuplicateForecastError)
-        .onConstraintViolation(AuthorOrForecastNotFound)
-        .transact(xa)

@@ -31,6 +31,7 @@ object SQL:
       VALUES (${a.id.value}, ${a.name.value}, ${a.website.map(_.value)})
     """.update
 
+  /* ---------------------- author_forecasts table ----------------------- */
   def insertAuthorForecasts(a: Author) =
     val sql = "INSERT INTO author_forecasts (id, author_id) VALUES (?, ?)"
     val ids = a.forecasts.toList.map(_.value -> a.id.value)

@@ -7,6 +7,7 @@ import scala.util.control.NoStackTrace
 import cats.MonadThrow
 import cats.syntax.all.*
 
+case object AuthorNotFound           extends NoStackTrace
 case object AuthorOrForecastNotFound extends NoStackTrace
 case object DuplicateForecastError   extends NoStackTrace
 case object DuplicateAuthorError     extends NoStackTrace
