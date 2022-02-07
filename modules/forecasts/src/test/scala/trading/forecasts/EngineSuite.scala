@@ -17,10 +17,12 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.syntax.all.*
-import weaver.SimpleIOSuite
+import weaver.{ Expectations, SimpleIOSuite }
 import weaver.scalacheck.Checkers
 
 object EngineSuite extends SimpleIOSuite with Checkers:
+  extension (cmd: ForecastCommand) def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
+
   val id  = CommandId(UUID.randomUUID())
   val cid = CorrelationId(UUID.randomUUID())
   val ts  = Timestamp(Instant.parse("2021-09-16T14:00:00.00Z"))
@@ -30,6 +32,11 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   val authorId   = AuthorId(genId)
   val authorName = AuthorName("swilson")
 
+  val fid    = ForecastId(genId)
+  val symbol = Symbol.EURUSD
+  val desc   = ForecastDescription("test")
+  val tag    = ForecastTag.Short
+
   val eventId = EventId(genId)
 
   given GenUUID[IO] with
@@ -38,100 +45,121 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   given Time[IO] with
     def timestamp: IO[Timestamp] = IO.pure(ts)
 
-  def mkAuthorStore(
-      atRef: Ref[IO, List[Author]],
-      fcRef: Ref[IO, Map[AuthorId, List[ForecastId]]]
-  ): AuthorStore[IO] = new:
-    def fetch(id: AuthorId): IO[Option[Author]] =
-      atRef.get.map(_.collectFirstSome(at => (at.id === id).guard[Option].as(at)))
+  class DummyForecastStore extends ForecastStore[IO]:
+    def fetch(fid: ForecastId): IO[Option[Forecast]]         = IO.none
+    def save(aid: AuthorId, fc: Forecast): IO[Unit]          = IO.unit
+    def castVote(fid: ForecastId, res: VoteResult): IO[Unit] = IO.unit
 
-    def save(author: Author): IO[Unit] =
-      atRef.modify {
-        case xs if xs.find(_.name === author.name).nonEmpty => xs -> DuplicateAuthorError.raiseError
-        case xs => (xs :+ author) -> fcRef.update(_.updated(author.id, List.empty))
-      }.flatten
+  class DummyAuthorStore extends AuthorStore[IO]:
+    def fetch(id: AuthorId): IO[Option[Author]] = IO.none
+    def save(author: Author): IO[Unit]          = IO.unit
 
-  def mkForecastStore(
-      fcRef: Ref[IO, List[Forecast]],
-      vtRef: Ref[IO, Map[ForecastId, List[VoteResult]]]
-  ): ForecastStore[IO] = new:
-    def fetch(fid: ForecastId): IO[Option[Forecast]] =
-      fcRef.get.map(_.collectFirstSome(fc => (fc.id === fid).guard[Option].as(fc)))
+  val okAuthorStore: AuthorStore[IO]     = new DummyAuthorStore
+  val okForecastStore: ForecastStore[IO] = new DummyForecastStore
 
-    def save(aid: AuthorId, fc: Forecast): IO[Unit] =
-      fcRef.modify {
-        case xs if xs.contains(fc) => xs         -> IO.unit
-        case xs                    => (xs :+ fc) -> vtRef.update(_.updated(fc.id, List.empty))
-      }.flatten
+  val failAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
+    override def save(author: Author): IO[Unit] = IO.raiseError(DuplicateAuthorError)
 
-    def castVote(fid: ForecastId, res: VoteResult): IO[Unit] =
-      vtRef.update(_.updatedWith(fid) {
-        case Some(xs) => Some(xs :+ res)
-        case None     => Some(List(res))
-      })
+  val unexpectedFailAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
+    override def save(author: Author): IO[Unit] = IO.raiseError(new Exception("boom"))
+
+  val failForecastStore: ForecastStore[IO] = new DummyForecastStore:
+    override def save(aid: AuthorId, fc: Forecast): IO[Unit] = IO.raiseError(AuthorNotFound)
+
+  val voteFailForecastStore: ForecastStore[IO] = new DummyForecastStore:
+    override def castVote(fid: ForecastId, res: VoteResult): IO[Unit] = IO.raiseError(ForecastNotFound)
 
   val dummyAcker: Acker[IO, ForecastCommand] = new:
     def ack(id: Consumer.MsgId): IO[Unit]  = IO.unit
     def nack(id: Consumer.MsgId): IO[Unit] = IO.unit
 
+  def mkNAcker(ref: Ref[IO, Option[Consumer.MsgId]]): Acker[IO, ForecastCommand] = new:
+    def ack(id: Consumer.MsgId): IO[Unit]  = IO.unit
+    def nack(id: Consumer.MsgId): IO[Unit] = ref.set(id.some)
+
   val msgId: Consumer.MsgId = UUID.randomUUID().toString
 
-  extension (cmd: ForecastCommand) def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
-
-  // TODO: add other events and make it property-based
-  // FIXME: cover all edge cases
-  test("Forecasts engine") {
+  private def baseTest(
+      authorStore: AuthorStore[IO] = okAuthorStore,
+      forecastStore: ForecastStore[IO] = okForecastStore,
+      in: ForecastCommand,
+      ex1: Option[AuthorEvent] => Expectations,
+      ex2: Option[ForecastEvent] => Expectations
+  ): IO[Expectations] =
     for
-      authors   <- IO.ref(none[AuthorEvent])
-      forecasts <- IO.ref(none[ForecastEvent])
-      p1 = Producer.test(authors)
-      p2 = Producer.test(forecasts)
-      atRef   <- IO.ref(List.empty[Author])
-      fcRef   <- IO.ref(List.empty[Forecast])
-      atfcRef <- IO.ref(Map.empty[AuthorId, List[ForecastId]])
-      fcvtRef <- IO.ref(Map.empty[ForecastId, List[VoteResult]])
-      atStore = mkAuthorStore(atRef, atfcRef)
-      fcStore = mkForecastStore(fcRef, fcvtRef)
-      engine  = Engine.make(p1, p2, atStore, fcStore, dummyAcker)
+      at <- IO.ref(none[AuthorEvent])
+      fc <- IO.ref(none[ForecastEvent])
+      p1     = Producer.test(at)
+      p2     = Producer.test(fc)
+      engine = Engine.make(p1, p2, authorStore, forecastStore, dummyAcker)
+      _  <- engine.run(in.asMsg)
+      ae <- at.get
+      fe <- fc.get
+    yield ex1(ae) && ex2(fe)
 
-      // register author
+  test("Successful author registration") {
+    val out = AuthorEvent.Registered(eventId, cid, authorId, authorName, ts)
+    baseTest(
+      in = ForecastCommand.Register(id, cid, authorName, None, ts),
+      ex1 = expect.same(_, Some(out)),
+      ex2 = expect.same(_, None)
+    )
+  }
+
+  test("Fail to register author (duplicate username)") {
+    val out = AuthorEvent.NotRegistered(eventId, cid, authorName, Reason("Duplicate username"), ts)
+    baseTest(
+      authorStore = failAuthorStore,
+      in = ForecastCommand.Register(id, cid, authorName, None, ts),
+      ex1 = expect.same(_, Some(out)),
+      ex2 = expect.same(_, None)
+    )
+  }
+
+  test("Successful forecast publishing") {
+    val out = ForecastEvent.Published(eventId, cid, authorId, fid, symbol, ts)
+    baseTest(
+      in = ForecastCommand.Publish(id, cid, authorId, symbol, desc, tag, ts),
+      ex1 = expect.same(_, None),
+      ex2 = expect.same(_, Some(out))
+    )
+  }
+
+  test("Fail to publish forecast (author not found)") {
+    val out = ForecastEvent.NotPublished(eventId, cid, authorId, fid, Reason("Author not found"), ts)
+    baseTest(
+      forecastStore = failForecastStore,
+      in = ForecastCommand.Publish(id, cid, authorId, symbol, desc, tag, ts),
+      ex1 = expect.same(_, None),
+      ex2 = expect.same(_, Some(out))
+    )
+  }
+
+  test("Successful forecast voting") {
+    val out = ForecastEvent.Voted(eventId, cid, fid, VoteResult.Up, ts)
+    baseTest(
+      in = ForecastCommand.Vote(id, cid, fid, VoteResult.Up, ts),
+      ex1 = expect.same(_, None),
+      ex2 = expect.same(_, Some(out))
+    )
+  }
+
+  test("Fail to vote (forecast not found)") {
+    val out = ForecastEvent.NotVoted(eventId, cid, fid, Reason("Forecast not found"), ts)
+    baseTest(
+      forecastStore = voteFailForecastStore,
+      in = ForecastCommand.Vote(id, cid, fid, VoteResult.Up, ts),
+      ex1 = expect.same(_, None),
+      ex2 = expect.same(_, Some(out))
+    )
+  }
+
+  test("Fail to register author (unexpected error); nack message") {
+    for
+      ref <- IO.ref(none[Consumer.MsgId])
+      acker  = mkNAcker(ref)
+      engine = Engine.make(Producer.dummy, Producer.dummy, unexpectedFailAuthorStore, okForecastStore, acker)
       _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts).asMsg)
-      ae1  <- authors.get
-      fe1  <- forecasts.get
-      as1  <- atRef.get
-      fs1  <- fcRef.get
-      afs1 <- atfcRef.get
-      fvs1 <- fcvtRef.get
-
-      res1 = NonEmptyList
-        .of(
-          expect.same(ae1, Some(AuthorEvent.Registered(eventId, cid, authorId, authorName, ts))),
-          expect.same(as1, List(Author(authorId, authorName, None, Set.empty))),
-          expect.same(afs1, Map(authorId -> Nil)),
-          expect(fe1.isEmpty),
-          expect(fs1.isEmpty),
-          expect(fvs1.isEmpty)
-        )
-        .reduce
-
-      // try to register same author again
-      _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts).asMsg)
-      ae2  <- authors.get
-      fe2  <- forecasts.get
-      as2  <- atRef.get
-      fs2  <- fcRef.get
-      afs2 <- atfcRef.get
-      fvs2 <- fcvtRef.get
-
-      res2 = NonEmptyList
-        .of(
-          expect.same(ae2, Some(AuthorEvent.NotRegistered(eventId, cid, authorName, Reason("Duplicate username"), ts))),
-          expect.same(as2, List(Author(authorId, authorName, None, Set.empty))),
-          expect.same(afs2, Map(authorId -> Nil)),
-          expect(fe2.isEmpty),
-          expect(fs2.isEmpty),
-          expect(fvs2.isEmpty)
-        )
-        .reduce
-    yield res1 && res2
+      nack <- ref.get
+    yield expect.same(nack, Some(msgId))
   }

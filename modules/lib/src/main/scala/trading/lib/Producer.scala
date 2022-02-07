@@ -23,6 +23,9 @@ object Producer:
       )
     )(_ => queue.offer(None))
 
+  def dummy[F[_]: Applicative, A]: Producer[F, A] = new:
+    def send(a: A): F[Unit] = Applicative[F].unit
+
   def test[F[_], A](ref: Ref[F, Option[A]]): Producer[F, A] = new:
     def send(a: A): F[Unit] = ref.set(Some(a))
 
