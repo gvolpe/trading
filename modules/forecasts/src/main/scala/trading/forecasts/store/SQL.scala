@@ -32,7 +32,7 @@ object SQL:
     """.update
 
   /* ---------------------- author_forecasts table ----------------------- */
-  def insertAuthorForecasts(a: Author) =
+  def insertAuthorForecasts(a: Author): ConnectionIO[Int] =
     val sql = "INSERT INTO author_forecasts (id, author_id) VALUES (?, ?)"
     val ids = a.forecasts.toList.map(_.value -> a.id.value)
     Update[(UUID, UUID)](sql).updateMany(ids)

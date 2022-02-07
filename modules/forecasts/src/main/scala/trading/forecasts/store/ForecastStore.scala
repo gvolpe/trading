@@ -4,6 +4,7 @@ import trading.domain.*
 
 import cats.effect.kernel.{ Async, MonadCancelThrow, Resource }
 import cats.syntax.all.*
+import doobie.Transactor
 import doobie.h2.*
 import doobie.implicits.*
 
@@ -14,7 +15,7 @@ trait ForecastStore[F[_]]:
 
 object ForecastStore:
   def from[F[_]: MonadCancelThrow](
-      xa: H2Transactor[F]
+      xa: Transactor[F]
   ): ForecastStore[F] = new:
     def fetch(fid: ForecastId): F[Option[Forecast]] =
       SQL.selectForecast(fid).option.transact(xa)

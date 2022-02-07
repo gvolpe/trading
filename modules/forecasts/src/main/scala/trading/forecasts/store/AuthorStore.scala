@@ -4,6 +4,7 @@ import trading.domain.*
 
 import cats.effect.kernel.{ Async, MonadCancelThrow, Resource }
 import cats.syntax.all.*
+import doobie.Transactor
 import doobie.h2.*
 import doobie.implicits.*
 
@@ -13,7 +14,7 @@ trait AuthorStore[F[_]]:
 
 object AuthorStore:
   def from[F[_]: MonadCancelThrow](
-      xa: H2Transactor[F]
+      xa: Transactor[F]
   ): AuthorStore[F] = new:
     def fetch(id: AuthorId): F[Option[Author]] =
       SQL.selectAuthor(id).accumulate[List].transact(xa).map {
