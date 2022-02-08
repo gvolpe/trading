@@ -1,6 +1,7 @@
 package trading.forecasts.store
 
 import trading.domain.*
+import trading.lib.*
 
 import cats.effect.kernel.{ Async, MonadCancelThrow, Resource }
 import cats.syntax.all.*
@@ -10,7 +11,9 @@ import doobie.implicits.*
 
 trait AuthorStore[F[_]]:
   def fetch(id: AuthorId): F[Option[Author]]
-  def save(author: Author): F[Unit]
+  def save(author: Author): F[Either[SaveError, Unit]]
+
+type SaveError = DuplicateAuthorError | DuplicateForecastError | ForecastNotFound
 
 object AuthorStore:
   def from[F[_]: MonadCancelThrow](
@@ -22,7 +25,7 @@ object AuthorStore:
         case (x :: xs) => x.copy(forecasts = x.forecasts.union(xs.toSet.flatMap(_.forecasts))).some
       }
 
-    def save(author: Author): F[Unit] =
+    def save(author: Author): F[Either[SaveError, Unit]] =
       val saveAuthor =
         SQL
           .insertAuthor(author)
@@ -37,4 +40,4 @@ object AuthorStore:
           .onDuplicate(DuplicateForecastError)
           .onConstraintViolation(ForecastNotFound)
 
-      (saveAuthor *> saveForecasts).transact(xa)
+      (saveAuthor *> saveForecasts).transact(xa).lift

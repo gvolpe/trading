@@ -29,27 +29,27 @@ object SQLSuite extends IOSuite:
 
     for
       // forecast does not exist yet: ForecastNotFound
-      a <- at.save(Author(aid, AuthorName("gvolpe"), None, Set(fid))).attempt
+      a <- at.save(Author(aid, AuthorName("gvolpe"), None, Set(fid)))
       // registering a new author without any forecast succeeds
-      _ <- at.save(Author(aid, AuthorName("gvolpe"), None, Set()))
+      _ <- at.save(Author(aid, AuthorName("gvolpe"), None, Set())).rethrow
       // create forecast with non-existing Author ID
-      b <- fc.save(aid2, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1))).attempt
+      b <- fc.save(aid2, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1)))
       // create forecast successfully with existing Author ID
-      _ <- fc.save(aid, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1)))
+      _ <- fc.save(aid, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1))).rethrow
       // fetching the author record
       c <- at.fetch(aid)
       // trying to register a new author using the same name fails due to the unique constraint
-      d <- at.save(Author(aid2, AuthorName("gvolpe"), None, Set())).attempt
+      d <- at.save(Author(aid2, AuthorName("gvolpe"), None, Set()))
       // fetching the forecast record
       e <- fc.fetch(fid)
       // cast a vote to non-existing forecast
-      f <- fc.castVote(fid2, VoteResult.Up).attempt
+      f <- fc.castVote(fid2, VoteResult.Up)
       // cast a vote on legit forecast
-      _ <- fc.castVote(fid, VoteResult.Up)
+      _ <- fc.castVote(fid, VoteResult.Up).rethrow
       // fetching the forecast record once again, which should have a raised score
       g <- fc.fetch(fid)
       // cast a down-vote three times
-      _ <- fc.castVote(fid, VoteResult.Down).replicateA(3).void
+      _ <- fc.castVote(fid, VoteResult.Down).rethrow.replicateA(3).void
       // fetching the forecast record once again, which should have a negative score
       h <- fc.fetch(fid)
     yield NonEmptyList

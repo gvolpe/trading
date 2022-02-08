@@ -29,9 +29,11 @@ object Engine:
             GenUUID[F].make[ForecastId].flatMap { fid =>
               fcStore
                 .save(aid, Forecast(fid, symbol, tag, desc, ForecastScore(0)))
-                .as(ForecastEvent.Published(eid, cid, aid, fid, symbol, ts))
-                .handleError { case AuthorNotFound =>
-                  ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
+                .map {
+                  case Right(_) =>
+                    ForecastEvent.Published(eid, cid, aid, fid, symbol, ts)
+                  case Left(AuthorNotFound) =>
+                    ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
                 }
                 .flatMap(e => forecasts.send(e) *> acker.ack(msgId))
                 .handleErrorWith(e => Logger[F].error(s"Publish: $e") *> acker.nack(msgId))
@@ -40,6 +42,7 @@ object Engine:
             GenUUID[F].make[AuthorId].flatMap { aid =>
               atStore
                 .save(Author(aid, name, website, Set.empty))
+                .rethrow
                 .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
                 .handleError { case DuplicateAuthorError =>
                   AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
@@ -50,9 +53,11 @@ object Engine:
           case ForecastCommand.Vote(_, cid, fid, res, _) =>
             fcStore
               .castVote(fid, res)
-              .as(ForecastEvent.Voted(eid, cid, fid, res, ts))
-              .handleError { case ForecastNotFound =>
-                ForecastEvent.NotVoted(eid, cid, fid, Reason("Forecast not found"), ts)
+              .map {
+                case Right(_) =>
+                  ForecastEvent.Voted(eid, cid, fid, res, ts)
+                case Left(ForecastNotFound) =>
+                  ForecastEvent.NotVoted(eid, cid, fid, Reason("Forecast not found"), ts)
               }
               .flatMap(ev => (forecasts.send(ev) *> acker.ack(msgId)).attempt.void)
               .handleErrorWith(e => Logger[F].error(s"Vote:$e") *> acker.nack(msgId))

@@ -1,6 +1,7 @@
 package trading.forecasts.store
 
 import trading.domain.*
+import trading.lib.*
 
 import cats.effect.kernel.{ Async, MonadCancelThrow, Resource }
 import cats.syntax.all.*
@@ -10,8 +11,8 @@ import doobie.implicits.*
 
 trait ForecastStore[F[_]]:
   def fetch(fid: ForecastId): F[Option[Forecast]]
-  def save(aid: AuthorId, fc: Forecast): F[Unit]
-  def castVote(fid: ForecastId, res: VoteResult): F[Unit]
+  def save(aid: AuthorId, fc: Forecast): F[Either[AuthorNotFound, Unit]]
+  def castVote(fid: ForecastId, res: VoteResult): F[Either[ForecastNotFound, Unit]]
 
 object ForecastStore:
   def from[F[_]: MonadCancelThrow](
@@ -20,7 +21,7 @@ object ForecastStore:
     def fetch(fid: ForecastId): F[Option[Forecast]] =
       SQL.selectForecast(fid).option.transact(xa)
 
-    def save(aid: AuthorId, fc: Forecast): F[Unit] =
+    def save(aid: AuthorId, fc: Forecast): F[Either[AuthorNotFound, Unit]] =
       val saveForecast =
         SQL.insertForecast(fc).run
 
@@ -31,11 +32,12 @@ object ForecastStore:
           .void
           .onConstraintViolation(AuthorNotFound)
 
-      (saveForecast *> saveRelationship).transact(xa)
+      (saveForecast *> saveRelationship).transact(xa).lift
 
-    def castVote(fid: ForecastId, res: VoteResult): F[Unit] =
+    def castVote(fid: ForecastId, res: VoteResult): F[Either[ForecastNotFound, Unit]] =
       SQL
         .updateVote(fid, res)
         .run
         .onUpdateFailure(ForecastNotFound)
         .transact(xa)
+        .lift

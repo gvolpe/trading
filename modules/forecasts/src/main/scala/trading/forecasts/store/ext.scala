@@ -7,11 +7,17 @@ import scala.util.control.NoStackTrace
 import cats.MonadThrow
 import cats.syntax.all.*
 
-case object AuthorNotFound           extends NoStackTrace
-case object AuthorOrForecastNotFound extends NoStackTrace
-case object DuplicateForecastError   extends NoStackTrace
-case object DuplicateAuthorError     extends NoStackTrace
-case object ForecastNotFound         extends NoStackTrace
+case object AuthorNotFound extends NoStackTrace
+type AuthorNotFound = AuthorNotFound.type
+
+case object DuplicateForecastError extends NoStackTrace
+type DuplicateForecastError = DuplicateForecastError.type
+
+case object DuplicateAuthorError extends NoStackTrace
+type DuplicateAuthorError = DuplicateAuthorError.type
+
+case object ForecastNotFound extends NoStackTrace
+type ForecastNotFound = ForecastNotFound.type
 
 extension [F[_]: MonadThrow, A](fa: F[A])
   /* duplicate key violates unique constraint */

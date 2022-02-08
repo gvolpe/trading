@@ -46,28 +46,29 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     def timestamp: IO[Timestamp] = IO.pure(ts)
 
   class DummyForecastStore extends ForecastStore[IO]:
-    def fetch(fid: ForecastId): IO[Option[Forecast]]         = IO.none
-    def save(aid: AuthorId, fc: Forecast): IO[Unit]          = IO.unit
-    def castVote(fid: ForecastId, res: VoteResult): IO[Unit] = IO.unit
+    def fetch(fid: ForecastId): IO[Option[Forecast]]                                   = IO.none
+    def save(aid: AuthorId, fc: Forecast): IO[Either[AuthorNotFound, Unit]]            = IO.unit.lift
+    def castVote(fid: ForecastId, res: VoteResult): IO[Either[ForecastNotFound, Unit]] = IO.unit.lift
 
   class DummyAuthorStore extends AuthorStore[IO]:
-    def fetch(id: AuthorId): IO[Option[Author]] = IO.none
-    def save(author: Author): IO[Unit]          = IO.unit
+    def fetch(id: AuthorId): IO[Option[Author]]           = IO.none
+    def save(author: Author): IO[Either[SaveError, Unit]] = IO.unit.lift
 
   val okAuthorStore: AuthorStore[IO]     = new DummyAuthorStore
   val okForecastStore: ForecastStore[IO] = new DummyForecastStore
 
   val failAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
-    override def save(author: Author): IO[Unit] = IO.raiseError(DuplicateAuthorError)
+    override def save(author: Author): IO[Either[SaveError, Unit]] = IO.pure(DuplicateAuthorError.asLeft)
 
   val unexpectedFailAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
-    override def save(author: Author): IO[Unit] = IO.raiseError(new Exception("boom"))
+    override def save(author: Author): IO[Either[SaveError, Unit]] = IO.raiseError(new Exception("boom"))
 
   val failForecastStore: ForecastStore[IO] = new DummyForecastStore:
-    override def save(aid: AuthorId, fc: Forecast): IO[Unit] = IO.raiseError(AuthorNotFound)
+    override def save(aid: AuthorId, fc: Forecast): IO[Either[AuthorNotFound, Unit]] = IO.pure(AuthorNotFound.asLeft)
 
   val voteFailForecastStore: ForecastStore[IO] = new DummyForecastStore:
-    override def castVote(fid: ForecastId, res: VoteResult): IO[Unit] = IO.raiseError(ForecastNotFound)
+    override def castVote(fid: ForecastId, res: VoteResult): IO[Either[ForecastNotFound, Unit]] =
+      IO.pure(ForecastNotFound.asLeft)
 
   val dummyAcker: Acker[IO, ForecastCommand] = new:
     def ack(id: Consumer.MsgId): IO[Unit]  = IO.unit
