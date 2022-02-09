@@ -1,11 +1,11 @@
 package trading.lib
 
-import scala.annotation.nowarn
 import scala.reflect.ClassTag
 
 import cats.MonadThrow
 import cats.syntax.all.*
 import fs2.{ Pull, Stream }
+import monocle.Iso
 
 export Logger.redisLog
 
@@ -17,19 +17,6 @@ extension [F[_], A](src: Stream[F, A])
         Pull.eval(action) >> Pull.output(chunk) >> tl.pull.echo
       case None => Pull.done
     }.stream
-
-extension [E <: Throwable, A](ut: E | A)
-  @nowarn
-  def asEither: Either[E, A] =
-    ut match
-      case e: E => Left(e)
-      case a: A => Right(a)
-
-extension [E, A](either: Either[E, A])
-  def asUnionType: E | A =
-    either match
-      case Left(e: E)  => e
-      case Right(a: A) => a
 
 extension [F[_]: MonadThrow, A](fa: F[A])
   /** Lift an F[A] into an F[Either[E, A]] where E can be an union type.
@@ -78,9 +65,9 @@ extension [F[_]: MonadThrow, A](fa: F[A])
     * }}}
     */
   def liftU[E <: Throwable: ClassTag]: F[E | A] =
-    lift.map(_.asUnionType)
+    lift.map(eitherUnionIso[E, A].get)
 
 extension [F[_]: MonadThrow, E <: Throwable, A](fa: F[E | A])
   /* Same as `rethrow`, except it operates on `F[E | A]` instead of `F[Either[E, A]]` */
   def rethrowU: F[A] =
-    fa.map(_.asEither).rethrow
+    fa.map(eitherUnionIso[E, A].reverseGet).rethrow
