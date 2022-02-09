@@ -1,6 +1,7 @@
 package trading.lib
 
 import scala.annotation.nowarn
+import scala.reflect.ClassTag
 
 import cats.MonadThrow
 import cats.syntax.all.*
@@ -16,6 +17,19 @@ extension [F[_], A](src: Stream[F, A])
         Pull.eval(action) >> Pull.output(chunk) >> tl.pull.echo
       case None => Pull.done
     }.stream
+
+extension [E <: Throwable, A](ut: E | A)
+  @nowarn
+  def asEither: Either[E, A] =
+    ut match
+      case e: E => Left(e)
+      case a: A => Right(a)
+
+extension [E, A](either: Either[E, A])
+  def asUnionType: E | A =
+    either match
+      case Left(e: E)  => e
+      case Right(a: A) => a
 
 extension [F[_]: MonadThrow, A](fa: F[A])
   /** Lift an F[A] into an F[Either[E, A]] where E can be an union type.
@@ -39,9 +53,8 @@ extension [F[_]: MonadThrow, A](fa: F[A])
     * val i: IO[Unit] = h.rethrow
     * }}}
     */
-  @nowarn
-  def lift[E <: Throwable]: F[Either[E, A]] =
-    fa.map(_.asRight[E]).recover { case e: E => e.asLeft }
+  def lift[E <: Throwable: ClassTag]: F[Either[E, A]] =
+    fa.attemptNarrow
 
   /** Same as `lift`, excepts the resulting type uses `E | A` instead of `Either[E, A]`.
     *
@@ -64,18 +77,10 @@ extension [F[_]: MonadThrow, A](fa: F[A])
     * val i: IO[Unit] = h.rethrow
     * }}}
     */
-  @nowarn
-  def liftU[E <: Throwable]: F[E | A] =
-    lift.map {
-      case Left(e: E)  => e
-      case Right(a: A) => a
-    }
+  def liftU[E <: Throwable: ClassTag]: F[E | A] =
+    lift.map(_.asUnionType)
 
 extension [F[_]: MonadThrow, E <: Throwable, A](fa: F[E | A])
   /* Same as `rethrow`, except it operates on `F[E | A]` instead of `F[Either[E, A]]` */
-  @nowarn
   def rethrowU: F[A] =
-    fa.flatMap {
-      case e: E => e.raiseError[F, A]
-      case a: A => a.pure[F]
-    }
+    fa.map(_.asEither).rethrow
