@@ -33,6 +33,7 @@ spec:
             - name: REDIS_URI
               value: redis://redis
           image: trading-alerts:latest
+          imagePullPolicy: Never
           livenessProbe:
             exec:
               command:
