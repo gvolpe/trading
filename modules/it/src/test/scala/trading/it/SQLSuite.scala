@@ -1,16 +1,17 @@
-package trading.forecasts.store
+package trading.it
 
 import java.util.UUID
 
 import trading.domain.*
+import trading.forecasts.store.*
+import trading.it.suite.ResourceSuite
 
 import cats.data.NonEmptyList
 import cats.effect.*
 import cats.syntax.all.*
 import doobie.h2.H2Transactor
-import weaver.IOSuite
 
-object SQLSuite extends IOSuite:
+object SQLSuite extends ResourceSuite:
   type Res = H2Transactor[IO]
 
   override def sharedResource: Resource[IO, Res] = DB.init[IO]
@@ -65,3 +66,4 @@ object SQLSuite extends IOSuite:
       )
       .reduce
   }
+
