@@ -23,6 +23,8 @@
             buildInputs = [
               jdk
               pkgs.coursier
+              pkgs.kubectl
+              pkgs.minikube
               pkgs.sbt
             ];
             shellHook = ''

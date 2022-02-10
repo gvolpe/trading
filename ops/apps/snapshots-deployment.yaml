@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: snapshots
+  name: snapshots
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: snapshots
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/app: "true"
+        io.kompose.service: snapshots
+    spec:
+      containers:
+        - env:
+            - name: HTTP_PORT
+              value: "9002"
+            - name: PULSAR_URI
+              value: pulsar://pulsar:6650
+            - name: REDIS_URI
+              value: redis://redis
+          image: trading-snapshots:latest
+          imagePullPolicy: Never
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - -f
+                - http://localhost:9002/health
+            failureThreshold: 15
+            initialDelaySeconds: 120
+            periodSeconds: 2
+            timeoutSeconds: 5
+          name: snapshots
+          ports:
+            - containerPort: 9002
+          resources: {}
+      restartPolicy: Always
+status: {}
