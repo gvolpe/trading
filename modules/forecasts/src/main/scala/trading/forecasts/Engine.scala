@@ -44,7 +44,7 @@ object Engine:
                 .save(Author(aid, name, website, Set.empty))
                 .rethrow
                 .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
-                .handleError { case DuplicateAuthorError =>
+                .recover { case DuplicateAuthorError =>
                   AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
                 }
                 .flatMap(e => authors.send(e) *> acker.ack(msgId))
