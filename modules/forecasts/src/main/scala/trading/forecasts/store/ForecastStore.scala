@@ -32,7 +32,7 @@ object ForecastStore:
           .void
           .onConstraintViolation(AuthorNotFound)
 
-      (saveForecast *> saveRelationship).transact(xa).lift
+      (saveForecast *> saveRelationship).transact(xa).attemptNarrow
 
     def castVote(fid: ForecastId, res: VoteResult): F[Either[ForecastNotFound, Unit]] =
       SQL
@@ -40,4 +40,4 @@ object ForecastStore:
         .run
         .onUpdateFailure(ForecastNotFound)
         .transact(xa)
-        .lift
+        .attemptNarrow

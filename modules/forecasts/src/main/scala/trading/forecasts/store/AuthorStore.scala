@@ -40,4 +40,4 @@ object AuthorStore:
           .onDuplicate(DuplicateForecastError)
           .onConstraintViolation(ForecastNotFound)
 
-      (saveAuthor *> saveForecasts).transact(xa).lift
+      (saveAuthor *> saveForecasts).transact(xa).attemptNarrow
