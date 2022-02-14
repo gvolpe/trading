@@ -1,8 +1,7 @@
 package trading.domain
 
 import cats.Show
-// FIXME: importing * does not work
-import cats.derived.semiauto.{ derived, product }
+import cats.derived.*
 import cats.syntax.all.*
 import io.circe.{ Decoder, Encoder, Json }
 

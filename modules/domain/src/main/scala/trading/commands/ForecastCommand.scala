@@ -4,8 +4,7 @@ import trading.domain.{ given, * }
 import trading.domain.ForecastTag.given // to derive Eq (should not be needed, though)
 import trading.domain.VoteResult.given  // to derive Eq (should not be needed, though)
 
-// FIXME: importing all `given` yield ambiguous implicits
-import cats.derived.semiauto.{ coproductEq, product, productEq, * }
+import cats.derived.*
 import cats.syntax.all.*
 import cats.{ Applicative, Eq, Show }
 import io.circe.Codec

@@ -4,8 +4,7 @@ import trading.commands.TradeCommand
 import trading.domain.{ given, * }
 
 import cats.{ Applicative, Show }
-// FIXME: importing all `given` yield ambiguous implicits
-import cats.derived.semiauto.{ derived, product }
+import cats.derived.*
 import cats.syntax.all.*
 import io.circe.Codec
 import monocle.{ Getter, Traversal }
