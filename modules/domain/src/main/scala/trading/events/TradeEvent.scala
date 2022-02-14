@@ -3,12 +3,12 @@ package trading.events
 import trading.commands.TradeCommand
 import trading.domain.{ given, * }
 
-import cats.Show
+import cats.{ Applicative, Show }
 // FIXME: importing all `given` yield ambiguous implicits
 import cats.derived.semiauto.{ derived, product }
 import cats.syntax.all.*
 import io.circe.Codec
-import monocle.Getter
+import monocle.{ Getter, Traversal }
 
 sealed trait TradeEvent derives Codec.AsObject, Show:
   def id: EventId
@@ -49,3 +49,13 @@ object TradeEvent:
       case e: CommandRejected => e.command.some
       case _                  => none
     }
+
+  val _CorrelationId: Traversal[TradeEvent, CorrelationId] = new:
+    def modifyA[F[_]: Applicative](f: CorrelationId => F[CorrelationId])(s: TradeEvent): F[TradeEvent] =
+      f(s.cid).map { newCid =>
+        s match
+          case c: CommandExecuted => c.copy(cid = newCid)
+          case c: CommandRejected => c.copy(cid = newCid)
+          case c: Started         => c.copy(cid = newCid)
+          case c: Stopped         => c.copy(cid = newCid)
+      }

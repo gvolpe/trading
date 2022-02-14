@@ -2,9 +2,14 @@ package trading.domain
 
 import trading.ws.WsOut
 
+// FIXME: importing all `given` yield ambiguous implicits
+import cats.derived.semiauto.{ coproductEq, product, productEq, * }
+import cats.{ Applicative, Show }
+import cats.syntax.all.*
 import io.circe.Codec
+import monocle.Traversal
 
-sealed trait Alert derives Codec.AsObject:
+sealed trait Alert derives Codec.AsObject, Show:
   def id: AlertId
   def cid: CorrelationId
   def createdAt: Timestamp
@@ -29,3 +34,11 @@ object Alert:
       status: TradingStatus,
       createdAt: Timestamp
   ) extends Alert
+
+  val _CorrelationId: Traversal[Alert, CorrelationId] = new:
+    def modifyA[F[_]: Applicative](f: CorrelationId => F[CorrelationId])(s: Alert): F[Alert] =
+      f(s.cid).map { newCid =>
+        s match
+          case c: TradeAlert  => c.copy(cid = newCid)
+          case c: TradeUpdate => c.copy(cid = newCid)
+      }

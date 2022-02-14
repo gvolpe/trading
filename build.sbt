@@ -131,6 +131,7 @@ lazy val tracing = (project in file("modules/tracing"))
     )
   )
   .dependsOn(core)
+  .dependsOn(domain % "compile->compile;test->test")
 
 lazy val ws = (project in file("modules/ws-server"))
   .enablePlugins(DockerPlugin)
