@@ -70,6 +70,17 @@ object TradeCommand:
           case c: Stop   => c.copy(id = newId)
       }
 
+  val _CorrelationId: Traversal[TradeCommand, CorrelationId] = new:
+    def modifyA[F[_]: Applicative](f: CorrelationId => F[CorrelationId])(s: TradeCommand): F[TradeCommand] =
+      f(s.cid).map { newCid =>
+        s match
+          case c: Create => c.copy(cid = newCid)
+          case c: Update => c.copy(cid = newCid)
+          case c: Delete => c.copy(cid = newCid)
+          case c: Start  => c.copy(cid = newCid)
+          case c: Stop   => c.copy(cid = newCid)
+      }
+
   val _CreatedAt: Traversal[TradeCommand, Timestamp] = new:
     def modifyA[F[_]: Applicative](f: Timestamp => F[Timestamp])(s: TradeCommand): F[TradeCommand] =
       f(s.createdAt).map { ts =>

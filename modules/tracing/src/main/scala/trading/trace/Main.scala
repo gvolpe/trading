@@ -7,7 +7,7 @@ import trading.core.snapshots.SnapshotReader
 import trading.domain.Alert
 import trading.events.*
 import trading.lib.{ given, * }
-import trading.state.{ DedupState, TradeState }
+import trading.trace.fsm.*
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
@@ -23,17 +23,13 @@ object Main extends IOApp.Simple:
         (server, alerts, tradingEvents, tradingCommands, authorEvents, forecastEvents, forecastCommands, tracer) =>
           val trading =
             tradingCommands
-              .merge[IO, Engine.TradeIn](tradingEvents.merge(alerts))
-              .evalMapAccumulate(
-                (List.empty[TradeCommand], List.empty[TradeEvent], List.empty[Alert])
-              )(Engine.tradingFsm[IO](tracer).run)
+              .merge[IO, TradeIn](tradingEvents.merge(alerts))
+              .evalMapAccumulate(TradeState.empty)(tradingFsm[IO](tracer).run)
 
           val forecasting =
             authorEvents
-              .merge[IO, Engine.ForecastIn](forecastEvents.merge(forecastCommands))
-              .evalMapAccumulate(
-                (List.empty[AuthorEvent], List.empty[ForecastEvent], List.empty[ForecastCommand])
-              )(Engine.forecastFsm[IO](tracer).run)
+              .merge[IO, ForecastIn](forecastEvents.merge(forecastCommands))
+              .evalMapAccumulate(ForecastState.empty)(forecastFsm[IO](tracer).run)
 
           Stream(
             Stream.eval(server.useForever),

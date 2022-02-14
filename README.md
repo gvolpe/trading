@@ -167,7 +167,7 @@ It consumes `Alert` messages and sends them over Web Sockets whenever there's an
 
 A decentralized application that hooks up on multiple topics and creates traces via the Open Tracing protocol, using the Natchez library and Honeycomb.
 
-![tracing](./imgs/tracing.png)
+![tracing](./imgs/tracer.png)
 
 ### Tests
 
