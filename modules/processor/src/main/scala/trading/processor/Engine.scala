@@ -17,7 +17,7 @@ object Engine:
       registry: DedupRegistry[F],
       ack: Consumer.MsgId => F[Unit]
   ): FSM[F, (TradeState, DedupState), Consumer.Msg[TradeCommand], Unit] =
-    FSM { case ((st, ds), Consumer.Msg(msgId, command)) =>
+    FSM { case ((st, ds), Consumer.Msg(msgId, _, command)) =>
       Conflicts.dedup(ds)(command) match
         case None =>
           for

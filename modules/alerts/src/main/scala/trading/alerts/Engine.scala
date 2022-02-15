@@ -19,23 +19,23 @@ object Engine:
       ack: Consumer.MsgId => F[Unit]
   ): FSM[F, (TradeState, DedupState), Consumer.Msg[TradeEvent], Unit] =
     FSM {
-      case ((st @ TradeState(Off, _), ds), Consumer.Msg(msgId, TradeEvent.Started(_, cid, _))) =>
+      case ((st @ TradeState(Off, _), ds), Consumer.Msg(msgId, _, TradeEvent.Started(_, cid, _))) =>
         (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
           val alert = TradeUpdate(id, cid, TradingStatus.On, ts)
           (producer.send(alert) *> ack(msgId)).attempt.void.tupleLeft(st -> ds)
         }
-      case ((st @ TradeState(On, _), ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, cid, _))) =>
+      case ((st @ TradeState(On, _), ds), Consumer.Msg(msgId, _, TradeEvent.Stopped(_, cid, _))) =>
         (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
           val alert = TradeUpdate(id, cid, TradingStatus.Off, ts)
           (producer.send(alert) *> ack(msgId)).attempt.void.tupleLeft(st -> ds)
         }
-      case ((st @ TradeState(On, _), ds), Consumer.Msg(msgId, TradeEvent.Started(_, _, _))) =>
+      case ((st @ TradeState(On, _), ds), Consumer.Msg(msgId, _, TradeEvent.Started(_, _, _))) =>
         (Logger[F].warn(s"Status already On") *> ack(msgId)).tupleLeft(st -> ds)
-      case ((st @ TradeState(Off, _), ds), Consumer.Msg(msgId, TradeEvent.Stopped(_, _, _))) =>
+      case ((st @ TradeState(Off, _), ds), Consumer.Msg(msgId, _, TradeEvent.Stopped(_, _, _))) =>
         (Logger[F].warn(s"Status already Off") *> ack(msgId)).tupleLeft(st -> ds)
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandRejected(_, _, _, _, _))) =>
+      case ((st, ds), Consumer.Msg(msgId, _, TradeEvent.CommandRejected(_, _, _, _, _))) =>
         ack(msgId).tupleLeft(st -> ds)
-      case ((st, ds), Consumer.Msg(msgId, TradeEvent.CommandExecuted(_, cid, command, _))) =>
+      case ((st, ds), Consumer.Msg(msgId, _, TradeEvent.CommandExecuted(_, cid, command, _))) =>
         Conflicts.dedup(ds)(command) match
           case None =>
             Logger[F].warn(s"Deduplicated Command ID: ${command.id.show}").tupleLeft(st -> ds)
@@ -63,8 +63,7 @@ object Engine:
                   TradeAlert(id, cid, StrongSell, symbol, currentAskMax, currentBidMax, high, low, ts)
                 else if currentBidMax - previousBidMax > Price(0.2) then
                   TradeAlert(id, cid, Sell, symbol, currentAskMax, currentBidMax, high, low, ts)
-                else
-                  TradeAlert(id, cid, Neutral, symbol, currentAskMax, currentBidMax, high, low, ts)
+                else TradeAlert(id, cid, Neutral, symbol, currentAskMax, currentBidMax, high, low, ts)
 
               (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
                 val nds = Conflicts.update(ds)(cmd, ts)

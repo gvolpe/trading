@@ -16,7 +16,7 @@ object Engine:
       writer: SnapshotWriter[F]
   ): FSM[F, TradeState, Msg[TradeEvent], Unit] =
     FSM {
-      case (st, Msg(msgId, TradeEvent.CommandExecuted(eid, _, cmd, _))) =>
+      case (st, Msg(msgId, _, TradeEvent.CommandExecuted(eid, _, cmd, _))) =>
         val nst = TradeEngine.fsm.runS(st, cmd)
         writer.save(nst).attempt.flatMap {
           case Left(e) =>
@@ -26,7 +26,7 @@ object Engine:
             Logger[F].debug(s"State persisted for event ID: $eid") *>
               acker.ack(msgId).attempt.void.tupleLeft(nst)
         }
-      case (st, Msg(msgId, evt)) =>
+      case (st, Msg(msgId, _, evt)) =>
         Logger[F].debug(s"Event ID: ${evt.id}, no persistence") *>
           acker.ack(msgId).attempt.void.tupleLeft(st)
     }

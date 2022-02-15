@@ -22,7 +22,7 @@ object Engine:
       fcStore: ForecastStore[F],
       acker: Acker[F, ForecastCommand]
   ): Engine[F] = new:
-    def run: Msg[ForecastCommand] => F[Unit] = { case Msg(msgId, cmd) =>
+    def run: Msg[ForecastCommand] => F[Unit] = { case Msg(msgId, _, cmd) =>
       (GenUUID[F].make[EventId], Time[F].timestamp).tupled.flatMap { (eid, ts) =>
         cmd match
           case ForecastCommand.Publish(_, cid, aid, symbol, desc, tag, _) =>

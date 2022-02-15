@@ -87,7 +87,7 @@ lazy val feed = (project in file("modules/feed"))
   .settings(
     libraryDependencies += Libraries.scalacheck
   )
-  .dependsOn(core)
+  .dependsOn(core, tracing)
   .dependsOn(domain % "compile->compile;compile->test")
 
 lazy val forecasts = (project in file("modules/forecasts"))

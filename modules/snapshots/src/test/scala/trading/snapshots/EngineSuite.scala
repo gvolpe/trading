@@ -50,7 +50,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
         acks   <- IO.ref(none[MsgId])
         nacks  <- IO.ref(none[MsgId])
         fsm = Engine.fsm[IO](mkAcker(acks, nacks), mkWriter(writes))
-        nst  <- fsm.runS(TradeState.empty, Msg(msgId, evt))
+        nst  <- fsm.runS(TradeState.empty, Msg(msgId, Map.empty, evt))
         res1 <- writes.get
         res2 <- acks.get
         res3 <- nacks.get

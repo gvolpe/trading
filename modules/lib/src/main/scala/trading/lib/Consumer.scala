@@ -22,14 +22,15 @@ trait Consumer[F[_], A]:
   def receive: Stream[F, A]
 
 object Consumer:
-  type MsgId = String
+  type MsgId      = String
+  type Properties = Map[String, String]
 
-  final case class Msg[A](id: MsgId, payload: A)
+  final case class Msg[A](id: MsgId, props: Properties, payload: A)
 
   def local[F[_]: Applicative, A](
       queue: Queue[F, Option[A]]
   ): Consumer[F, A] = new:
-    def receiveM: Stream[F, Msg[A]]       = receive.map(Msg("N/A", _))
+    def receiveM: Stream[F, Msg[A]]       = receive.map(Msg("N/A", Map.empty, _))
     def receive: Stream[F, A]             = Stream.fromQueueNoneTerminated(queue)
     def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
     def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
@@ -53,8 +54,10 @@ object Consumer:
 
     PulsarConsumer.make[F, A](client, topic, sub, decoder, handler, _settings).map { c =>
       new:
-        def receiveM: Stream[F, Msg[A]] = c.subscribe.map(m => Msg(new String(m.id.toByteArray(), UTF_8), m.payload))
-        def receive: Stream[F, A]       = c.autoSubscribe
+        def receiveM: Stream[F, Msg[A]] = c.subscribe.map { m =>
+          Msg(new String(m.id.toByteArray(), UTF_8), m.properties, m.payload)
+        }
+        def receive: Stream[F, A]             = c.autoSubscribe
         def ack(id: Consumer.MsgId): F[Unit]  = c.ack(MessageId.fromByteArray(id.getBytes(UTF_8)))
         def nack(id: Consumer.MsgId): F[Unit] = c.nack(MessageId.fromByteArray(id.getBytes(UTF_8)))
     }
@@ -73,7 +76,7 @@ object Consumer:
           new:
             def receiveM: Stream[F, Msg[A]] =
               c.stream.evalMap { c =>
-                ref.set(c.offset.offsets).as(Msg("N/A", c.record.value))
+                ref.set(c.offset.offsets).as(Msg("N/A", Map.empty, c.record.value))
               }
             def receive: Stream[F, A] =
               c.stream.evalMap(c => c.offset.commit.as(c.record.value))

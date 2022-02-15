@@ -46,7 +46,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       fsm  = Engine.fsm(prod, registry, i => acks.set(i.some))
       (tst1, dst1) <- fsm.runS(
         TradeState.empty -> DedupState.empty,
-        Consumer.Msg("id1", TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts))
+        Consumer.Msg("id1", Map.empty, TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts))
       )
       e1 <- evts.get
       a1 <- acks.get

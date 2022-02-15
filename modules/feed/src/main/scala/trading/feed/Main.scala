@@ -4,6 +4,7 @@ import trading.commands.*
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.lib.{ Logger, Producer }
+import trading.trace.tracer.{ Honeycomb, TradingTracer }
 
 import cats.effect.*
 import cats.syntax.all.*
@@ -25,9 +26,11 @@ object Main extends IOApp.Simple:
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(Logger[IO].info("Initializing feed service"))
+      ep     <- Honeycomb.makeEntryPoint(config.honeycombApiKey, dataset = "decentralized")
+      tracer  = TradingTracer.make[IO](ep)
       trTopic = AppTopic.TradingCommands.make(config.pulsar)
       fcTopic = AppTopic.ForecastCommands.make(config.pulsar)
       trading     <- Producer.sharded[IO, TradeCommand](pulsar, trTopic)
       forecasting <- Producer.pulsar[IO, ForecastCommand](pulsar, fcTopic)
       server = Ember.default[IO](config.httpPort)
-    yield server -> Feed.random(trading, forecasting)
+    yield server -> Feed.random(trading, forecasting, tracer)

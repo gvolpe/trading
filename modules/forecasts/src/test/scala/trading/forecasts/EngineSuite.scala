@@ -21,7 +21,7 @@ import weaver.{ Expectations, SimpleIOSuite }
 import weaver.scalacheck.Checkers
 
 object EngineSuite extends SimpleIOSuite with Checkers:
-  extension (cmd: ForecastCommand) def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, cmd)
+  extension (cmd: ForecastCommand) def asMsg: Consumer.Msg[ForecastCommand] = Consumer.Msg(msgId, Map.empty, cmd)
 
   val id  = CommandId(UUID.randomUUID())
   val cid = CorrelationId(UUID.randomUUID())

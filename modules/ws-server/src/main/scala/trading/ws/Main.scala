@@ -22,7 +22,7 @@ object Main extends IOApp.Simple:
           topic.subscribers.evalMap(n => Logger[IO].info(s"WS connections: $n"))
 
         val alerts =
-          consumer.receiveM.evalMap { case Consumer.Msg(id, alert) =>
+          consumer.receiveM.evalMap { case Consumer.Msg(id, _, alert) =>
             topic.publish1(alert) *> consumer.ack(id)
           }
 
