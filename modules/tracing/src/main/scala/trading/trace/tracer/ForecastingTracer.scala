@@ -24,25 +24,29 @@ object ForecastingTracer:
           val durationMs = createdAt.value.toEpochMilli - cmd.createdAt.value.toEpochMilli
           val evtPayload = evt.fold(_.asJson, _.asJson)
 
-          sp1.put("correlation_id" -> cmd.cid.show) *>
-            sp1.put("created_at"   -> cmd.createdAt.show) *>
-            sp1.put("payload" -> cmd.asJson.noSpaces) *>
-            sp1.span(s"forecast-event-${cid.show}").use { sp2 =>
-              sp2.put("correlation_id" -> cid.show) *>
-                sp2.put("created_at"   -> createdAt.show) *>
-                sp2.put("duration_tx_ms" -> durationMs.show) *>
-                sp2.put("payload" -> evtPayload.noSpaces)
-            }
+          sp1.put(
+            "correlation_id" -> cmd.cid.show,
+            "created_at"     -> cmd.createdAt.show,
+            "payload"        -> cmd.asJson.noSpaces
+          ) *> sp1.span(s"forecast-event-${cid.show}").use { sp2 =>
+            sp2.put(
+              "correlation_id" -> cid.show,
+              "created_at"     -> createdAt.show,
+              "duration_tx_ms" -> durationMs.show,
+              "payload"        -> evtPayload.noSpaces
+            )
+          }
         }
       }
 
     def command(cmd: ForecastCommand): F[Kernel] =
       ep.root("forecasting-root").use { root =>
         root.span(s"forecasting-command-${cmd.cid.show}").use { sp =>
-          sp.put("correlation_id" -> cmd.cid.show) *>
-            sp.put("created_at"   -> cmd.createdAt.show) *>
-            sp.put("payload" -> cmd.asJson.noSpaces) *>
-            sp.kernel
+          sp.put(
+            "correlation_id" -> cmd.cid.show,
+            "created_at"     -> cmd.createdAt.show,
+            "payload"        -> cmd.asJson.noSpaces
+          ) *> sp.kernel
         }
       }
 
@@ -53,8 +57,10 @@ object ForecastingTracer:
 
       ep.continue(s"forecasting-command-${cid.show}", kernel).use { sp1 =>
         sp1.span(s"forecasting-event-${cid.show}").use { sp2 =>
-          sp2.put("correlation_id" -> cid.show) *>
-            sp2.put("created_at"   -> createdAt.show) *>
-            sp2.put("payload" -> payload.noSpaces)
+          sp2.put(
+            "correlation_id" -> cid.show,
+            "created_at"     -> createdAt.show,
+            "payload"        -> payload.noSpaces
+          )
         }
       }
