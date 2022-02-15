@@ -9,6 +9,7 @@ import trading.commands.*
 import trading.domain.*
 import trading.events.*
 import trading.lib.{ FSM, Logger, Time }
+import trading.trace.tracer.ForecastingTracer
 
 import cats.{ Applicative, Monad }
 import cats.syntax.all.*
@@ -21,7 +22,7 @@ object ForecastState:
     (List.empty, List.empty, List.empty)
 
 def forecastFsm[F[_]: Applicative: Logger](
-    tracer: Tracer[F]
+    tracer: ForecastingTracer[F]
 ): FSM[F, ForecastState, ForecastIn, Unit] =
   FSM {
     case ((atEvents, fcEvents, fcCommands), cmd: ForecastCommand) =>
@@ -29,11 +30,11 @@ def forecastFsm[F[_]: Applicative: Logger](
         case (Some(evt), _) =>
           val ne = atEvents.filterNot(_.id === evt.id)
           val nc = fcCommands.filterNot(_.id === cmd.id)
-          tracer.forecasting(cmd, evt.asLeft).tupleLeft((ne, fcEvents, nc))
+          tracer.trace(cmd, evt.asLeft).tupleLeft((ne, fcEvents, nc))
         case (_, Some(evt)) =>
           val ne = fcEvents.filterNot(_.id === evt.id)
           val nc = fcCommands.filterNot(_.id === cmd.id)
-          tracer.forecasting(cmd, evt.asRight).tupleLeft((atEvents, ne, nc))
+          tracer.trace(cmd, evt.asRight).tupleLeft((atEvents, ne, nc))
         case (None, None) =>
           ().pure[F].tupleLeft((atEvents, fcEvents, fcCommands :+ cmd))
 
@@ -42,7 +43,7 @@ def forecastFsm[F[_]: Applicative: Logger](
         case Some(cmd) =>
           val ne = fcEvents.filterNot(_.id === evt.id)
           val nc = fcCommands.filterNot(_.id === cmd.id)
-          tracer.forecasting(cmd, evt.asRight).tupleLeft((atEvents, ne, nc))
+          tracer.trace(cmd, evt.asRight).tupleLeft((atEvents, ne, nc))
         case None =>
           ().pure[F].tupleLeft((atEvents, fcEvents :+ evt, fcCommands))
 
@@ -51,7 +52,7 @@ def forecastFsm[F[_]: Applicative: Logger](
         case Some(cmd) =>
           val ne = atEvents.filterNot(_.id === evt.id)
           val nc = fcCommands.filterNot(_.id === cmd.id)
-          tracer.forecasting(cmd, evt.asLeft).tupleLeft((ne, fcEvents, nc))
+          tracer.trace(cmd, evt.asLeft).tupleLeft((ne, fcEvents, nc))
         case None =>
           ().pure[F].tupleLeft((atEvents :+ evt, fcEvents, fcCommands))
   }

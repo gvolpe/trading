@@ -1,5 +1,7 @@
 package trading.trace
 
+import scala.concurrent.duration.*
+
 import trading.commands.*
 import trading.core.AppTopic
 import trading.core.http.Ember
@@ -8,28 +10,41 @@ import trading.domain.Alert
 import trading.events.*
 import trading.lib.{ given, * }
 import trading.trace.fsm.*
+import trading.trace.tracer.*
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import fs2.Stream
-import natchez.EntryPoint
-import natchez.honeycomb.Honeycomb
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
       .flatMap {
-        (server, alerts, tradingEvents, tradingCommands, authorEvents, forecastEvents, forecastCommands, tracer) =>
+        (
+            server,
+            alerts,
+            tradingEvents,
+            tradingCommands,
+            authorEvents,
+            forecastEvents,
+            forecastCommands,
+            fcTracer,
+            tdTracer
+        ) =>
+          val ticks: Stream[IO, TradeIn] =
+            Stream.fixedDelay[IO](2.seconds)
+
           val trading =
             tradingCommands
               .merge[IO, TradeIn](tradingEvents.merge(alerts))
-              .evalMapAccumulate(TradeState.empty)(tradingFsm[IO](tracer).run)
+              .merge(ticks)
+              .evalMapAccumulate(TradeState.empty)(tradingFsm[IO](tdTracer).run)
 
           val forecasting =
             authorEvents
               .merge[IO, ForecastIn](forecastEvents.merge(forecastCommands))
-              .evalMapAccumulate(ForecastState.empty)(forecastFsm[IO](tracer).run)
+              .evalMapAccumulate(ForecastState.empty)(forecastFsm[IO](fcTracer).run)
 
           Stream(
             Stream.eval(server.useForever),
@@ -39,17 +54,6 @@ object Main extends IOApp.Simple:
       }
       .compile
       .drain
-
-  def mkEntryPoint(
-      key: Config.HoneycombApiKey
-  ): Resource[IO, EntryPoint[IO]] =
-    Honeycomb.entryPoint[IO]("trading-app") { ep =>
-      IO {
-        ep.setWriteKey(key.value)
-          .setDataset("demo")
-          .build
-      }
-    }
 
   val sub =
     Subscription.Builder
@@ -62,8 +66,9 @@ object Main extends IOApp.Simple:
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(Logger[IO].info("Initializing tracing service"))
-      ep     <- mkEntryPoint(config.honeycombApiKey)
-      tracer           = Tracer.make[IO](ep)
+      ep     <- Honeycomb.makeEntryPoint(config.honeycombApiKey)
+      fcTracer         = ForecastingTracer.make[IO](ep)
+      tdTracer         = TradingTracer.make[IO](ep)
       alertsTopic      = AppTopic.Alerts.make(config.pulsar)
       tradingEvtTopic  = AppTopic.TradingEvents.make(config.pulsar)
       tradingCmdTopic  = AppTopic.TradingCommands.make(config.pulsar)
@@ -85,5 +90,6 @@ object Main extends IOApp.Simple:
       authorEvents,
       forecastEvents,
       forecastCommands,
-      tracer
+      fcTracer,
+      tdTracer
     )
