@@ -15,8 +15,6 @@ import trading.trace.tracer.*
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
 import fs2.Stream
-import natchez.EntryPoint
-import natchez.honeycomb.Honeycomb
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -57,17 +55,6 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  def mkEntryPoint(
-      key: Config.HoneycombApiKey
-  ): Resource[IO, EntryPoint[IO]] =
-    Honeycomb.entryPoint[IO]("trading-app") { ep =>
-      IO {
-        ep.setWriteKey(key.value)
-          .setDataset("demo")
-          .build
-      }
-    }
-
   val sub =
     Subscription.Builder
       .withName("tracing")
@@ -79,7 +66,7 @@ object Main extends IOApp.Simple:
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(Logger[IO].info("Initializing tracing service"))
-      ep     <- mkEntryPoint(config.honeycombApiKey)
+      ep     <- Honeycomb.makeEntryPoint(config.honeycombApiKey)
       fcTracer         = ForecastingTracer.make[IO](ep)
       tdTracer         = TradingTracer.make[IO](ep)
       alertsTopic      = AppTopic.Alerts.make(config.pulsar)
