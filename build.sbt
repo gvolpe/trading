@@ -5,6 +5,7 @@ ThisBuild / version          := "0.1.0"
 ThisBuild / organization     := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
 
+ThisBuild / evictionErrorLevel := Level.Warn
 ThisBuild / scalafixDependencies += Libraries.organizeImports
 
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
@@ -87,7 +88,7 @@ lazy val feed = (project in file("modules/feed"))
   .settings(
     libraryDependencies += Libraries.scalacheck
   )
-  .dependsOn(core, tracing)
+  .dependsOn(core)
   .dependsOn(domain % "compile->compile;compile->test")
 
 lazy val forecasts = (project in file("modules/forecasts"))
@@ -155,7 +156,12 @@ lazy val it = (project in file("modules/it"))
 // extension demo
 lazy val demo = (project in file("modules/x-demo"))
   .settings(commonSettings: _*)
-  .dependsOn(core)
+  .dependsOn(core, tracing)
   .dependsOn(domain % "compile->compile;compile->test")
+  .settings(
+    libraryDependencies ++= List(
+      Libraries.natchezHttp4s
+    )
+  )
 
 addCommandAlias("runLinter", ";scalafixAll --rules OrganizeImports")

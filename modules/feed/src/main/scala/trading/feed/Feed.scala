@@ -7,7 +7,6 @@ import trading.domain.*
 import trading.domain.TradingStatus.*
 import trading.domain.generators.*
 import trading.lib.*
-import trading.trace.tracer.TradingTracer
 
 import cats.Parallel
 import cats.effect.kernel.{ Ref, Temporal }
@@ -16,23 +15,17 @@ import cats.syntax.all.*
 object Feed:
   def random[F[_]: GenUUID: Logger: Parallel: Temporal: Time](
       trProducer: Producer[F, TradeCommand],
-      fcProducer: Producer[F, ForecastCommand],
-      tracer: TradingTracer[F]
+      fcProducer: Producer[F, ForecastCommand]
   ): F[Unit] =
     val trading: F[Unit] =
       Ref.of[F, TradingStatus](TradingStatus.On).flatMap { ref =>
         import TradeCommand.*
 
-        def send(cmd: TradeCommand): F[Unit] =
-          tracer.command(cmd).flatMap { kernel =>
-            trProducer.sendAs(cmd, kernel.toHeaders)
-          }
-
         def switch(st: TradingStatus, cmd: TradeCommand): F[Unit] =
           (Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap { (ts, cmdId) =>
             val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
             Logger[F].warn(s">>> Trading $st <<<") *>
-              send(uniqueCmd) *> ref.set(On) *> Temporal[F].sleep(1.second)
+              trProducer.send(uniqueCmd) *> ref.set(On) *> Temporal[F].sleep(1.second)
           }
 
         tradeCommandListGen.replicateA(2).flatten.traverse_ {
@@ -44,7 +37,7 @@ object Feed:
             (ref.get, Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap {
               case (On, ts, cmdId) =>
                 val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
-                Logger[F].info(cmd.show) *> send(uniqueCmd) *> Temporal[F].sleep(300.millis)
+                Logger[F].info(cmd.show) *> trProducer.send(uniqueCmd) *> Temporal[F].sleep(300.millis)
               case (Off, _, _) =>
                 ().pure[F]
             }

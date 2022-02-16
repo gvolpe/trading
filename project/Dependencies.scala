@@ -3,22 +3,23 @@ import sbt._
 object Dependencies {
 
   object V {
-    val cats       = "2.7.0"
-    val catsEffect = "3.3.5"
-    val circe      = "0.14.1"
-    val ciris      = "2.3.2"
-    val doobie     = "1.0.0-RC2"
-    val flyway     = "8.5.0"
-    val fs2Core    = "3.2.4"
-    val fs2Kafka   = "2.3.0"
-    val http4s     = "1.0.0-M31"
-    val kittens    = "3.0.0-M1"
-    val monocle    = "3.1.0"
-    val natchez    = "0.1.6"
-    val neutron    = "0.3.0"
-    val odin       = "0.13.0"
-    val redis4cats = "1.1.1"
-    val refined    = "0.9.28"
+    val cats          = "2.7.0"
+    val catsEffect    = "3.3.5"
+    val circe         = "0.14.1"
+    val ciris         = "2.3.2"
+    val doobie        = "1.0.0-RC2"
+    val flyway        = "8.5.0"
+    val fs2Core       = "3.2.4"
+    val fs2Kafka      = "2.3.0"
+    val http4s        = "1.0.0-M31"
+    val kittens       = "3.0.0-M1"
+    val monocle       = "3.1.0"
+    val natchez       = "0.1.6"
+    val natchezHttp4s = "0.3.2"
+    val neutron       = "0.3.0"
+    val odin          = "0.13.0"
+    val redis4cats    = "1.1.1"
+    val refined       = "0.9.28"
 
     val scalacheck = "1.15.4"
     val weaver     = "0.7.9"
@@ -54,6 +55,7 @@ object Dependencies {
 
     val natchezCore      = "org.tpolecat" %% "natchez-core"      % V.natchez
     val natchezHoneycomb = "org.tpolecat" %% "natchez-honeycomb" % V.natchez
+    val natchezHttp4s    = "org.tpolecat" %% "natchez-http4s"    % V.natchezHttp4s
 
     val neutronCore       = "dev.profunktor" %% "neutron-core"       % V.neutron
     val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
