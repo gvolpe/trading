@@ -71,23 +71,22 @@ def tradingFsm[F[_]: Logger: Monad: Time](
   }
 
 def updateMatchingIds[F[_]: Monad: Time](
-    _ids: MatchingIds,
+    ids: MatchingIds,
     cid: CorrelationId,
     kernel: Either[CmdKernel, EvtKernel]
 ): F[MatchingIds] =
   Time[F].timestamp.flatMap { now =>
-    val updatedIds =
-      if _ids.get(cid).isEmpty then _ids.updated(cid, (now, None, None)) else _ids
+    def update(ts: Timestamp, k1: Option[CmdKernel], k2: Option[EvtKernel]) =
+      kernel match
+        case Left(nk1)  => (ts, nk1.some, k2).some
+        case Right(nk2) => (ts, k1, nk2.some).some
 
-    val ids = updatedIds.updatedWith(cid) {
-      _.map { (ts, k1, k2) =>
-        kernel match
-          case Left(nk1)  => (ts, nk1.some, k2)
-          case Right(nk2) => (ts, k1, nk2.some)
+    expireMatchingIds {
+      ids.updatedWith(cid) {
+        case Some(ts, k1, k2) => update(ts, k1, k2)
+        case None             => update(now, None, None)
       }
     }
-
-    expireMatchingIds(ids)
   }
 
 def expireMatchingIds[F[_]: Monad: Time](
