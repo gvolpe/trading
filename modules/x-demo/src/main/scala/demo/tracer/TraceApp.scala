@@ -11,7 +11,6 @@ export demo.tracer.NT.syntax.*
 import trading.core.http.Ember
 import trading.lib.{ given, * }
 import trading.lib.Consumer.Msg
-import trading.trace.Config.HoneycombApiKey
 import trading.trace.tracer.Honeycomb
 
 import cats.~>
@@ -19,13 +18,13 @@ import cats.data.Kleisli
 import cats.effect.*
 import cats.syntax.all.*
 import com.comcast.ip4s.*
-import dev.profunktor.pulsar.{ Config as PulsarConfig, Pulsar, Subscription, Topic }
+import dev.profunktor.pulsar.{ Config as PulsarConfig, Pulsar }
 import fs2.Stream
 import io.circe.Codec
 import org.http4s.HttpRoutes
 import org.http4s.server.Server
 import natchez.{ EntryPoint, Span, Trace }
-import natchez.http4s.implicits.*
+import natchez.http4s.syntax.entrypoint.*
 import natchez.Kernel
 
 case class User(id: UUID, name: String) derives Codec.AsObject
@@ -33,145 +32,105 @@ case class User(id: UUID, name: String) derives Codec.AsObject
 object TraceApp extends IOApp.Simple:
   type Eff[A] = Kleisli[IO, Span[IO], A]
 
-  def run: IO[Unit] = programTwo
-
-  /* Users Engine.two[IO, Eff] and UsersDB.alt[IO, Eff] */
-  val programOne: IO[Unit] =
+  def run: IO[Unit] =
     Honeycomb.makeEntryPoint(apiKey, dataset = "dist-trace-demo").use { ep =>
       ep.root("demo-root").use { root =>
-        resources(ep)
-          .use { (_, db, routes, nameProducer, nameConsumer, userProducer, userConsumer) =>
-            val server =
-              Ember.routes[IO](port"9000", routes)
-
-            val http =
-              Stream.eval(server.useForever)
-
-            val random =
-              Stream("Gabriel", "Guillermo", "Gonzalo", "Gabriel", "Miguel")
-                .metered[IO](1.second)
-                .evalMap { name =>
-                  ep.root("random-root").use { sp =>
-                    sp.put("random-name" -> name) *> sp.kernel.flatMap { k =>
-                      nameProducer.sendAs(name, k.toHeaders)
-                    }
-                  }
+        val random: Producer[IO, String] => Stream[IO, Unit] = p =>
+          Stream("Gabriel", "Guillermo", "Gonzalo", "Gabriel", "Miguel")
+            .metered[IO](1.second)
+            .evalMap { name =>
+              ep.root("random-root").use { sp =>
+                sp.put("random-name" -> name) *> sp.kernel.flatMap { k =>
+                  p.sendAs(name, k.toHeaders)
                 }
-
-            val names =
-              nameConsumer.receiveM.evalMap { case msg @ Msg(_, props, _) =>
-                ep.continue("random-name", Kernel(props)).use { sp1 =>
-                  Engine.two[IO, Eff](userProducer, db, nameConsumer.ack)(msg).run(sp1)
-                }
-              }
-
-            val users =
-              userConsumer.receiveM.evalMap { case Msg(id, props, user) =>
-                val k = Kernel(props)
-                ep.continue("ok", k).orElse(ep.continue("duplicate", k)).use { sp =>
-                  sp.span("user-consumer").use { sp1 =>
-                    sp1.put("user" -> user.name) *>
-                      IO.println(s"<<< USER: $user with properties: $props \n") *>
-                      userConsumer.ack(id)
-                  }
-                }
-              }
-
-            Stream(http, random, names, users).parJoin(4).compile.drain
-          }
-      }
-    }
-
-  /* Users Engine.one[IO] and UsersDB.make[Eff] */
-  val programTwo: IO[Unit] =
-    Honeycomb.makeEntryPoint(apiKey, dataset = "dist-trace-demo").use { ep =>
-      ep.root("demo-root").use { root =>
-        resources(ep).use { (pulsar, _, _, nameProducer, nameConsumer, _, userConsumer) =>
-          contextual(ep, pulsar)
-            .use { (db, routes, userProducer) =>
-              Kleisli.liftF {
-                val server =
-                  Ember.routes[IO](port"9000", routes)
-
-                val http =
-                  Stream.eval(server.useForever)
-
-                val random =
-                  Stream("Gabriel", "Guillermo", "Gonzalo", "Gabriel", "Miguel")
-                    .metered[IO](1.second)
-                    .evalMap { name =>
-                      ep.root("random-root").use { sp =>
-                        sp.put("random-name" -> name) *> sp.kernel.flatMap { k =>
-                          nameProducer.sendAs(name, k.toHeaders)
-                        }
-                      }
-                    }
-
-                val names =
-                  nameConsumer.receiveM.evalMap { case msg @ Msg(_, props, _) =>
-                    ep.continue("random-name", Kernel(props)).use { sp1 =>
-                      Engine.one(userProducer, db, id => Kleisli.liftF(nameConsumer.ack(id)))(msg).run(sp1)
-                    }
-                  }
-
-                val users =
-                  userConsumer.receiveM.evalMap { case Msg(id, props, user) =>
-                    val k = Kernel(props)
-                    ep.continue("ok", k).orElse(ep.continue("duplicate", k)).use { sp =>
-                      sp.span("user-consumer").use { sp1 =>
-                        sp1.put("user" -> user.name) *>
-                          IO.println(s"<<< USER: $user with properties: $props \n") *>
-                          userConsumer.ack(id)
-                      }
-                    }
-                  }
-
-                Stream(http, random, names, users).parJoin(4).compile.drain
               }
             }
-            .run(root)
-        }
+
+        val users: Consumer[IO, User] => Stream[IO, Unit] = c =>
+          c.receiveM.evalMap { case Msg(id, props, user) =>
+            val k = Kernel(props)
+            ep.continue("ok", k).orElse(ep.continue("duplicate", k)).use { sp =>
+              sp.span("user-consumer").use { sp1 =>
+                sp1.put("user" -> user.name) *>
+                  IO.println(s"<<< USER: $user with properties: $props \n") *> c.ack(id)
+              }
+            }
+          }
+
+        def names(c: Consumer[IO, String], f: (Msg[String], Span[IO]) => IO[Unit]): Stream[IO, Unit] =
+          c.receiveM.evalMap { case msg @ Msg(_, props, _) =>
+            ep.continue("random-name", Kernel(props)).use(f(msg, _))
+          }
+
+        programTwo(ep, random, users, names)
       }
     }
 
-  val sub =
-    Subscription.Builder
-      .withName("tracer-demo")
-      .withType(Subscription.Type.Failover)
-      .build
+  /* Engine.two[IO, Eff] and UsersDB.alt[IO, Eff] */
+  def programTwo(
+      ep: EntryPoint[IO],
+      random: Producer[IO, String] => Stream[IO, Unit],
+      users: Consumer[IO, User] => Stream[IO, Unit],
+      names: (Consumer[IO, String], (Msg[String], Span[IO]) => IO[Unit]) => Stream[IO, Unit]
+  ): IO[Unit] =
+    resources(ep).use { (_, db, server, nameProducer, nameConsumer, userProducer, userConsumer) =>
+      val runner =
+        names(
+          nameConsumer,
+          (msg, sp) => Engine.two[IO, Eff](userProducer, db, nameConsumer.ack)(msg).run(sp)
+        )
 
-  val pulsarCfg =
-    PulsarConfig.Builder
-      .withTenant("public")
-      .withNameSpace("default")
-      .withURL("pulsar://localhost:6650")
-      .build
+      Stream(
+        Stream.eval(server.useForever),
+        random(nameProducer),
+        runner,
+        users(userConsumer)
+      ).parJoin(4).compile.drain
+    }
 
-  val nameTopic: Topic.Single =
-    Topic.Builder
-      .withName(Topic.Name("user-names"))
-      .withConfig(pulsarCfg)
-      .withType(Topic.Type.NonPersistent)
-      .build
+  /* Engine.one[IO] and UsersDB.make[Eff] */
+  def programOne(
+      ep: EntryPoint[IO],
+      root: Span[IO],
+      random: Producer[IO, String] => Stream[IO, Unit],
+      users: Consumer[IO, User] => Stream[IO, Unit],
+      names: (Consumer[IO, String], (Msg[String], Span[IO]) => IO[Unit]) => Stream[IO, Unit]
+  ): IO[Unit] =
+    resources(ep).use { (pulsar, _, _, nameProducer, nameConsumer, _, userConsumer) =>
+      contextual(ep, pulsar)
+        .use { (db, server, userProducer) =>
+          Kleisli.liftF {
+            val runner =
+              names(
+                nameConsumer,
+                (msg, sp) => Engine.one(userProducer, db, id => Kleisli.liftF(nameConsumer.ack(id)))(msg).run(sp)
+              )
 
-  val userTopic: Topic.Single =
-    Topic.Builder
-      .withName(Topic.Name("new-users"))
-      .withConfig(pulsarCfg)
-      .withType(Topic.Type.NonPersistent)
-      .build
-
-  val apiKey = HoneycombApiKey(System.getenv("HONEYCOMB_API_KEY"))
+            Stream(
+              Stream.eval(server.useForever),
+              random(nameProducer),
+              runner,
+              users(userConsumer)
+            ).parJoin(4).compile.drain
+          }
+        }
+        .run(root)
+    }
 
   def contextual(
       ep: EntryPoint[IO],
       pulsar: Pulsar.T
-  ): Resource[Eff, (UsersDB[Eff], HttpRoutes[IO], Producer[Eff, User])] =
+  ): Resource[Eff, (UsersDB[Eff], Resource[IO, Server], Producer[Eff, User])] =
     for
       db <- Resource.eval(UsersDB.make[Eff])
       routes = ep.liftT(Routes(db).routes)
+      server = Ember.routes[IO](port"9000", routes)
       userProducer <- Producer.pulsar[Eff, User](pulsar, userTopic)
-    yield (db, routes, userProducer)
+    yield (db, server, userProducer)
+
+  /* can lift HttpRoutes[IO] with a `Trace` constraint but not possible to create a UsersDB instance */
+  def ctx(ep: EntryPoint[IO]): HttpRoutes[IO] =
+    ep.liftRoutes(implicit t => Routes[IO](???).routes)
 
   def resources(ep: EntryPoint[IO]) =
     for
@@ -179,8 +138,9 @@ object TraceApp extends IOApp.Simple:
       _      <- Resource.eval(Logger[IO].info("Initializing processor service"))
       db     <- Resource.eval(UsersDB.alt[IO, Eff])
       routes = ep.liftT(Routes(db).routes)
+      server = Ember.routes[IO](port"9000", routes)
       nameProducer <- Producer.pulsar[IO, String](pulsar, nameTopic)
       nameConsumer <- Consumer.pulsar[IO, String](pulsar, nameTopic, sub)
       userProducer <- Producer.pulsar[IO, User](pulsar, userTopic)
       userConsumer <- Consumer.pulsar[IO, User](pulsar, userTopic, sub)
-    yield (pulsar, db, routes, nameProducer, nameConsumer, userProducer, userConsumer)
+    yield (pulsar, db, server, nameProducer, nameConsumer, userProducer, userConsumer)
