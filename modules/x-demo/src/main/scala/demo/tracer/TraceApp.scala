@@ -62,7 +62,7 @@ object TraceApp extends IOApp.Simple:
             ep.continue("random-name", Kernel(props)).use(f(msg, _))
           }
 
-        programTwo(ep, random, users, names)
+        programZero(ep, random, users, names)
       }
     }
 
@@ -117,6 +117,34 @@ object TraceApp extends IOApp.Simple:
         .run(root)
     }
 
+  /* Everything in IO: Engine.one[IO] and UsersDB.noTrace[IO] */
+  def programZero(
+      ep: EntryPoint[IO],
+      random: Producer[IO, String] => Stream[IO, Unit],
+      users: Consumer[IO, User] => Stream[IO, Unit],
+      names: (Consumer[IO, String], (Msg[String], Span[IO]) => IO[Unit]) => Stream[IO, Unit]
+  ): IO[Unit] =
+    resources(ep).use { (_, _, _, nameProducer, nameConsumer, userProducer, userConsumer) =>
+      ctxIOLocal(ep)
+        .use { (db, server) =>
+          val runner =
+            names(
+              nameConsumer,
+              (msg, sp) =>
+                Trace.ioTrace(sp).flatMap { implicit trace =>
+                  Engine.one[IO](userProducer, db, nameConsumer.ack)(msg)
+                }
+            )
+
+          Stream(
+            Stream.eval(server.useForever),
+            random(nameProducer),
+            runner,
+            users(userConsumer)
+          ).parJoin(4).compile.drain
+        }
+    }
+
   def contextual(
       ep: EntryPoint[IO],
       pulsar: Pulsar.T
@@ -128,9 +156,13 @@ object TraceApp extends IOApp.Simple:
       userProducer <- Producer.pulsar[Eff, User](pulsar, userTopic)
     yield (db, server, userProducer)
 
-  /* can lift HttpRoutes[IO] with a `Trace` constraint but not possible to create a UsersDB instance */
-  def ctx(ep: EntryPoint[IO]): HttpRoutes[IO] =
-    ep.liftRoutes(implicit t => Routes[IO](???).routes)
+  /* it uses `Trace.ioTrace` under the hood, so only for IO */
+  def ctxIOLocal(ep: EntryPoint[IO]) =
+    for
+      db <- Resource.eval(UsersDB.noTrace[IO])
+      routes = ep.liftRoutes(Routes[IO](db).routes)
+      server = Ember.routes[IO](port"9000", routes)
+    yield db -> server
 
   def resources(ep: EntryPoint[IO]) =
     for

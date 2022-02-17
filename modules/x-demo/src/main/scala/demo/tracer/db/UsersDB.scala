@@ -19,61 +19,59 @@ object UsersDB:
   type DuplicateUser = DuplicateUser.type
 
   def make[F[_]: MonadThrow: Ref.Make: Trace]: F[UsersDB[F]] =
+    noTrace[F].map { db =>
+      new:
+        def get(id: UUID): F[Option[User]] =
+          Trace[F].span("users-db") {
+            Trace[F].put("fetch" -> id.toString) *> db.get(id)
+          }
+        def save(user: User): F[Either[DuplicateUser, Unit]] =
+          Trace[F].span("users-db") {
+            db.save(user).flatTap {
+              case Left(e) =>
+                Trace[F].put("duplicate-error" -> user.name)
+              case Right(_) =>
+                Trace[F].put("new-user" -> user.name)
+            }
+          }
+    }
+
+  def alt[F[_]: MonadThrow: Ref.Make, G[_]: MonadThrow: Trace](using NT[F, G]): F[UsersDB[G]] =
+    noTrace[F].map { db =>
+      new:
+        def get(id: UUID): G[Option[User]] =
+          Trace[G].span("users-db") {
+            Trace[G].put("fetch" -> id.toString) *> db.get(id).liftK
+          }
+        def save(user: User): G[Either[DuplicateUser, Unit]] =
+          Trace[G].span("users-db") {
+            db.save(user).liftK.flatTap {
+              case Left(e) =>
+                Trace[G].put("duplicate-error" -> user.name)
+              case Right(_) =>
+                Trace[G].put("new-user" -> user.name)
+            }
+          }
+    }
+
+  def noTrace[F[_]: MonadThrow: Ref.Make]: F[UsersDB[F]] =
     (
       Ref.of[F, Map[UUID, User]](Map.empty),
       Ref.of[F, Map[String, UUID]](Map.empty)
     ).tupled.map { (users, idx) =>
       new:
         def get(id: UUID): F[Option[User]] =
-          Trace[F].span("users-db") {
-            Trace[F].put("fetch" -> id.toString) *>
-              users.get.map(_.get(id))
-          }
+          users.get.map(_.get(id))
 
         def save(user: User): F[Either[DuplicateUser, Unit]] =
-          Trace[F].span("users-db") {
-            idx.get
-              .map(_.get(user.name))
-              .flatMap {
-                case Some(_) =>
-                  Trace[F].put("duplicate-error" -> user.name) *>
-                    DuplicateUser.raiseError
-                case None =>
-                  Trace[F].put("new-user" -> user.name) *>
-                    users.update(_.updated(user.id, user)) *>
-                    idx.update(_.updated(user.name, user.id))
-              }
-              .attemptNarrow
-          }
-    }
-
-  def alt[F[_]: Monad: Ref.Make, G[_]: MonadThrow: Trace](using NT[F, G]): F[UsersDB[G]] =
-    (
-      Ref.of[F, Map[UUID, User]](Map.empty),
-      Ref.of[F, Map[String, UUID]](Map.empty)
-    ).tupled.map { (users, idx) =>
-      new:
-        def get(id: UUID): G[Option[User]] =
-          Trace[G].span("users-db") {
-            Trace[G].put("fetch" -> id.toString) *>
-              users.get.map(_.get(id)).liftK
-          }
-
-        def save(user: User): G[Either[DuplicateUser, Unit]] =
-          Trace[G].span("users-db") {
-            idx.get.liftK
-              .map(_.get(user.name))
-              .flatMap {
-                case Some(_) =>
-                  Trace[G].put("duplicate-error" -> user.name) *>
-                    DuplicateUser.raiseError
-                case None =>
-                  Trace[G].put("new-user" -> user.name) *>
-                    (
-                      users.update(_.updated(user.id, user)) *>
-                        idx.update(_.updated(user.name, user.id))
-                    ).liftK
-              }
-              .attemptNarrow
-          }
+          idx.get
+            .map(_.get(user.name))
+            .flatMap {
+              case Some(_) =>
+                DuplicateUser.raiseError
+              case None =>
+                users.update(_.updated(user.id, user)) *>
+                  idx.update(_.updated(user.name, user.id))
+            }
+            .attemptNarrow
     }

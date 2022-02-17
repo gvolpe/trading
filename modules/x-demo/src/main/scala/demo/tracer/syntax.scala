@@ -1,5 +1,6 @@
 package demo.tracer
 
+import cats.~>
 import cats.data.{ Kleisli, OptionT }
 import cats.effect.{ IO, Resource }
 import cats.syntax.all.*
@@ -9,7 +10,7 @@ import org.http4s.{ HttpRoutes, Request, Response }
 import org.typelevel.ci.CIString
 
 extension (ep: EntryPoint[IO])
-  private def ioTrace: Kleisli[OptionT[IO, *], Request[IO], Trace[IO]] =
+  def liftRoutes(f: Trace[IO] ?=> HttpRoutes[IO]): HttpRoutes[IO] =
     Kleisli { req =>
       val isKernelHeader: CIString => Boolean = name => !ExcludedHeaders.contains(name)
 
@@ -20,8 +21,11 @@ extension (ep: EntryPoint[IO])
       val kernel = Kernel(kernelHeaders)
       val spanR  = ep.continueOrElseRoot(req.uri.path.toString, kernel)
 
-      OptionT.liftF(spanR.use(Trace.ioTrace))
+      OptionT {
+        spanR.use { span =>
+          Trace.ioTrace(span).flatMap { implicit trace =>
+            f.run(req).value
+          }
+        }
+      }
     }
-
-  def liftRoutes(f: Trace[IO] => HttpRoutes[IO]): HttpRoutes[IO] =
-    ioTrace.flatMap(f)
