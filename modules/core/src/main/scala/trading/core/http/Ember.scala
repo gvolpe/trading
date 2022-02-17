@@ -42,6 +42,17 @@ object Ember:
         .evalTap(showBanner[F])
     }
 
+  def routes[F[_]: Async: Console](
+      port: Port,
+      routes: HttpRoutes[F]
+  ): Resource[F, Server] =
+    metrics[F].flatMap { mid =>
+      make[F](port)
+        .withHttpApp(mid(HealthRoutes[F].routes <+> routes).orNotFound)
+        .build
+        .evalTap(showBanner[F])
+    }
+
   def default[F[_]: Async: Console](port: Port): Resource[F, Server] =
     metrics[F].flatMap { mid =>
       make[F](port)
