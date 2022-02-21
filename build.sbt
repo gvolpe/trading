@@ -146,6 +146,18 @@ lazy val ws = (project in file("modules/ws-server"))
   )
   .dependsOn(core)
 
+lazy val webapp = (project in file("modules/ws-client"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    scalafmtOnCompile := false,
+    libraryDependencies ++= Seq(
+      //Libraries.tyrian
+      "io.indigoengine" %%% "tyrian" % V.tyrian
+    )
+  )
+  .dependsOn(domain)
+
 // integration tests
 lazy val it = (project in file("modules/it"))
   .settings(commonSettings: _*)

@@ -31,3 +31,6 @@ project/.bloop/
 elm-stuff/
 *elm.js
 *Main.js
+.parcel-cache/
+dist/
+node_modules/
