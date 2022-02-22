@@ -24,6 +24,7 @@
             ];
             shellHook = ''
               yarn install
+              yarn build
             '';
           };
         };

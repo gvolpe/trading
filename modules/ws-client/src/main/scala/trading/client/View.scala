@@ -8,8 +8,6 @@ import trading.client.ui.*
 import tyrian.*
 import tyrian.Html.*
 
-private val assets = "/home/gvolpe/workspace/trading/web-app/assets/"
-
 def render(model: Model): Html[Msg] =
   val tableHidden: Attr[Nothing] =
     if model.alerts.isEmpty then hidden else attribute("foo", "")
@@ -18,16 +16,16 @@ def render(model: Model): Html[Msg] =
     genericErrorAlert(model),
     subscriptionSuccess(model),
     unsubscriptionSuccess(model),
-    h2(attribute("align", "center"))(text("Trading WS")), // h2(align := "center") DOES NOT WORK
+    h2(attribute("align", "center"))(text("Trading WS")),
     div(`class` := "input-group mb-3")(
       input(
         `type` := "text",
         id     := "symbol-input",
         autoFocus,
         placeholder := "Symbol (e.g. EURUSD)",
-        onInput(s => Symbol.from(s).fold(Msg.InvalidSymbol(_), Msg.SymbolChanged(_))),
-        onKeyDown(onEnter(Msg.Subscribe))
-        //value := model.symbol.show
+        onInput(s => Msg.SymbolChanged(s)),
+        onKeyDown(subscribeOnEnter),
+        attribute("value", if model.symbol.show == "XXXXXX" then "" else model.symbol.show)
       ),
       div(`class` := "input-group-append")(
         button(
@@ -82,13 +80,12 @@ def renderTradeStatus: TradingStatus => Html[Msg] =
   case TradingStatus.Off =>
     span(id := "trade-status", `class` := "badge badge-pill badge-danger")(text("Trading Off"))
 
-// FIXME: size and hard-coded assets directory
 def alertTypeColumn(imgName: String, value: String): Html[Msg] =
   th(
     img(
-      src := s"$assets/icons/$imgName.png"
-      //width  := 28,
-      //height := 28
+      src := s"assets/icons/$imgName.png",
+      attribute("width", "28"),
+      attribute("height", "28")
     ),
     text(value)
   )
@@ -126,9 +123,9 @@ def renderAlertRow(symbol: Symbol): Alert => List[Html[Msg]] =
             title := "Unsubscribe"
           )(
             img(
-              src := s"$assets/icons/delete.png"
-              //width := 16,
-              //height := 16
+              src := "assets/icons/delete.png",
+              attribute("width", "16"),
+              attribute("height", "16")
             )
           )
         )
@@ -138,5 +135,6 @@ def renderAlertRow(symbol: Symbol): Alert => List[Html[Msg]] =
   case _: Alert.TradeUpdate =>
     List.empty
 
-def onEnter(msg: Msg): PartialFunction[Tyrian.KeyboardEvent, Msg] =
-  case ev if ev.key == "Enter" => msg
+def subscribeOnEnter: Tyrian.KeyboardEvent => Msg =
+  case ev if ev.key == "Enter" => Msg.Subscribe
+  case _                       => Msg.NoOp

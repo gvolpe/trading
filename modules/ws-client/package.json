@@ -1,7 +1,8 @@
 {
   "scripts": {
     "start": "parcel index.html --no-cache --dist-dir dist --log-level info",
-    "build": "parcel build index.html --dist-dir dist --log-level info"
+    "build": "parcel build index.html --dist-dir dist --log-level info",
+    "postbuild": "cp -r static/* dist/"
   },
   "devDependencies": {
     "parcel": "^2.3.2"

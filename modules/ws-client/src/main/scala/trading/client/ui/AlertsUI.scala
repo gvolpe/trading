@@ -11,15 +11,19 @@ private def mkAlert(property: Option[String], divId: String, status: String, mes
   val alertHidden: Attr[Nothing] =
     if property.isEmpty then hidden else attribute("foo", "")
 
-  div(id := divId, `class` := s"alert alert-$status fade show", alertHidden)(
+  div(
+    id      := divId,
+    `class` := s"alert alert-$status fade show",
+    alertHidden
+  )(
     button(
       `class` := "close",
       attribute("aria-label", "Close"),
       onClick(Msg.CloseAlerts)
     )(
-      text("x"),
-      text(message ++ property.getOrElse("X"))
-    )
+      text("x")
+    ),
+    text(message ++ property.getOrElse("X"))
   )
 
 def genericErrorAlert(model: Model): Html[Msg] =
