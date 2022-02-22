@@ -8,8 +8,10 @@ import tyrian.Html.*
 
 private def mkAlert(property: Option[String], divId: String, status: String, message: String): Html[Msg] =
   //FIXME: div [ hidden property.isEmpty ]
-  val h: Attr[Nothing] = if property.isEmpty then hidden else attribute("foo", "")
-  div(id := divId, `class` := s"alert alert-$status fade show", h)(
+  val alertHidden: Attr[Nothing] =
+    if property.isEmpty then hidden else attribute("foo", "")
+
+  div(id := divId, `class` := s"alert alert-$status fade show", alertHidden)(
     button(
       `class` := "close",
       attribute("aria-label", "Close"),

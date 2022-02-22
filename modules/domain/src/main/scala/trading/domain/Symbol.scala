@@ -2,7 +2,6 @@ package trading.domain
 
 import trading.RefNewtype
 
-import ciris.refined.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyFiniteString
 import io.circe.refined.*

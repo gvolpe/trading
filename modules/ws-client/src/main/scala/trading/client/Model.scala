@@ -13,6 +13,7 @@ sealed trait Msg
 object Msg:
   case object CloseAlerts                  extends Msg
   case object Connect                      extends Msg
+  case class InvalidSymbol(input: String)  extends Msg
   case class SymbolChanged(symbol: Symbol) extends Msg
   case object Subscribe                    extends Msg
   case class Unsubscribe(symbol: Symbol)   extends Msg
@@ -20,7 +21,7 @@ object Msg:
   case object NoOp                         extends Msg
 
 case class Model(
-    symbol: Option[Symbol],
+    symbol: Symbol,
     ws: WebSocket,
     socketId: Option[SocketId],
     onlineUsers: Int,
@@ -33,7 +34,7 @@ case class Model(
 
 object Model:
   def init = Model(
-    symbol = None,
+    symbol = Symbol.XXXXXX,
     ws = WebSocket("ws://localhost:9000/v1/ws"),
     socketId = None,
     onlineUsers = 0,

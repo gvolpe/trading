@@ -153,7 +153,14 @@ lazy val webapp = (project in file("modules/ws-client"))
     scalafmtOnCompile := false,
     libraryDependencies ++= Seq(
       //Libraries.tyrian
-      "io.indigoengine" %%% "tyrian" % V.tyrian
+      "io.indigoengine"   %%% "tyrian"          % V.tyrian,
+      "io.circe"          %%% "circe-core"      % V.circe,
+      "io.circe"          %%% "circe-parser"    % V.circe,
+      "io.circe"          %%% "circe-refined"   % V.circe,
+      "dev.optics"        %%% "monocle-core"    % V.monocle,
+      "eu.timepit"        %%% "refined"         % V.refined,
+      "eu.timepit"        %%% "refined-cats"    % V.refined,
+      "io.github.cquiroz" %%% "scala-java-time" % V.scalajsTime
     )
   )
   .dependsOn(domain)

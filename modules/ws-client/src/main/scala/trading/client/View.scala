@@ -11,6 +11,9 @@ import tyrian.Html.*
 private val assets = "/home/gvolpe/workspace/trading/web-app/assets/"
 
 def render(model: Model): Html[Msg] =
+  val tableHidden: Attr[Nothing] =
+    if model.alerts.isEmpty then hidden else attribute("foo", "")
+
   div(`class` := "container")(
     genericErrorAlert(model),
     subscriptionSuccess(model),
@@ -22,8 +25,8 @@ def render(model: Model): Html[Msg] =
         id     := "symbol-input",
         autoFocus,
         placeholder := "Symbol (e.g. EURUSD)",
-        onInput(Msg.SymbolChanged(model.symbol.get)),
-        onKeyDown(onEnter(Msg.Subscribe)),
+        onInput(s => Symbol.from(s).fold(Msg.InvalidSymbol(_), Msg.SymbolChanged(_))),
+        onKeyDown(onEnter(Msg.Subscribe))
         //value := model.symbol.show
       ),
       div(`class` := "input-group-append")(
@@ -43,10 +46,7 @@ def render(model: Model): Html[Msg] =
       )
     ),
     p(),
-    table(
-      `class` := "table table-inverse",
-      hidden // FIXME: hidden (Dict.isEmpty model.alerts)
-    )(
+    table(`class` := "table table-inverse", tableHidden)(
       thead(
         tr(
           th(text("Symbol")),
@@ -58,7 +58,9 @@ def render(model: Model): Html[Msg] =
           th()
         )
       ),
-      tbody(model.alerts.toList.flatMap((sl, alt) => renderAlertRow(sl)(alt)))
+      tbody(
+        model.alerts.toList.flatMap((sl, alt) => renderAlertRow(sl)(alt))
+      )
     )
   )
 

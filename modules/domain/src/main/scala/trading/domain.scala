@@ -8,14 +8,9 @@ import scala.concurrent.duration.FiniteDuration
 import trading.*
 
 import cats.{ Eq, Order, Show }
-import ciris.ConfigValue
 import io.circe.*
 
 export OrphanInstances.given
-
-extension [F[_], A](cv: ConfigValue[F, A])
-  def fallback[Raw](value: Raw)(using ev: Wrapper[Raw, A]): ConfigValue[F, A] =
-    cv.default(ev.iso.get(value))
 
 type PulsarURI = PulsarURI.Type
 object PulsarURI extends Newtype[String]
