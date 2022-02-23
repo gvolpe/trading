@@ -3,21 +3,19 @@ package trading.client
 import trading.domain.*
 import trading.ws.WsOut
 
-sealed trait WsMsg
-object WsMsg:
-  case class Error(msg: String) extends WsMsg
-  case object Disconnected      extends WsMsg
+enum WsMsg:
+  case Error(msg: String)
+  case Disconnected
 
-sealed trait Msg
-object Msg:
-  case object CloseAlerts                 extends Msg
-  case object Connect                     extends Msg
-  case class SymbolChanged(input: String) extends Msg
-  case object Subscribe                   extends Msg
-  case class Unsubscribe(symbol: Symbol)  extends Msg
-  case class Recv(in: WsOut)              extends Msg
-  case class ConnStatus(msg: WsMsg)    extends Msg
-  case object NoOp                        extends Msg
+enum Msg:
+  case CloseAlerts
+  case Connect
+  case SymbolChanged(input: String)
+  case Subscribe
+  case Unsubscribe(symbol: Symbol)
+  case Recv(in: WsOut)
+  case ConnStatus(msg: WsMsg)
+  case NoOp
 
 case class Model(
     symbol: Symbol,

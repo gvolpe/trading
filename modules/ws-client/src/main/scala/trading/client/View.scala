@@ -47,12 +47,12 @@ def render(model: Model): Html[Msg] =
     table(`class` := "table table-inverse", tableHidden)(
       thead(
         tr(
-          th(text("Symbol")),
-          th(text("Bid")),
-          th(text("Ask")),
-          th(text("High")),
-          th(text("Low")),
-          th(text("Status")),
+          th("Symbol"),
+          th("Bid"),
+          th("Ask"),
+          th("High"),
+          th("Low"),
+          th("Status"),
           th()
         )
       ),
@@ -110,11 +110,11 @@ def renderAlertRow(symbol: Symbol): Alert => List[Html[Msg]] =
   case t: Alert.TradeAlert =>
     List(
       tr(
-        th(text(symbol.show)),
-        th(text(t.bidPrice.show)),
-        th(text(t.askPrice.show)),
-        th(text(t.high.show)),
-        th(text(t.low.show)),
+        th(symbol.show),
+        th(t.bidPrice.show),
+        th(t.askPrice.show),
+        th(t.high.show),
+        th(t.low.show),
         renderAlertType(t.alertType),
         th(
           button(

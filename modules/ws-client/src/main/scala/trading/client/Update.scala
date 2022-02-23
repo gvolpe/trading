@@ -6,14 +6,15 @@ import trading.ws.{ WsIn, WsOut }
 import cats.syntax.eq.*
 import io.circe.syntax.*
 
+import org.scalajs.dom
 import tyrian.*
 
 def disconnected(model: Model): (Model, Cmd[Msg]) =
   model.copy(error = Some("Disconnected from server, please click on Connect.")) -> Cmd.Empty
 
-//TODO:  is there a better way to do this?
+//TODO: find a better way to reset the value
 def refocusInput: Cmd[Msg] = Cmd.SideEffect { () =>
-  val elem = org.scalajs.dom.document.querySelector("#symbol-input").asInstanceOf[Tyrian.HTMLInputElement]
+  val elem = dom.document.querySelector("#symbol-input").asInstanceOf[dom.raw.HTMLInputElement]
   elem.value = ""
   elem.focus()
 }
