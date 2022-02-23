@@ -36,8 +36,6 @@ def runUpdates(msg: Msg, model: Model): (Model, Cmd[Msg]) =
 
     case Msg.SymbolChanged(input) if input.length == 6 =>
       model.copy(symbol = Symbol.unsafeFrom(input)) -> Cmd.Empty
-    // NOTE: Refined validation does not seem to work on ScalaJS... :(
-    //Symbol.from(input).fold(_ => model, sl => model.copy(symbol = sl)) -> Cmd.Empty
 
     case Msg.SymbolChanged(input) =>
       model -> Cmd.Empty
