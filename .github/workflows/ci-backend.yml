@@ -42,7 +42,7 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: "Run trading tests 🚀"
-        run: nix develop -c sbt 'test;it/test'
+        run: nix develop -c sbt 'test;it/test;webapp/fastOptJS'
 
       - name: "Shutting down Redis 🐳"
         run: docker-compose down
