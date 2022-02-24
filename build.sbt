@@ -63,6 +63,7 @@ lazy val root = (project in file("."))
   .aggregate(lib, domain, core, alerts, feed, forecasts, processor, snapshots, tracing, ws, demo)
 
 lazy val domain = (project in file("modules/domain"))
+  .enablePlugins(ScalaJSPlugin)
   .settings(commonSettings: _*)
 
 lazy val lib = (project in file("modules/lib"))
