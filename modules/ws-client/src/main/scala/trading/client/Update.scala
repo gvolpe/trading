@@ -12,10 +12,8 @@ import tyrian.*
 def disconnected(model: Model): (Model, Cmd[Msg]) =
   model.copy(error = Some("Disconnected from server, please click on Connect.")) -> Cmd.Empty
 
-//TODO: find a better way to reset the value
 def refocusInput: Cmd[Msg] = Cmd.SideEffect { () =>
   val elem = dom.document.querySelector("#symbol-input").asInstanceOf[dom.raw.HTMLInputElement]
-  elem.value = ""
   elem.focus()
 }
 
@@ -34,18 +32,18 @@ def runUpdates(msg: Msg, model: Model): (Model, Cmd[Msg]) =
     case Msg.CloseAlerts =>
       model.copy(error = None, sub = None, unsub = None) -> refocusInput
 
-    case Msg.SymbolChanged(input) if input.length == 6 =>
-      model.copy(symbol = Symbol.unsafeFrom(input)) -> Cmd.Empty
+    case Msg.SymbolChanged(in) if in.length == 6 =>
+      model.copy(symbol = Symbol.unsafeFrom(in), input = in) -> Cmd.Empty
 
-    case Msg.SymbolChanged(input) =>
-      model -> Cmd.Empty
+    case Msg.SymbolChanged(in) =>
+      model.copy(input = in) -> Cmd.Empty
 
     case Msg.Subscribe =>
       if model.symbol === Symbol.XXXXXX then model.copy(error = Some("Invalid symbol")) -> Cmd.Empty
       else
         model.socketId match
           case Some(_) =>
-            val nm       = model.copy(sub = Some(model.symbol), symbol = Symbol.XXXXXX)
+            val nm       = model.copy(sub = Some(model.symbol), symbol = Symbol.XXXXXX, input = "")
             val in: WsIn = WsIn.Subscribe(model.symbol)
             val cmd      = model.ws.map(ws => Cmd.Batch(ws.publish(in.asJson.noSpaces), refocusInput))
             nm -> cmd.getOrElse(Cmd.Empty)

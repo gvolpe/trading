@@ -19,6 +19,7 @@ enum Msg:
 
 case class Model(
     symbol: Symbol,
+    input: String,
     ws: Option[WS],
     wsUrl: String,
     socketId: Option[SocketId],
@@ -33,6 +34,7 @@ case class Model(
 object Model:
   def init = Model(
     symbol = Symbol.XXXXXX,
+    input = "",
     ws = None,
     wsUrl = "ws://localhost:9000/v1/ws",
     socketId = None,

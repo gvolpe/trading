@@ -25,7 +25,7 @@ def render(model: Model): Html[Msg] =
         placeholder := "Symbol (e.g. EURUSD)",
         onInput(s => Msg.SymbolChanged(s)),
         onKeyDown(subscribeOnEnter),
-        attribute("value", if model.symbol.show == "XXXXXX" then "" else model.symbol.show)
+        Property("value", model.input)
       ),
       div(`class` := "input-group-append")(
         button(
