@@ -1,4 +1,5 @@
 import sbt._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
 
@@ -21,6 +22,9 @@ object Dependencies {
     val redis4cats    = "1.1.1"
     val refined       = "0.9.28"
 
+    val scalajsTime = "2.4.0-M1"
+    val tyrian      = "0.3.2"
+
     val scalacheck = "1.15.4"
     val weaver     = "0.7.11"
 
@@ -28,7 +32,8 @@ object Dependencies {
   }
 
   object Libraries {
-    def circe(artifact: String): ModuleID  = "io.circe"   %% s"circe-$artifact"  % V.circe
+    def circe(artifact: String) = Def.setting("io.circe" %%% s"circe-$artifact" % V.circe)
+
     def http4s(artifact: String): ModuleID = "org.http4s" %% s"http4s-$artifact" % V.http4s
 
     val cats       = "org.typelevel" %% "cats-core"   % V.cats
@@ -60,12 +65,16 @@ object Dependencies {
     val neutronCore       = "dev.profunktor" %% "neutron-core"       % V.neutron
     val redis4catsEffects = "dev.profunktor" %% "redis4cats-effects" % V.redis4cats
 
-    val monocleCore = "dev.optics" %% "monocle-core" % V.monocle
+    val monocleCore = Def.setting("dev.optics" %%% "monocle-core" % V.monocle)
 
     val odin = "com.github.valskalla" %% "odin-core" % V.odin
 
-    val refinedCore = "eu.timepit" %% "refined"      % V.refined
-    val refinedCats = "eu.timepit" %% "refined-cats" % V.refined
+    val refinedCore = Def.setting("eu.timepit" %%% "refined"      % V.refined)
+    val refinedCats = Def.setting("eu.timepit" %%% "refined-cats" % V.refined)
+
+    // webapp
+    val scalajsTime = Def.setting("io.github.cquiroz" %%% "scala-java-time" % V.scalajsTime)
+    val tyrian      = Def.setting("io.indigoengine" %%% "tyrian" % V.tyrian)
 
     // test
     val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle

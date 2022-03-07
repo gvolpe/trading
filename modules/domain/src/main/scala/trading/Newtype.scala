@@ -7,7 +7,6 @@ import scala.language.adhocExtensions // for RefinedTypeOps
 import trading.domain.OrphanInstances.given
 
 import cats.{ Eq, Order, Show }
-import ciris.{ ConfigDecoder, ConfigValue }
 import eu.timepit.refined.api.{ Refined, RefinedType, RefinedTypeOps }
 import io.circe.{ Decoder, Encoder }
 import monocle.Iso
@@ -17,8 +16,7 @@ abstract class Newtype[A](using
     ord: Order[A],
     shw: Show[A],
     enc: Encoder[A],
-    dec: Decoder[A],
-    cfg: ConfigDecoder[String, A]
+    dec: Decoder[A]
 ):
   opaque type Type = A
 
@@ -32,13 +30,12 @@ abstract class Newtype[A](using
     def iso: Iso[A, Type] =
       Iso[A, Type](apply(_))(_.value)
 
-  given Eq[Type]                    = eqv
-  given Order[Type]                 = ord
-  given Show[Type]                  = shw
-  given Encoder[Type]               = enc
-  given Decoder[Type]               = dec
-  given ConfigDecoder[String, Type] = cfg
-  given Ordering[Type]              = ord.toOrdering
+  given Eq[Type]       = eqv
+  given Order[Type]    = ord
+  given Show[Type]     = shw
+  given Encoder[Type]  = enc
+  given Decoder[Type]  = dec
+  given Ordering[Type] = ord.toOrdering
 
 abstract class IdNewtype extends Newtype[UUID]:
   given IsUUID[Type]                = derive[IsUUID]
@@ -50,7 +47,6 @@ abstract class RefNewtype[T, RT](using
     shw: Show[RT],
     enc: Encoder[RT],
     dec: Decoder[RT],
-    cfg: ConfigDecoder[String, RT],
     rt: RefinedType.AuxT[RT, T]
 ) extends Newtype[RT]:
   object Ops extends RefinedTypeOps[RT, T]
@@ -63,7 +59,6 @@ abstract class NumNewtype[A](using
     shw: Show[A],
     enc: Encoder[A],
     dec: Decoder[A],
-    cfg: ConfigDecoder[String, A],
     num: Numeric[A]
 ) extends Newtype[A]:
 

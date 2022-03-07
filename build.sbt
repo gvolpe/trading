@@ -22,10 +22,10 @@ val commonSettings = List(
   libraryDependencies ++= Seq(
     Libraries.cats,
     Libraries.catsEffect,
-    Libraries.circeCore,
-    Libraries.circeParser,
-    Libraries.circeExtras,
-    Libraries.circeRefined,
+    Libraries.circeCore.value,
+    Libraries.circeParser.value,
+    Libraries.circeExtras.value,
+    Libraries.circeRefined.value,
     Libraries.cirisCore,
     Libraries.cirisRefined,
     Libraries.fs2Core,
@@ -34,12 +34,12 @@ val commonSettings = List(
     Libraries.http4sMetrics,
     Libraries.http4sServer,
     Libraries.kittens,
-    Libraries.monocleCore,
+    Libraries.monocleCore.value,
     Libraries.neutronCore,
     Libraries.odin,
     Libraries.redis4catsEffects,
-    Libraries.refinedCore,
-    Libraries.refinedCats,
+    Libraries.refinedCore.value,
+    Libraries.refinedCats.value,
     Libraries.monocleLaw       % Test,
     Libraries.scalacheck       % Test,
     Libraries.weaverCats       % Test,
@@ -63,6 +63,7 @@ lazy val root = (project in file("."))
   .aggregate(lib, domain, core, alerts, feed, forecasts, processor, snapshots, tracing, ws, demo)
 
 lazy val domain = (project in file("modules/domain"))
+  .enablePlugins(ScalaJSPlugin)
   .settings(commonSettings: _*)
 
 lazy val lib = (project in file("modules/lib"))
@@ -145,6 +146,24 @@ lazy val ws = (project in file("modules/ws-server"))
     )
   )
   .dependsOn(core)
+
+lazy val webapp = (project in file("modules/ws-client"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    scalafmtOnCompile := false,
+    libraryDependencies ++= Seq(
+      Libraries.circeCore.value,
+      Libraries.circeParser.value,
+      Libraries.circeRefined.value,
+      Libraries.monocleCore.value,
+      Libraries.refinedCore.value,
+      Libraries.refinedCats.value,
+      Libraries.scalajsTime.value,
+      Libraries.tyrian.value
+    )
+  )
+  .dependsOn(domain)
 
 // integration tests
 lazy val it = (project in file("modules/it"))

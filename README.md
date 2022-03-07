@@ -10,6 +10,7 @@ Reference application developed in the [Functional event-driven architecture: Po
 ## Table of contents
 
 * [Web App](#web-app)
+   * [ScalaJS](#scalajs)
 * [Overview](#overview)
 * [Requirements](#requirements)
 * [Services](#services)
@@ -55,6 +56,22 @@ $ cd web-app
 $ elm make src/Main.elm --output=Main.js
 $ xdg-open index.html # or specify browser
 ```
+
+### ScalaJS
+
+There is also a replica of the ELM application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. You can run it via Nix (requires flakes).
+
+```console
+$ cd modules/ws-client && nix develop
+$ yarn start
+yarn run v1.22.17
+warning package.json: No license field
+parcel index.html --no-cache --dist-dir dist --log-level info
+Server running at http://localhost:1234
+✨ Built in 1.82s
+```
+
+Or without Nix, you need both `yarn` and `parcel` installed.
 
 ## Overview
 
