@@ -5,9 +5,10 @@ import trading.ws.WsOut
 import io.circe.parser.decode as jsonDecode
 
 import tyrian.*
+import tyrian.websocket.WebSocket
 import tyrian.websocket.WebSocketEvent as WSEvent
 
-def wsSub(ws: Option[WS]): Sub[Msg] =
+def wsSub(ws: Option[WebSocket]): Sub[Msg] =
   ws.fold(Sub.emit(Msg.NoOp)) {
     _.subscribe {
       case WSEvent.Receive(str) =>
@@ -18,12 +19,14 @@ def wsSub(ws: Option[WS]): Sub[Msg] =
             Msg.NoOp
       case WSEvent.Error(err) =>
         println(s"WS error: $err")
-        Msg.ConnStatus(WsMsg.Error(err))
+        WsMsg.Error(err).asMsg
       case WSEvent.Open =>
         println("WS socket opened")
         Msg.NoOp
-      case WSEvent.Close =>
-        println("WS socket closed")
-        Msg.ConnStatus(WsMsg.Disconnected)
+      case WSEvent.Close(code, reason) =>
+        println(s"WS socket closed. Code: $code, reason: $reason")
+        WsMsg.Disconnected.asMsg
+      case WSEvent.Heartbeat =>
+        WsMsg.Heartbeat.asMsg
     }
   }

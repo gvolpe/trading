@@ -8,26 +8,39 @@ import io.circe.syntax.*
 
 import org.scalajs.dom
 import tyrian.*
+import tyrian.cmds.Dom
+import tyrian.websocket.{ KeepAliveSettings, WebSocket }
 
 def disconnected(model: Model): (Model, Cmd[Msg]) =
   model.copy(error = Some("Disconnected from server, please click on Connect.")) -> Cmd.Empty
 
-def refocusInput: Cmd[Msg] = Cmd.SideEffect { () =>
-  val elem = dom.document.querySelector("#symbol-input").asInstanceOf[dom.raw.HTMLInputElement]
-  elem.focus()
-}
+def refocusInput: Cmd[Msg] =
+  Dom.focus("symbol-input")(_.fold(e => Msg.FocusError(e.elementId), _ => Msg.NoOp))
 
 def runUpdates(msg: Msg, model: Model): (Model, Cmd[Msg]) =
   msg match
     case Msg.NoOp =>
       model -> Cmd.Empty
 
-    case Msg.Connect =>
-      WS.connect(model.wsUrl) match
-        case Left(cause) =>
-          model -> Cmd.Emit(Msg.ConnStatus(WsMsg.Error(cause)))
-        case Right(ws) =>
-          model.copy(error = None, ws = Some(ws)) -> refocusInput
+    case Msg.FocusError(id) =>
+      model.copy(error = Some(s"Fail to focus on ID: $id")) -> Cmd.Empty
+
+    case Msg.ConnStatus(WsMsg.Connecting) =>
+      model -> WebSocket.connect(model.wsUrl, KeepAliveSettings.default)(
+        _.fold(WsMsg.Error(_), WsMsg.Connected(_)).asMsg
+      )
+
+    case Msg.ConnStatus(WsMsg.Connected(ws)) =>
+      model.copy(error = None, ws = Some(ws)) -> refocusInput
+
+    case Msg.ConnStatus(WsMsg.Disconnected) =>
+      model.copy(socketId = None) -> Cmd.Empty
+
+    case Msg.ConnStatus(WsMsg.Error(cause)) =>
+      model.copy(error = Some(s"Connection error: $cause")) -> Cmd.Empty
+
+    case Msg.ConnStatus(WsMsg.Heartbeat) =>
+      model -> model.ws.map(_.publish("{ \"Heartbeat\": {} }")).getOrElse(Cmd.Empty)
 
     case Msg.CloseAlerts =>
       model.copy(error = None, sub = None, unsub = None) -> refocusInput
@@ -68,9 +81,3 @@ def runUpdates(msg: Msg, model: Model): (Model, Cmd[Msg]) =
 
     case Msg.Recv(WsOut.Notification(t: Alert.TradeUpdate)) =>
       model.copy(tradingStatus = t.status) -> Cmd.Empty
-
-    case Msg.ConnStatus(WsMsg.Disconnected) =>
-      model.copy(socketId = None) -> Cmd.Empty
-
-    case Msg.ConnStatus(WsMsg.Error(cause)) =>
-      model.copy(error = Some(s"Connection error: $cause")) -> Cmd.Empty

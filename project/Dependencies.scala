@@ -23,7 +23,7 @@ object Dependencies {
     val refined       = "0.9.28"
 
     val scalajsTime = "2.4.0-M1"
-    val tyrian      = "0.3.1"
+    val tyrian      = "0.3.2"
 
     val scalacheck = "1.15.4"
     val weaver     = "0.7.10"

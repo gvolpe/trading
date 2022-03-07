@@ -9,9 +9,6 @@ import tyrian.*
 import tyrian.Html.*
 
 def render(model: Model): Html[Msg] =
-  val tableHidden: Attr[Nothing] =
-    if model.alerts.isEmpty then hidden else attribute("foo", "")
-
   div(`class` := "container")(
     genericErrorAlert(model),
     subscriptionSuccess(model),
@@ -25,7 +22,7 @@ def render(model: Model): Html[Msg] =
         placeholder := "Symbol (e.g. EURUSD)",
         onInput(s => Msg.SymbolChanged(s)),
         onKeyDown(subscribeOnEnter),
-        Property("value", model.input)
+        value := model.input
       ),
       div(`class` := "input-group-append")(
         button(
@@ -39,12 +36,12 @@ def render(model: Model): Html[Msg] =
     div(id := "sid-card", `class` := "card")(
       div(`class` := "sid-body")(
         renderTradeStatus(model.tradingStatus),
-        span(text(" ")),
+        span(" "),
         renderSocketId(model.socketId)
       )
     ),
     p(),
-    table(`class` := "table table-inverse", tableHidden)(
+    table(`class` := "table table-inverse", hidden(model.alerts.isEmpty))(
       thead(
         tr(
           th("Symbol"),
@@ -70,7 +67,7 @@ def renderSocketId: Option[SocketId] => Html[Msg] =
     span(
       span(id := "socket-id", `class` := "badge badge-pill badge-secondary")(text("<Disconnected>")),
       span(text(" ")),
-      button(`class` := "badge badge-pill badge-primary", onClick(Msg.Connect))(text("Connect"))
+      button(`class` := "badge badge-pill badge-primary", onClick(WsMsg.Connecting.asMsg))(text("Connect"))
     )
 
 def renderTradeStatus: TradingStatus => Html[Msg] =

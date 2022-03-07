@@ -3,24 +3,31 @@ package trading.client
 import trading.domain.*
 import trading.ws.WsOut
 
+import tyrian.websocket.WebSocket
+
 enum WsMsg:
   case Error(msg: String)
+  case Connecting
+  case Connected(ws: WebSocket)
+  case Heartbeat
   case Disconnected
+
+  def asMsg: Msg = Msg.ConnStatus(this)
 
 enum Msg:
   case CloseAlerts
-  case Connect
   case SymbolChanged(input: String)
   case Subscribe
   case Unsubscribe(symbol: Symbol)
   case Recv(in: WsOut)
   case ConnStatus(msg: WsMsg)
+  case FocusError(id: String)
   case NoOp
 
 case class Model(
     symbol: Symbol,
     input: String,
-    ws: Option[WS],
+    ws: Option[WebSocket],
     wsUrl: String,
     socketId: Option[SocketId],
     onlineUsers: Int,
