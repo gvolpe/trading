@@ -59,7 +59,7 @@ $ xdg-open index.html # or specify browser
 
 ### ScalaJS
 
-There is also a replica of the ELM application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. You can run it via Nix (requires flakes).
+There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. You can run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
 
 ```console
 $ cd modules/ws-client && nix develop
@@ -71,7 +71,12 @@ Server running at http://localhost:1234
 ✨ Built in 1.82s
 ```
 
-Or without Nix, you need both `yarn` and `parcel` installed.
+Or without Nix, you need to run these commands before (requires `yarn` and `parcel`).
+
+```console
+$ yarn install
+$ yarn build
+```
 
 ## Overview
 
