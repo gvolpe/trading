@@ -5,7 +5,7 @@ object Dependencies {
 
   object V {
     val cats          = "2.7.0"
-    val catsEffect    = "3.3.6"
+    val catsEffect    = "3.3.7"
     val circe         = "0.14.1"
     val ciris         = "2.3.2"
     val doobie        = "1.0.0-RC2"
@@ -69,7 +69,7 @@ object Dependencies {
 
     val odin = "com.github.valskalla" %% "odin-core" % V.odin
 
-    val refinedCore = Def.setting("eu.timepit" %%% "refined"      % V.refined)
+    val refinedCore = Def.setting("eu.timepit" %%% "refined" % V.refined)
     val refinedCats = Def.setting("eu.timepit" %%% "refined-cats" % V.refined)
 
     // webapp
