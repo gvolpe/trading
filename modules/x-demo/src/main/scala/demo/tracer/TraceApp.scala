@@ -41,7 +41,7 @@ object TraceApp extends IOApp.Simple:
             .evalMap { name =>
               ep.root("random-root").use { sp =>
                 sp.put("random-name" -> name) *> sp.kernel.flatMap { k =>
-                  p.sendAs(name, k.toHeaders)
+                  p.send(name, k.toHeaders)
                 }
               }
             }

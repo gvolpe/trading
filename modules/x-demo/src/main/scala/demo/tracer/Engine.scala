@@ -25,7 +25,7 @@ object Engine:
               Trace[F].put("duplicate" -> name)
             case Right(_) =>
               Trace[F].put("ok" -> name) *> Trace[F].kernel.flatMap { kernel =>
-                producer.sendAs(User(id, name), kernel.toHeaders)
+                producer.send(User(id, name), kernel.toHeaders)
               }
           } *> ack(msgId)
         }
@@ -46,7 +46,7 @@ object Engine:
               Trace[G].put("duplicate" -> name)
             case Right(_) =>
               Trace[G].put("ok" -> name) *> Trace[G].kernel.flatMap { kernel =>
-                producer.sendAs(User(id, name), kernel.toHeaders).liftK
+                producer.send(User(id, name), kernel.toHeaders).liftK
               }
           } *> ack(msgId).liftK
         }

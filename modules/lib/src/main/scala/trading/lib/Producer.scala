@@ -13,7 +13,7 @@ import io.circe.syntax.*
 
 trait Producer[F[_], A]:
   def send(a: A): F[Unit]
-  def sendAs(a: A, properties: Map[String, String]): F[Unit]
+  def send(a: A, properties: Map[String, String]): F[Unit]
 
 object Producer:
   def local[F[_]: Applicative, A](queue: Queue[F, Option[A]]): Resource[F, Producer[F, A]] =
@@ -21,17 +21,17 @@ object Producer:
       Applicative[F].pure(
         new:
           def send(a: A): F[Unit]                                    = queue.offer(Some(a))
-          def sendAs(a: A, properties: Map[String, String]): F[Unit] = send(a)
+          def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
       )
     )(_ => queue.offer(None))
 
   def dummy[F[_]: Applicative, A]: Producer[F, A] = new:
     def send(a: A): F[Unit]                                    = Applicative[F].unit
-    def sendAs(a: A, properties: Map[String, String]): F[Unit] = send(a)
+    def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
 
   def test[F[_], A](ref: Ref[F, Option[A]]): Producer[F, A] = new:
     def send(a: A): F[Unit]                                    = ref.set(Some(a))
-    def sendAs(a: A, properties: Map[String, String]): F[Unit] = send(a)
+    def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
 
   def sharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
       client: Pulsar.T,
@@ -48,7 +48,7 @@ object Producer:
     PulsarProducer.make[F, A](client, topic, encoder, settings).map { p =>
       new:
         def send(a: A): F[Unit]                                    = p.send_(a)
-        def sendAs(a: A, properties: Map[String, String]): F[Unit] = p.send_(a, properties)
+        def send(a: A, properties: Map[String, String]): F[Unit] = p.send_(a, properties)
     }
 
   def pulsar[F[_]: Async: Logger: Parallel, A: Encoder](
@@ -66,5 +66,5 @@ object Producer:
       new:
         def send(a: A): F[Unit] =
           p.produceOne_(topic, "key", a).flatten.void
-        def sendAs(a: A, properties: Map[String, String]): F[Unit] = send(a)
+        def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
     }
