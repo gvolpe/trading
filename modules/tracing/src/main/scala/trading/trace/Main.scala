@@ -58,7 +58,7 @@ object Main extends IOApp.Simple:
   val sub =
     Subscription.Builder
       .withName("tracing")
-      .withType(Subscription.Type.Shared)
+      .withType(Subscription.Type.Exclusive)
       .build
 
   def resources =

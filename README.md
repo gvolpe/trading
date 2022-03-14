@@ -143,6 +143,7 @@ modules
 ├── processor
 ├── snapshots
 ├── tracing
+├── ws-client
 ├── ws-server
 └── x-demo
 ```

@@ -39,6 +39,7 @@ object ForecastingTracer:
         }
       }
 
+    /* the following two methods are not used but this is how it could look if it followed the trading design */
     def command(cmd: ForecastCommand): F[Kernel] =
       ep.root("forecasting-root").use { root =>
         root.span(s"forecasting-command-${cmd.cid.show}").use { sp =>
