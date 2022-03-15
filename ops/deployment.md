@@ -2,19 +2,9 @@
 
 These are the quick instructions to deploy the system locally in a k8s cluster via `minikube`.
 
-## Publish docker images to local registry
-
-First, create the docker images from the root folder of this project.
-
-```console
-$ eval $(minikube docker-env)
-$ docker build -t jdk17-curl modules/
-$ sbt docker:publishLocal
-```
-
 ## Start local cluster
 
-Next, start the local cluster using `minikube`.
+First of all, start the local cluster using `minikube`.
 
 ```console
 $ minikube start
@@ -39,9 +29,19 @@ $ minikube stop
 🛑  1 node stopped.
 ```
 
+## Publish docker images to local registry
+
+Next, create the docker images from the root folder of this project.
+
+```console
+$ eval $(minikube docker-env)
+$ docker build -t jdk17-curl modules/
+$ sbt docker:publishLocal
+```
+
 ## Deploy pods
 
-First we deploy Pulsar and Redis.
+First we deploy Pulsar and Redis and wait until they are running.
 
 ```console
 $ kubectl apply -f ops/infra
@@ -50,7 +50,7 @@ deployment.apps/redis created
 service/redis configured
 ```
 
-After a minute or so we can deploy the application services.
+Next, we can deploy the application services.
 
 ```console
 $ kubectl apply -f ops/apps
@@ -95,6 +95,48 @@ deployment.apps "ws-server" deleted
 
 $ kubectl get pods
 No resources found in default namespace.
+```
+
+You can tail the logs of every pod via `kubectl logs`. E.g.
+
+```console
+$ kubectl logs -f ws-server-668c9dccb8-kvtvv
+```
+
+Scaling (up or down) pods.
+
+```console
+$ kubectl logs -f ws-server-668c9dccb8-kvtvv
+```
+
+To delete a specific pod.
+
+```console
+$ kubectl delete pod ws-server-668c9dccb8-kvtvv
+pod "ws-server-668c9dccb8-kvtvv" deleted
+```
+
+### Expose minikube Pulsar to localhost
+
+This is useful to run the `feed` service from localhost pointing at the Pulsar instance running on minikube.
+
+```console
+```
+
+### Expose minikube Pulsar to localhost
+
+This is useful to run the `feed` service from localhost pointing at the Pulsar instance running on minikube.
+
+```console
+$ kubectl expose deployment pulsar --type=NodePort --port=6650 --name=pulsar-svc
+$ minikube service --url pulsar-svc
+http://192.168.49.2:32356
+```
+
+Then we can run the `feed` service as follows.
+
+```console
+$ PULSAR_URI=pulsar://192.168.49.2:32356 sbt feed/run
 ```
 
 See the [kubectl cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) to learn more.

@@ -6,13 +6,13 @@ metadata:
     kompose.version: 1.26.1 (HEAD)
   creationTimestamp: null
   labels:
-    io.kompose.service: forecasts
-  name: forecasts
+    io.kompose.service: tracing
+  name: tracing
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: forecasts
+      io.kompose.service: tracing
   strategy: {}
   template:
     metadata:
@@ -22,29 +22,31 @@ spec:
       creationTimestamp: null
       labels:
         io.kompose.network/app: "true"
-        io.kompose.service: forecasts
+        io.kompose.service: tracing
     spec:
       containers:
         - env:
             - name: HTTP_PORT
-              value: "9006"
+              value: "9005"
             - name: PULSAR_URI
               value: pulsar://pulsar:6650
-          image: trading-forecasts:latest
+            - name: HONEYCOMB_API_KEY
+              value: $HONEYCOMB_API_KEY
+          image: trading-tracing:latest
           imagePullPolicy: Never
           livenessProbe:
             exec:
               command:
                 - curl
                 - -f
-                - http://localhost:9006/health
+                - http://localhost:9005/health
             failureThreshold: 15
             initialDelaySeconds: 120
             periodSeconds: 2
             timeoutSeconds: 5
-          name: forecasts
+          name: tracing
           ports:
-            - containerPort: 9006
+            - containerPort: 9005
           resources: {}
       restartPolicy: Always
 status: {}

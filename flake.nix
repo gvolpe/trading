@@ -23,6 +23,7 @@
             buildInputs = [
               jdk
               pkgs.coursier
+              pkgs.envsubst
               pkgs.kubectl
               pkgs.minikube
               pkgs.sbt
