@@ -23,42 +23,41 @@ import weaver.scalacheck.Checkers
 
 object EngineSuite extends SimpleIOSuite with Checkers:
   def succesfulWriter(ref: Ref[IO, Option[TradeState]]): SnapshotWriter[IO] = new:
-    def save(state: TradeState): IO[Unit] = ref.set(state.some)
+    def save(state: TradeState, id: Consumer.MsgId): IO[Unit] = ref.set(state.some)
 
   val failingWriter: SnapshotWriter[IO] = new:
-    def save(state: TradeState): IO[Unit] = IO.raiseError(new Exception("boom"))
+    def save(state: TradeState, id: Consumer.MsgId): IO[Unit] = IO.raiseError(new Exception("boom"))
 
-  def mkAcker(
-      acks: Ref[IO, Option[MsgId]],
-      nacks: Ref[IO, Option[MsgId]]
-  ): Acker[IO, TradeEvent] = new:
-    def ack(id: MsgId): IO[Unit]  = acks.set(id.some)
-    def nack(id: MsgId): IO[Unit] = nacks.set(id.some)
+  def mkAcker(acks: Ref[IO, List[MsgId]]): Acker[IO, TradeEvent] = new:
+    def ack(id: MsgId): IO[Unit]       = acks.update(_ :+ id)
+    def ack(ids: Set[MsgId]): IO[Unit] = acks.update(_ ::: ids.toList)
+    def nack(id: MsgId): IO[Unit]      = IO.unit
 
   val msgId: MsgId = UUID.randomUUID().toString
+
+  val tick: Tick = ()
 
   def baseTest(
       gen: Gen[TradeEvent],
       mkWriter: Ref[IO, Option[TradeState]] => SnapshotWriter[IO],
       expWrites: TradeState => Option[TradeState],
-      expAcks: Option[MsgId],
-      expNacks: Option[MsgId]
+      expAcks: List[MsgId]
   ): IO[Expectations] =
     forall(gen) { evt =>
       for
         writes <- IO.ref(none[TradeState])
-        acks   <- IO.ref(none[MsgId])
-        nacks  <- IO.ref(none[MsgId])
-        fsm = Engine.fsm[IO](mkAcker(acks, nacks), mkWriter(writes))
-        nst  <- fsm.runS(TradeState.empty, Msg(msgId, Map.empty, evt))
+        acks   <- IO.ref(List.empty[MsgId])
+        fsm = Engine.fsm[IO](mkAcker(acks), mkWriter(writes))
+        nst1 <- fsm.runS(TradeState.empty -> List.empty, Msg(msgId, Map.empty, evt))
         res1 <- writes.get
-        res2 <- acks.get
-        res3 <- nacks.get
+        nst2 <- fsm.runS(nst1, tick)
+        res2 <- writes.get
+        res3 <- acks.get
       yield NonEmptyList
         .of(
-          expect.same(res1, expWrites(nst)),
-          expect.same(res2, expAcks),
-          expect.same(res3, expNacks)
+          expect.same(res1, None),
+          expect.same(res2, expWrites(nst2._1)),
+          expect.same(res3, expAcks)
         )
         .reduce
     }
@@ -69,8 +68,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       gen = genCommandExecEvt,
       mkWriter = succesfulWriter,
       expWrites = nst => Some(nst),
-      expAcks = Some(msgId),
-      expNacks = None
+      expAcks = List(msgId)
     )
   }
 
@@ -80,8 +78,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       gen = genTradeEventNoCmdExec,
       mkWriter = succesfulWriter,
       expWrites = _ => None,
-      expAcks = Some(msgId),
-      expNacks = None
+      expAcks = List(msgId)
     )
   }
 
@@ -91,7 +88,6 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       gen = genCommandExecEvt,
       mkWriter = _ => failingWriter,
       expWrites = _ => None,
-      expAcks = None,
-      expNacks = Some(msgId)
+      expAcks = List.empty
     )
   }

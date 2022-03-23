@@ -70,13 +70,13 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     override def castVote(fid: ForecastId, res: VoteResult): IO[Either[ForecastNotFound, Unit]] =
       IO.pure(ForecastNotFound.asLeft)
 
-  val dummyAcker: Acker[IO, ForecastCommand] = new:
-    def ack(id: Consumer.MsgId): IO[Unit]  = IO.unit
-    def nack(id: Consumer.MsgId): IO[Unit] = IO.unit
+  class DummyAcker extends Acker[IO, ForecastCommand]:
+    def ack(id: Consumer.MsgId): IO[Unit]       = IO.unit
+    def ack(ids: Set[Consumer.MsgId]): IO[Unit] = IO.unit
+    def nack(id: Consumer.MsgId): IO[Unit]      = IO.unit
 
-  def mkNAcker(ref: Ref[IO, Option[Consumer.MsgId]]): Acker[IO, ForecastCommand] = new:
-    def ack(id: Consumer.MsgId): IO[Unit]  = IO.unit
-    def nack(id: Consumer.MsgId): IO[Unit] = ref.set(id.some)
+  def mkNAcker(ref: Ref[IO, Option[Consumer.MsgId]]): Acker[IO, ForecastCommand] = new DummyAcker:
+    override def nack(id: Consumer.MsgId): IO[Unit] = ref.set(id.some)
 
   val msgId: Consumer.MsgId = UUID.randomUUID().toString
 
@@ -92,7 +92,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       fc <- IO.ref(none[ForecastEvent])
       p1     = Producer.test(at)
       p2     = Producer.test(fc)
-      engine = Engine.make(p1, p2, authorStore, forecastStore, dummyAcker)
+      engine = Engine.make(p1, p2, authorStore, forecastStore, DummyAcker())
       _  <- engine.run(in.asMsg)
       ae <- at.get
       fe <- fc.get

@@ -20,15 +20,14 @@ object Main extends IOApp.Simple:
       .resource(resources)
       .flatMap { (server, consumer, snapshots, registry, fsm) =>
         Stream.eval(server.useForever).concurrently {
-          val s = snapshots.latest.map(_.getOrElse(TradeState.empty))
-          val d = registry.get
-
-          Stream
-            .eval((s, d).tupled)
-            .flatMap { (sn, dp) =>
-              val log = Logger[IO].debug(s"SNAPSHOTS: $sn") *> Logger[IO].debug(s"DEDUP: $dp")
-              Stream.eval(log) ++ consumer.receiveM.evalMapAccumulate(sn -> dp)(fsm.run)
-            }
+          Stream.eval((snapshots.latest, registry.get).tupled).flatMap {
+            case (Some(sn, id), dp) =>
+              val log = Logger[IO].debug(s"ID: $id - SNAPSHOTS: $sn") *> Logger[IO].debug(s"DEDUP: $dp")
+              Stream.eval(log) ++ consumer.receiveM(id).evalMapAccumulate(sn -> dp)(fsm.run)
+            case (None, dp) =>
+              Stream.exec(Logger[IO].debug(s"DEDUP: $dp")) ++
+                consumer.receiveM.evalMapAccumulate(TradeState.empty -> dp)(fsm.run)
+          }
         }
       }
       .compile

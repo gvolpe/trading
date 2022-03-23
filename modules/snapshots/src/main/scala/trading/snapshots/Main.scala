@@ -1,5 +1,7 @@
 package trading.snapshots
 
+import scala.concurrent.duration.*
+
 import trading.core.http.Ember
 import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
 import trading.core.{ AppTopic, TradeEngine }
@@ -17,13 +19,17 @@ object Main extends IOApp.Simple:
     Stream
       .resource(resources)
       .flatMap { (server, consumer, reader, fsm) =>
+        val ticks: Stream[IO, Engine.In] =
+          Stream.fixedDelay[IO](2.seconds)
+
         Stream.eval(server.useForever).concurrently {
-          Stream
-            .eval(reader.latest.map(_.getOrElse(TradeState.empty)))
-            .evalTap(latest => Logger[IO].debug(s"SNAPSHOTS: $latest"))
-            .flatMap {
-              consumer.receiveM.evalMapAccumulate(_)(fsm.run)
-            }
+          Stream.eval(reader.latest).flatMap {
+            case Some(st, id) =>
+              Stream.exec(Logger[IO].debug(s"SNAPSHOTS: $st")) ++
+                consumer.receiveM(id).merge(ticks).evalMapAccumulate(st -> List.empty)(fsm.run)
+            case None =>
+              consumer.receiveM.merge(ticks).evalMapAccumulate(TradeState.empty -> List.empty)(fsm.run)
+          }
         }
       }
       .compile

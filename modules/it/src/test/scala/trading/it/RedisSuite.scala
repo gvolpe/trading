@@ -30,6 +30,7 @@ object RedisSuite extends ResourceSuite:
   test("snapshots reader and writer") { redis =>
     val reader = SnapshotReader.from[IO](redis)
     val writer = SnapshotWriter.from[IO](redis, KeyExpiration(30.seconds))
+    val msgId  = "id-123"
 
     NonEmptyList
       .of(tradeStateGen.sample.replicateA(3).toList.flatten.last)
@@ -38,13 +39,14 @@ object RedisSuite extends ResourceSuite:
 
         for
           x <- reader.latest
-          _ <- writer.save(ts)
+          _ <- writer.save(ts, msgId)
           y <- reader.latest
         yield NonEmptyList
           .of(
             expect.same(None, x),
-            expect.same(Some(ts.status), y.map(_.status)),
-            expect.same(Some(ex1), y.map(_.prices.keySet))
+            expect.same(Some(ts.status), y.map(_._1.status)),
+            expect.same(Some(ex1), y.map(_._1.prices.keySet)),
+            expect.same(Some(msgId), y.map(_._2))
           )
       }
       .map(_.flatten.reduce)

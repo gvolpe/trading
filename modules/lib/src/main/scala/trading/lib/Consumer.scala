@@ -17,11 +17,14 @@ import org.apache.pulsar.client.api.MessageId
 
 trait Consumer[F[_], A]:
   def ack(id: Consumer.MsgId): F[Unit]
+  def ack(ids: Set[Consumer.MsgId]): F[Unit]
   def nack(id: Consumer.MsgId): F[Unit]
   def receiveM: Stream[F, Consumer.Msg[A]]
+  def receiveM(id: Consumer.MsgId): Stream[F, Consumer.Msg[A]]
   def receive: Stream[F, A]
 
 object Consumer:
+  //Pulsar: serialized version of MessageId(ledgerId: Long, entryId: Long, partitionIndex: Int)
   type MsgId      = String
   type Properties = Map[String, String]
 
@@ -30,10 +33,12 @@ object Consumer:
   def local[F[_]: Applicative, A](
       queue: Queue[F, Option[A]]
   ): Consumer[F, A] = new:
-    def receiveM: Stream[F, Msg[A]]       = receive.map(Msg("N/A", Map.empty, _))
-    def receive: Stream[F, A]             = Stream.fromQueueNoneTerminated(queue)
-    def ack(id: Consumer.MsgId): F[Unit]  = Applicative[F].unit
-    def nack(id: Consumer.MsgId): F[Unit] = Applicative[F].unit
+    def receiveM: Stream[F, Msg[A]]                              = receive.map(Msg("N/A", Map.empty, _))
+    def receiveM(id: Consumer.MsgId): Stream[F, Consumer.Msg[A]] = receiveM
+    def receive: Stream[F, A]                                    = Stream.fromQueueNoneTerminated(queue)
+    def ack(id: Consumer.MsgId): F[Unit]                         = Applicative[F].unit
+    def ack(ids: Set[Consumer.MsgId]): F[Unit]                   = Applicative[F].unit
+    def nack(id: Consumer.MsgId): F[Unit]                        = Applicative[F].unit
 
   def pulsar[F[_]: Async: Logger, A: Decoder: Encoder](
       client: Pulsar.T,
@@ -57,9 +62,15 @@ object Consumer:
         def receiveM: Stream[F, Msg[A]] = c.subscribe.map { m =>
           Msg(new String(m.id.toByteArray(), UTF_8), m.properties, m.payload)
         }
-        def receive: Stream[F, A]             = c.autoSubscribe
-        def ack(id: Consumer.MsgId): F[Unit]  = c.ack(MessageId.fromByteArray(id.getBytes(UTF_8)))
-        def nack(id: Consumer.MsgId): F[Unit] = c.nack(MessageId.fromByteArray(id.getBytes(UTF_8)))
+        def receiveM(id: Consumer.MsgId): Stream[F, Consumer.Msg[A]] =
+          c.subscribe(MessageId.fromByteArray(id.getBytes(UTF_8))).map { m =>
+            Msg(new String(m.id.toByteArray(), UTF_8), m.properties, m.payload)
+          }
+
+        def receive: Stream[F, A]                  = c.autoSubscribe
+        def ack(id: Consumer.MsgId): F[Unit]       = c.ack(MessageId.fromByteArray(id.getBytes(UTF_8)))
+        def ack(ids: Set[Consumer.MsgId]): F[Unit] = c.ack(ids.map(id => MessageId.fromByteArray(id.getBytes(UTF_8))))
+        def nack(id: Consumer.MsgId): F[Unit]      = c.nack(MessageId.fromByteArray(id.getBytes(UTF_8)))
     }
 
   type KafkaOffset = Map[TopicPartition, OffsetAndMetadata]
@@ -78,9 +89,12 @@ object Consumer:
               c.stream.evalMap { c =>
                 ref.set(c.offset.offsets).as(Msg("N/A", Map.empty, c.record.value))
               }
+            def receiveM(id: Consumer.MsgId): Stream[F, Consumer.Msg[A]] = receiveM
             def receive: Stream[F, A] =
               c.stream.evalMap(c => c.offset.commit.as(c.record.value))
             def ack(id: MsgId): F[Unit] =
+              ref.get >>= c.commitAsync
+            def ack(ids: Set[Consumer.MsgId]): F[Unit] =
               ref.get >>= c.commitAsync
             def nack(id: Consumer.MsgId): F[Unit] =
               Applicative[F].unit
