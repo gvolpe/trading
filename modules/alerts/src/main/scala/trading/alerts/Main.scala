@@ -18,11 +18,12 @@ object Main extends IOApp.Simple:
       .resource(resources)
       .flatMap { (server, consumer, snapshots, fsm) =>
         Stream.eval(server.useForever).concurrently {
-          Stream.eval(snapshots.latest).flatMap { maybeSt =>
-            consumer.receiveM.evalMapAccumulate(
-              // could use DedupRegistry here as we do in processor
-              maybeSt.getOrElse(TradeState.empty) -> DedupState.empty
-            )(fsm.run)
+          // could use DedupRegistry here as we do in processor
+          Stream.eval(snapshots.latest).flatMap {
+            case Some(st, id) =>
+              consumer.receiveM(id).evalMapAccumulate(st -> DedupState.empty)(fsm.run)
+            case None =>
+              consumer.receiveM.evalMapAccumulate(TradeState.empty -> DedupState.empty)(fsm.run)
           }
         }
       }

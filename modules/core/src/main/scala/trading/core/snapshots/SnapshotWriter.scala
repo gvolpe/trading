@@ -1,6 +1,7 @@
 package trading.core.snapshots
 
 import trading.domain.*
+import trading.lib.Consumer
 import trading.state.TradeState
 
 import cats.MonadThrow
@@ -13,15 +14,16 @@ import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.syntax.*
 
 trait SnapshotWriter[F[_]]:
-  def save(state: TradeState): F[Unit]
+  def save(state: TradeState, id: Consumer.MsgId): F[Unit]
 
 object SnapshotWriter:
   def from[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String],
       exp: KeyExpiration
   ): SnapshotWriter[F] = new:
-    def save(state: TradeState): F[Unit] =
-      redis.set(s"trading-status", state.status.show) *>
+    def save(state: TradeState, id: Consumer.MsgId): F[Unit] =
+      redis.set("trading-status", state.status.show) *>
+        redis.set("trading-last-id", id) *>
         state.prices.toList.traverse_ { case (symbol, prices) =>
           val key = s"snapshot-$symbol"
           redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces) *>
