@@ -28,6 +28,6 @@ object Main extends IOApp.Simple:
       trTopic = AppTopic.TradingCommands.make(config.pulsar)
       fcTopic = AppTopic.ForecastCommands.make(config.pulsar)
       trading     <- Producer.sharded[IO, TradeCommand](pulsar, trTopic)
-      forecasting <- Producer.pulsar[IO, ForecastCommand](pulsar, fcTopic)
+      forecasting <- Producer.dedup[IO, ForecastCommand](pulsar, fcTopic)
       server = Ember.default[IO](config.httpPort)
     yield server -> Feed.random(trading, forecasting)

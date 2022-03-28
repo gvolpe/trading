@@ -6,7 +6,7 @@ import trading.core.snapshots.SnapshotReader
 import trading.domain.Alert
 import trading.events.TradeEvent
 import trading.lib.{ given, * }
-import trading.state.{ DedupState, TradeState }
+import trading.state.TradeState
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Pulsar, Subscription }
@@ -18,12 +18,11 @@ object Main extends IOApp.Simple:
       .resource(resources)
       .flatMap { (server, consumer, snapshots, fsm) =>
         Stream.eval(server.useForever).concurrently {
-          // could use DedupRegistry here as we do in processor
           Stream.eval(snapshots.latest).flatMap {
             case Some(st, id) =>
-              consumer.receiveM(id).evalMapAccumulate(st -> DedupState.empty)(fsm.run)
+              consumer.receiveM(id).evalMapAccumulate(st)(fsm.run)
             case None =>
-              consumer.receiveM.evalMapAccumulate(TradeState.empty -> DedupState.empty)(fsm.run)
+              consumer.receiveM.evalMapAccumulate(TradeState.empty)(fsm.run)
           }
         }
       }
@@ -44,7 +43,7 @@ object Main extends IOApp.Simple:
       alertsTopic = AppTopic.Alerts.make(config.pulsar)
       eventsTopic = AppTopic.TradingEvents.make(config.pulsar)
       snapshots <- SnapshotReader.make[IO](config.redisUri)
-      producer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic)
+      producer  <- Producer.dedup[IO, Alert](pulsar, alertsTopic)
       consumer  <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
       server = Ember.default[IO](config.httpPort)
     yield (server, consumer, snapshots, Engine.fsm(producer, consumer.ack))

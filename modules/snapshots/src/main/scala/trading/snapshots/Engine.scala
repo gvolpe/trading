@@ -32,9 +32,9 @@ object Engine:
           .attempt
           .flatMap {
             case Left(e) =>
-              Logger[F].warn(s"Failed to persist state for event ID: $lastId").tupleLeft(st -> ids)
+              Logger[F].warn(s"Failed to persist state: $lastId").tupleLeft(st -> ids)
             case Right(_) =>
-              Logger[F].debug(s"State persisted for event ID: $lastId") *>
+              Logger[F].debug(s"State persisted: $lastId. Acking ${ids.size} messages.") *>
                 acker.ack(ids.toSet).attempt.map {
                   case Left(_)  => (st -> ids)        -> ()
                   case Right(_) => (st -> List.empty) -> ()

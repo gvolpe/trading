@@ -2,7 +2,7 @@ package trading.domain
 
 import trading.ws.WsOut
 
-import cats.{ Applicative, Show }
+import cats.{ Applicative, Eq, Show }
 // FIXME: importing all `given` yield ambiguous implicits
 import cats.derived.semiauto.{ coproductEq, product, productEq, * }
 import cats.syntax.all.*
@@ -34,6 +34,22 @@ object Alert:
       status: TradingStatus,
       createdAt: Timestamp
   ) extends Alert
+
+  // Eq instances are used for deduplication
+  // FIXME: should not be necessary to use `show` on `alertType` (related to typeclass derivation)
+  given Eq[TradeAlert] = Eq.instance { (x, y) =>
+    x.cid === y.cid && x.alertType.show === y.alertType.show && x.symbol === y.symbol && x.askPrice === y.askPrice && x.bidPrice === y.bidPrice && x.high === y.high && x.low === y.low
+  }
+
+  given Eq[TradeUpdate] = Eq.instance { (x, y) =>
+    x.cid === y.cid && x.status === y.status
+  }
+
+  given Eq[Alert] = Eq.instance {
+    case (x: TradeAlert, y: TradeAlert)   => x === y
+    case (x: TradeUpdate, y: TradeUpdate) => x === y
+    case _                                => false
+  }
 
   val _CorrelationId: Traversal[Alert, CorrelationId] = new:
     def modifyA[F[_]: Applicative](f: CorrelationId => F[CorrelationId])(s: Alert): F[Alert] =
