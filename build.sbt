@@ -60,15 +60,16 @@ lazy val root = (project in file("."))
   .settings(
     name := "trading-app"
   )
-  .aggregate(lib, domain, core, alerts, feed, forecasts, processor, snapshots, tracing, ws, demo)
+  .aggregate(lib, domain.js, domain.jvm, core, alerts, feed, forecasts, processor, snapshots, tracing, ws, demo)
 
-lazy val domain = (project in file("modules/domain"))
-  .enablePlugins(ScalaJSPlugin)
+lazy val domain = crossProject(JSPlatform, JVMPlatform)
+  .in(file("modules/domain"))
   .settings(commonSettings: _*)
+  .jsSettings(test := {})
 
 lazy val lib = (project in file("modules/lib"))
   .settings(commonSettings: _*)
-  .dependsOn(domain % "compile->compile;test->test")
+  .dependsOn(domain.jvm % "compile->compile;test->test")
 
 lazy val core = (project in file("modules/core"))
   .settings(commonSettings: _*)
@@ -90,7 +91,7 @@ lazy val feed = (project in file("modules/feed"))
     libraryDependencies += Libraries.scalacheck
   )
   .dependsOn(core)
-  .dependsOn(domain % "compile->compile;compile->test")
+  .dependsOn(domain.jvm % "compile->compile;compile->test")
 
 lazy val forecasts = (project in file("modules/forecasts"))
   .enablePlugins(DockerPlugin)
@@ -111,7 +112,7 @@ lazy val snapshots = (project in file("modules/snapshots"))
   .settings(commonSettings: _*)
   .settings(dockerSettings("snapshots"))
   .dependsOn(core)
-  .dependsOn(domain % "compile->compile;test->test")
+  .dependsOn(domain.jvm % "compile->compile;test->test")
 
 lazy val processor = (project in file("modules/processor"))
   .enablePlugins(DockerPlugin)
@@ -133,7 +134,7 @@ lazy val tracing = (project in file("modules/tracing"))
     )
   )
   .dependsOn(core)
-  .dependsOn(domain % "compile->compile;test->test")
+  .dependsOn(domain.jvm % "compile->compile;test->test")
 
 lazy val ws = (project in file("modules/ws-server"))
   .enablePlugins(DockerPlugin)
@@ -163,20 +164,20 @@ lazy val webapp = (project in file("modules/ws-client"))
       Libraries.tyrian.value
     )
   )
-  .dependsOn(domain)
+  .dependsOn(domain.js)
 
 // integration tests
 lazy val it = (project in file("modules/it"))
   .settings(commonSettings: _*)
   .dependsOn(core)
-  .dependsOn(domain % "compile->compile;compile->test")
+  .dependsOn(domain.jvm % "compile->compile;compile->test")
   .dependsOn(forecasts)
 
 // extension demo
 lazy val demo = (project in file("modules/x-demo"))
   .settings(commonSettings: _*)
   .dependsOn(core, tracing)
-  .dependsOn(domain % "compile->compile;compile->test")
+  .dependsOn(domain.jvm % "compile->compile;compile->test")
   .settings(
     libraryDependencies ++= List(
       Libraries.natchezHttp4s

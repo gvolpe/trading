@@ -2,9 +2,9 @@ package trading.domain
 
 import trading.ws.WsOut
 
+import cats.{ Applicative, Show }
 // FIXME: importing all `given` yield ambiguous implicits
 import cats.derived.semiauto.{ coproductEq, product, productEq, * }
-import cats.{ Applicative, Show }
 import cats.syntax.all.*
 import io.circe.Codec
 import monocle.Traversal
