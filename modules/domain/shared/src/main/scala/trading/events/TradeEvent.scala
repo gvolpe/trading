@@ -3,7 +3,7 @@ package trading.events
 import trading.commands.TradeCommand
 import trading.domain.{ given, * }
 
-import cats.{ Applicative, Show }
+import cats.{ Applicative, Eq, Show }
 // FIXME: importing all `given` yield ambiguous implicits
 import cats.derived.semiauto.{ derived, product }
 import cats.syntax.all.*
@@ -42,6 +42,9 @@ object TradeEvent:
       cid: CorrelationId,
       createdAt: Timestamp
   ) extends TradeEvent
+
+  // EventId and Timestamp are regenerated when reprocessed so we don't consider them for deduplication.
+  given Eq[TradeEvent] = Eq.and(Eq.by(_.cid), Eq.by(_Command.get))
 
   val _Command =
     Getter[TradeEvent, Option[TradeCommand]] {

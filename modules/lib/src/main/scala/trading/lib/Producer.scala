@@ -2,6 +2,7 @@ package trading.lib
 
 import java.nio.charset.StandardCharsets.UTF_8
 
+import cats.Eq
 import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.Queue
 import cats.syntax.all.*
@@ -20,22 +21,26 @@ object Producer:
     Resource.make[F, Producer[F, A]](
       Applicative[F].pure(
         new:
-          def send(a: A): F[Unit]                                    = queue.offer(Some(a))
+          def send(a: A): F[Unit]                                  = queue.offer(Some(a))
           def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
       )
     )(_ => queue.offer(None))
 
   def dummy[F[_]: Applicative, A]: Producer[F, A] = new:
-    def send(a: A): F[Unit]                                    = Applicative[F].unit
+    def send(a: A): F[Unit]                                  = Applicative[F].unit
     def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
 
   def test[F[_], A](ref: Ref[F, Option[A]]): Producer[F, A] = new:
-    def send(a: A): F[Unit]                                    = ref.set(Some(a))
+    def send(a: A): F[Unit]                                  = ref.set(Some(a))
     def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
 
-  def sharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
+  private def dummySeqIdMaker[A]: SeqIdMaker[A] = new:
+    def next(prevId: Long, prevPayload: Option[A], payload: A): Long = 0L
+
+  private def dedupSharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
       client: Pulsar.T,
-      topic: Topic.Single
+      topic: Topic.Single,
+      seqIdMaker: Option[SeqIdMaker[A]] = None
   ): Resource[F, Producer[F, A]] =
     val settings =
       PulsarProducer
@@ -45,11 +50,25 @@ object Producer:
 
     val encoder: A => Array[Byte] = _.asJson.noSpaces.getBytes(UTF_8)
 
-    PulsarProducer.make[F, A](client, topic, encoder, settings).map { p =>
+    val _settings = seqIdMaker.fold(settings)(settings.withDeduplication)
+
+    PulsarProducer.make[F, A](client, topic, encoder, _settings).map { p =>
       new:
-        def send(a: A): F[Unit]                                    = p.send_(a)
+        def send(a: A): F[Unit]                                  = p.send_(a)
         def send(a: A, properties: Map[String, String]): F[Unit] = p.send_(a, properties)
     }
+  def sharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
+      client: Pulsar.T,
+      topic: Topic.Single
+  ): Resource[F, Producer[F, A]] =
+    dedupSharded[F, A](client, topic)
+
+  def dedup[F[_]: Async: Logger: Parallel, A: Encoder: Eq](
+      client: Pulsar.T,
+      topic: Topic.Single
+  ): Resource[F, Producer[F, A]] =
+    given Shard[A] = Shard.default[A]
+    dedupSharded[F, A](client, topic, Some(SeqIdMaker.fromEq[A]))
 
   def pulsar[F[_]: Async: Logger: Parallel, A: Encoder](
       client: Pulsar.T,

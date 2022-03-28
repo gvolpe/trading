@@ -6,6 +6,8 @@ import trading.state.{ DedupState, IdRegistry }
 
 import cats.syntax.all.*
 
+// Not used in the project but left here to demonstrate how deduplication could be
+// implemented for other brokers that do not support it natively (see also DedupRegistry).
 object Conflicts:
   def dedup(st: DedupState)(command: TradeCommand): Option[TradeCommand] =
     (!st.ids.map(_.id).contains(command.id)).guard[Option].as(command)

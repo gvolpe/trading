@@ -12,6 +12,8 @@ import dev.profunktor.redis4cats.data.RedisCodec
 import dev.profunktor.redis4cats.effect.{ Log, MkRedis }
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 
+// Not used in the project but left here to demonstrate how deduplication could be
+// implemented for other brokers that do not support it natively (see also Conflicts).
 trait DedupRegistry[F[_]]:
   def get: F[DedupState]
   def save(state: DedupState): F[Unit]
