@@ -82,10 +82,10 @@ $ yarn build
 
 Here's an overview of all the components of the system.
 
-![overview](./imgs/overview.png)
+![overview](./imgs/system-overview.png)
 
 - Dotted lines: Pulsar messages such as commands and events.
-- Bold lines: read and writes from / to external component such as Redis.
+- Bold lines: read and writes from / to external components (Redis, Postgres, etc).
 
 ## Requirements
 
