@@ -57,6 +57,7 @@ object Producer:
         def send(a: A): F[Unit]                                  = p.send_(a)
         def send(a: A, properties: Map[String, String]): F[Unit] = p.send_(a, properties)
     }
+
   def sharded[F[_]: Async: Logger: Parallel, A: Encoder: Shard](
       client: Pulsar.T,
       topic: Topic.Single

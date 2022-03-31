@@ -14,6 +14,7 @@ import io.circe.parser.decode as jsonDecode
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
 import org.apache.pulsar.client.api.MessageId
+import org.apache.pulsar.client.api.DeadLetterPolicy
 
 trait Consumer[F[_], A]:
   def ack(id: Consumer.MsgId): F[Unit]
@@ -46,16 +47,20 @@ object Consumer:
       sub: Subscription,
       settings: Option[PulsarConsumer.Settings[F, A]] = None
   ): Resource[F, Consumer[F, A]] =
+    val deadLetterPolicy =
+      DeadLetterPolicy.builder.deadLetterTopic("dead-letter").maxRedeliverCount(2).build
+
     val _settings =
       settings
         .getOrElse(PulsarConsumer.Settings[F, A]())
         .withLogger(Logger.pulsar[F, A]("in"))
+        .withDeadLetterPolicy(deadLetterPolicy)
 
     val decoder: Array[Byte] => F[A] =
       bs => Async[F].fromEither(jsonDecode[A](new String(bs, UTF_8)))
 
     val handler: Throwable => F[PulsarConsumer.OnFailure] =
-      e => Logger[F].error(e.getMessage).as(PulsarConsumer.OnFailure.Ack)
+      e => Logger[F].error(e.getMessage).as(PulsarConsumer.OnFailure.Nack)
 
     PulsarConsumer.make[F, A](client, topic, sub, decoder, handler, _settings).map { c =>
       new:
