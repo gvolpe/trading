@@ -8,6 +8,7 @@ import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.TradeEvent
 import trading.lib.*
+import trading.lib.Consumer.{ Msg, MsgId }
 import trading.state.TradeState
 
 import cats.MonadThrow
@@ -18,24 +19,30 @@ object Engine:
       producer: Producer[F, Alert],
       ack: Consumer.MsgId => F[Unit]
   ): FSM[F, TradeState, Consumer.Msg[TradeEvent], Unit] =
+    def mkIdTs: F[(AlertId, Timestamp)] =
+      (GenUUID[F].make[AlertId], Time[F].timestamp).tupled
+
+    def sendAck(alert: Alert, msgId: MsgId): F[Unit] =
+      (producer.send(alert) *> ack(msgId)).attempt.void
+
     FSM {
-      case (st @ TradeState(Off, _), Consumer.Msg(msgId, _, TradeEvent.Started(_, cid, _))) =>
-        (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
-          val alert = TradeUpdate(id, cid, TradingStatus.On, ts)
-          (producer.send(alert) *> ack(msgId)).attempt.void.tupleLeft(st)
+      case (st @ TradeState(Off, _), Msg(msgId, _, TradeEvent.Started(_, cid, _))) =>
+        mkIdTs.map(TradeUpdate(_, cid, On, _)).flatMap { alert =>
+          val nst = TradeState._Status.replace(On)(st)
+          sendAck(alert, msgId).tupleLeft(nst)
         }
-      case (st @ TradeState(On, _), Consumer.Msg(msgId, _, TradeEvent.Stopped(_, cid, _))) =>
-        (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
-          val alert = TradeUpdate(id, cid, TradingStatus.Off, ts)
-          (producer.send(alert) *> ack(msgId)).attempt.void.tupleLeft(st)
+      case (st @ TradeState(On, _), Msg(msgId, _, TradeEvent.Stopped(_, cid, _))) =>
+        mkIdTs.map(TradeUpdate(_, cid, Off, _)).flatMap { alert =>
+          val nst = TradeState._Status.replace(Off)(st)
+          sendAck(alert, msgId).tupleLeft(nst)
         }
-      case (st @ TradeState(On, _), Consumer.Msg(msgId, _, TradeEvent.Started(_, _, _))) =>
+      case (st @ TradeState(On, _), Msg(msgId, _, TradeEvent.Started(_, _, _))) =>
         (Logger[F].warn(s"Status already On") *> ack(msgId)).tupleLeft(st)
-      case (st @ TradeState(Off, _), Consumer.Msg(msgId, _, TradeEvent.Stopped(_, _, _))) =>
+      case (st @ TradeState(Off, _), Msg(msgId, _, TradeEvent.Stopped(_, _, _))) =>
         (Logger[F].warn(s"Status already Off") *> ack(msgId)).tupleLeft(st)
-      case (st, Consumer.Msg(msgId, _, TradeEvent.CommandRejected(_, _, _, _, _))) =>
+      case (st, Msg(msgId, _, TradeEvent.CommandRejected(_, _, _, _, _))) =>
         ack(msgId).tupleLeft(st)
-      case (st, Consumer.Msg(msgId, _, TradeEvent.CommandExecuted(_, cid, cmd, _))) =>
+      case (st, Msg(msgId, _, TradeEvent.CommandExecuted(_, cid, cmd, _))) =>
         TradeCommand._Symbol.get(cmd).fold(ack(msgId).attempt.void.tupleLeft(st)) { symbol =>
           val nst = TradeEngine.fsm.runS(st, cmd)
           val p   = st.prices.get(symbol)
@@ -50,7 +57,7 @@ object Engine:
           val low: Price  = c.map(_.low).getOrElse(Price(0.0))
 
           // dummy logic to simulate the trading market
-          def alert(id: AlertId, ts: Timestamp): Alert =
+          def mkAlert(id: AlertId, ts: Timestamp): Alert =
             if previousAskMax - currentAskMax > Price(0.3) then
               TradeAlert(id, cid, StrongBuy, symbol, currentAskMax, currentBidMax, high, low, ts)
             else if previousAskMax - currentAskMax > Price(0.2) then
@@ -61,8 +68,8 @@ object Engine:
               TradeAlert(id, cid, Sell, symbol, currentAskMax, currentBidMax, high, low, ts)
             else TradeAlert(id, cid, Neutral, symbol, currentAskMax, currentBidMax, high, low, ts)
 
-          (GenUUID[F].make[AlertId], Time[F].timestamp).tupled.flatMap { (id, ts) =>
-            (producer.send(alert(id, ts)) *> ack(msgId)).attempt.void.tupleLeft(nst)
+          mkIdTs.map(mkAlert).flatMap { alert =>
+            sendAck(alert, msgId).tupleLeft(nst)
           }
         }
     }
