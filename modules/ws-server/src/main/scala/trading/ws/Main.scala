@@ -24,7 +24,7 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  def mkSub = (sid: SocketId) =>
+  val mkSub = (sid: SocketId) =>
     Subscription.Builder
       .withName(s"ws-server-${sid.show}")
       .withMode(Subscription.Mode.NonDurable)
