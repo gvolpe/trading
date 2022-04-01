@@ -9,7 +9,7 @@ sealed abstract class AppTopic:
 object AppTopic:
   case object Alerts extends AppTopic:
     val name: String                    = "trading-alerts"
-    def make(cfg: Config): Topic.Single = mkNonPersistent(cfg, name)
+    def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
 
   case object TradingCommands extends AppTopic:
     val name: String                    = "trading-commands"

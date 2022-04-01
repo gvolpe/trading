@@ -6,7 +6,6 @@ import trading.lib.*
 
 import cats.effect.kernel.{ Concurrent, Deferred, Ref }
 import cats.syntax.all.*
-import fs2.concurrent.Topic
 import fs2.{ Pipe, Stream }
 import io.circe.parser.decode as jsonDecode
 import io.circe.syntax.*
@@ -18,23 +17,16 @@ trait Handler[F[_]]:
   def receive: Pipe[F, WebSocketFrame, Unit]
 
 object Handler:
-  def make[F[_]: Concurrent: GenUUID: Logger](
-      topic: Topic[F, Alert]
-  ): F[Handler[F]] =
-    make[F](topic.subscribers, topic.subscribe, topic.close.void)
-
-  // alternative constructor to show a different way of testing this impl
-  def make[F[_]: Concurrent: GenUUID: Logger](
-      subscribers: Stream[F, Int],
-      subscribe: Int => Stream[F, Alert],
-      close: F[Unit]
+  def make[F[_]: Concurrent: Logger](
+      sid: SocketId,
+      conns: WsConnections[F],
+      alerts: Stream[F, Alert]
   ): F[Handler[F]] =
     (
       Deferred[F, Either[Throwable, Unit]], // syncs the termination of the handler
       Deferred[F, Unit],                    // syncs the first received message to avoid losing subscriptions
-      Ref.of[F, Set[Symbol]](Set.empty),    // keeps track of the symbol subscriptions
-      GenUUID[F].make[SocketId]             // unique socket id
-    ).mapN { case (switch, fuze, subs, sid) =>
+      Ref.of[F, Set[Symbol]](Set.empty)     // keeps track of the symbol subscriptions
+    ).mapN { case (switch, fuze, subs) =>
       new:
         val encode: WsOut => F[Option[WebSocketFrame]] = {
           case out @ WsOut.Notification(t: TradeAlert) =>
@@ -50,11 +42,11 @@ object Handler:
         }
 
         val send: Stream[F, WebSocketFrame] =
-          subscribers
-            .take(1)
-            .evalMap(n => encode(WsOut.Attached(sid, n + 1)))
+          Stream
+            .eval(conns.subscribe(sid) *> conns.get)
+            .evalMap(n => encode(WsOut.Attached(sid, n)))
             .append {
-              subscribe(100)
+              alerts
                 .evalMap(x => fuze.get *> encode(x.wsOut))
                 .interruptWhen(switch)
             }
@@ -69,7 +61,7 @@ object Handler:
                 ().pure[F]
               case Right(WsIn.Close) =>
                 Logger[F].info(s"[$sid] - Closing WS connection") *>
-                  close *> switch.complete(().asRight).void
+                  conns.unsubscribe(sid) *> switch.complete(().asRight).void
               case Right(WsIn.Subscribe(symbol)) =>
                 Logger[F].info(s"[$sid] - Subscribing to $symbol alerts") *>
                   subs.update(_ + symbol)
