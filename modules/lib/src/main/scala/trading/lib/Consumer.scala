@@ -16,10 +16,12 @@ import org.apache.kafka.common.TopicPartition
 import org.apache.pulsar.client.api.MessageId
 import org.apache.pulsar.client.api.DeadLetterPolicy
 
-trait Consumer[F[_], A]:
+trait Acker[F[_], A]:
   def ack(id: Consumer.MsgId): F[Unit]
   def ack(ids: Set[Consumer.MsgId]): F[Unit]
   def nack(id: Consumer.MsgId): F[Unit]
+
+trait Consumer[F[_], A] extends Acker[F, A]:
   def receiveM: Stream[F, Consumer.Msg[A]]
   def receiveM(id: Consumer.MsgId): Stream[F, Consumer.Msg[A]]
   def receive: Stream[F, A]

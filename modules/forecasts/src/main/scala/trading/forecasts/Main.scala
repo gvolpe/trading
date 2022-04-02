@@ -43,6 +43,5 @@ object Main extends IOApp.Simple:
       xa        <- DB.init[IO]
       atStore = AuthorStore.from(xa)
       fcStore = ForecastStore.from(xa)
-      acker   = Acker.from(consumer)
       server  = Ember.default[IO](config.httpPort)
-    yield (server, consumer, Engine.make(authors, forecasts, atStore, fcStore, acker))
+    yield (server, consumer, Engine.make(authors, forecasts, atStore, fcStore, consumer))

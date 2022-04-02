@@ -52,6 +52,6 @@ object Main extends IOApp.Simple:
       reader   <- SnapshotReader.fromClient[IO](redis)
       writer   <- SnapshotWriter.fromClient[IO](redis, config.keyExpiration)
       consumer <- Consumer.pulsar[IO, TradeEvent](pulsar, topic, sub)
-      fsm    = Engine.fsm(Acker.from(consumer), writer)
+      fsm    = Engine.fsm(consumer, writer)
       server = Ember.default[IO](config.httpPort)
     yield (server, consumer, reader, fsm)
