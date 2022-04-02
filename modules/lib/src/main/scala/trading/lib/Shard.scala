@@ -20,12 +20,14 @@ object Shard:
     val key: String => ShardKey =
       str => ShardKey.Of(str.getBytes(UTF_8))
 
+  // Start and Stop should go to the same shard responsible for the trading switch
   given Shard[TradeCommand] with
     val key: TradeCommand => ShardKey =
       cmd =>
         Shard[String].key {
-          TradeCommand._Symbol
-            .get(cmd)
-            .map(_.show)
-            .getOrElse(cmd.id.show)
+          cmd match
+            case _: TradeCommand.Start | _: TradeCommand.Stop =>
+              "trading-status-shard"
+            case _ =>
+              TradeCommand._Symbol.get(cmd).get.show
         }
