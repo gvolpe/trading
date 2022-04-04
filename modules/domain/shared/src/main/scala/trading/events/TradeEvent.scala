@@ -43,6 +43,18 @@ object TradeEvent:
       createdAt: Timestamp
   ) extends TradeEvent
 
+  final case class Switch(evt: Either[Started, Stopped]) derives Codec.AsObject, Show:
+    def getEvent: TradeEvent = evt.fold[TradeEvent](identity, identity)
+
+  object Switch:
+    def from(evt: TradeEvent): Option[Switch] = evt match
+      case e: Started => Switch(e.asLeft).some
+      case e: Stopped => Switch(e.asRight).some
+      case _          => none
+
+    given Eq[Switch] = new:
+      def eqv(x: Switch, y: Switch): Boolean = x.getEvent === y.getEvent
+
   // EventId and Timestamp are regenerated when reprocessed so we don't consider them for deduplication.
   given Eq[TradeEvent] = Eq.and(Eq.by(_.cid), Eq.by(_Command.get))
 

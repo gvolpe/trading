@@ -9,43 +9,75 @@ import trading.lib.{ given, * }
 import trading.state.TradeState
 
 import cats.effect.*
-import cats.syntax.apply.*
-import dev.profunktor.pulsar.{ Pulsar, Subscription }
+import cats.syntax.all.*
+import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Producer as PulsarProducer, Pulsar, Subscription }
 import fs2.Stream
+import dev.profunktor.pulsar.SeqIdMaker
+import java.util.UUID
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { (server, consumer, snapshots, fsm) =>
+      .flatMap { (server, consumer, events, snapshots, fsm) =>
         Stream.eval(server.useForever).concurrently {
           Stream.eval(snapshots.latest).flatMap {
-            case Some(sn, id) =>
-              val log = Logger[IO].debug(s"ID: $id - SNAPSHOTS: $sn")
-              Stream.eval(log) ++ consumer.receiveM(id).evalMapAccumulate(sn)(fsm.run)
+            case Some(st, id) =>
+              val log = Logger[IO].debug(s"Last ID: $id, Status: ${st.status}")
+              val src = consumer.receiveM(id).merge[IO, Engine.In](events)
+              Stream.eval(log) ++ src.evalMapAccumulate(st)(fsm.run)
             case None =>
-              consumer.receiveM.evalMapAccumulate(TradeState.empty)(fsm.run)
+              val src = consumer.receiveM.merge[IO, Engine.In](events)
+              src.evalMapAccumulate(TradeState.empty)(fsm.run)
           }
         }
       }
       .compile
       .drain
 
-  val sub =
+  // sharded by symbol (see Shard[TradeCommand] instance)
+  val cmdSub =
     Subscription.Builder
       .withName("processor")
       .withType(Subscription.Type.KeyShared)
       .build
 
+  def swtSub(id: UUID) =
+    Subscription.Builder
+      .withName(s"processor-${id.show}")
+      .withType(Subscription.Type.Exclusive)
+      .build
+
+  val compact =
+    PulsarConsumer.Settings[IO, TradeEvent.Switch]().withReadCompacted.some
+
+  val evtSettings =
+    PulsarProducer
+      .Settings[IO, TradeEvent]()
+      .withDeduplication(SeqIdMaker.fromEq)
+      .withShardKey(Shard[TradeEvent].key)
+      .some
+
+  val swtSettings =
+    PulsarProducer
+      .Settings[IO, TradeEvent.Switch]()
+      .withDeduplication(SeqIdMaker.fromEq)
+      .withMessageKey(Partition[TradeEvent.Switch].key)
+      .some
+
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
-      _      <- Resource.eval(Logger[IO].info("Initializing processor service"))
+      uuid   <- Resource.eval(GenUUID[IO].make[UUID])
+      _      <- Resource.eval(Logger[IO].info(s"Initializing processor service: ${uuid.show}"))
       server   = Ember.default[IO](config.httpPort)
       cmdTopic = AppTopic.TradingCommands.make(config.pulsar)
       evtTopic = AppTopic.TradingEvents.make(config.pulsar)
-      producer  <- Producer.dedup[IO, TradeEvent](pulsar, evtTopic)
+      swtTopic = AppTopic.SwitchEvents.make(config.pulsar)
+      producer  <- Producer.pulsar[IO, TradeEvent](pulsar, evtTopic, evtSettings)
+      switcher  <- Producer.pulsar[IO, TradeEvent.Switch](pulsar, swtTopic, swtSettings)
       snapshots <- SnapshotReader.make[IO](config.redisUri)
-      consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, sub)
-    yield (server, consumer, snapshots, Engine.fsm(producer, consumer.ack))
+      consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, cmdSub)
+      events    <- Consumer.pulsar[IO, TradeEvent.Switch](pulsar, evtTopic, swtSub(uuid), compact).map(_.receive)
+    yield (server, consumer, events, snapshots, Engine.fsm(producer, switcher, consumer.ack))

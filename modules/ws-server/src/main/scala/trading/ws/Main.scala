@@ -6,8 +6,8 @@ import trading.domain.{ Alert, SocketId }
 import trading.lib.{ Consumer, Logger }
 
 import cats.effect.*
-import cats.syntax.show.*
-import dev.profunktor.pulsar.{ Pulsar, Subscription }
+import cats.syntax.all.*
+import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -31,6 +31,9 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.Exclusive)
       .build
 
+  val compact =
+    PulsarConsumer.Settings[IO, Alert]().withReadCompacted.some
+
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
@@ -38,7 +41,7 @@ object Main extends IOApp.Simple:
       _      <- Resource.eval(Logger[IO].info("Initializing ws-server service"))
       ptopic = AppTopic.Alerts.make(config.pulsar)
       conns <- Resource.eval(WsConnections.make[IO])
-      mkConsumer = (sid: SocketId) => Consumer.pulsar[IO, Alert](pulsar, ptopic, mkSub(sid))
+      mkConsumer = (sid: SocketId) => Consumer.pulsar[IO, Alert](pulsar, ptopic, mkSub(sid), compact)
       mkAlerts   = (sid: SocketId) => Stream.resource(mkConsumer(sid)).flatMap(_.receive)
       mkHandler  = (sid: SocketId) => Handler.make[IO](sid, conns, mkAlerts(sid))
       server     = Ember.websocket[IO](config.httpPort, WsRoutes[IO](_, mkHandler).routes)

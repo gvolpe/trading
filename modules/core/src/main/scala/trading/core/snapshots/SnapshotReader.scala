@@ -14,36 +14,40 @@ import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.parser.decode as jsonDecode
 
 trait SnapshotReader[F[_]]:
+  def getLastId: F[Option[Consumer.MsgId]]
   def latest: F[Option[(TradeState, Consumer.MsgId)]]
 
-/** This model only allows for a single snappshots service running at a time. Thus, the snapshots service uses a
-  * Failover subscription mode and it's recommended to run two instances: a main one, and a failover one.
-  */
 object SnapshotReader:
   def from[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String]
   ): SnapshotReader[F] = new:
-    def latest: F[Option[(TradeState, Consumer.MsgId)]] =
-      (redis.get("trading-status"), redis.get("trading-last-id"), redis.keys("snapshot*")).tupled.flatMap {
-        (st, id, sn) =>
-          sn.traverseFilter { key =>
-            redis.hGetAll(key).map { kv =>
-              val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
-              val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
-              val high = Price(kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0))
-              val low  = Price(kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0))
+    def getLastId: F[Option[Consumer.MsgId]] =
+      redis.get("trading-last-id")
 
-              Either
-                .catchNonFatal(key.split("-").apply(1)) // get symbol
-                .toOption
-                .map(Symbol.unsafeFrom(_) -> Prices(ask.toMap, bid.toMap, high, low))
-            }
-          }.map {
-            case Nil => None
-            case xs =>
-              val ts = st.flatMap(TradingStatus.from).getOrElse(TradingStatus.On)
-              id.map(TradeState(ts, xs.toMap) -> _)
+    def getStatus: F[TradingStatus] =
+      redis.get("trading-status").map {
+        _.flatMap(TradingStatus.from).getOrElse(TradingStatus.On)
+      }
+
+    def latest: F[Option[(TradeState, Consumer.MsgId)]] =
+      (getStatus, getLastId, redis.keys("snapshot*")).tupled.flatMap { (ts, id, sn) =>
+        sn.traverseFilter { key =>
+          redis.hGetAll(key).map { kv =>
+            val ask  = kv.get("ask").toList.flatMap(jsonDecode[List[(AskPrice, Quantity)]](_).toList).flatten
+            val bid  = kv.get("bid").toList.flatMap(jsonDecode[List[(BidPrice, Quantity)]](_).toList).flatten
+            val high = Price(kv.get("high").flatMap(_.toDoubleOption).getOrElse(0.0))
+            val low  = Price(kv.get("low").flatMap(_.toDoubleOption).getOrElse(0.0))
+
+            Either
+              .catchNonFatal(key.split("-").apply(1)) // get symbol
+              .toOption
+              .map(Symbol.unsafeFrom(_) -> Prices(ask.toMap, bid.toMap, high, low))
           }
+        }.map {
+          case Nil => None
+          case xs =>
+            id.map(TradeState(ts, xs.toMap) -> _)
+        }
       }
 
   def fromClient[F[_]: MkRedis: MonadThrow](

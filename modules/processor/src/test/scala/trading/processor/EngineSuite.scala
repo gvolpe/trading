@@ -29,29 +29,43 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   val p2 = Price(3.5782)
   val q2 = Quantity(20)
 
-  // TODO: We should be able to test with different times as well
-  given Time[IO] with
-    def timestamp: IO[Timestamp] = IO.pure(ts)
-
   test("Processor engine fsm") {
     for
-      evts <- IO.ref(none[TradeEvent])
-      acks <- IO.ref(none[Consumer.MsgId])
-      prod = Producer.test(evts)
-      fsm  = Engine.fsm(prod, i => acks.set(i.some))
+      evts <- IO.ref(List.empty[TradeEvent])
+      swts <- IO.ref(List.empty[TradeEvent.Switch])
+      acks <- IO.ref(List.empty[Consumer.MsgId])
+      prod     = Producer.testMany(evts)
+      switcher = Producer.testMany(swts)
+      fsm      = Engine.fsm(prod, switcher, i => acks.update(_ :+ i))
+      // first command: Create
       tst1 <- fsm.runS(
         TradeState.empty,
         Consumer.Msg("id1", Map.empty, TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts))
       )
+      tex1 = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
       e1 <- evts.get
       a1 <- acks.get
-      tex1 = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
-      res1 = NonEmptyList
-        .of(
-          expect.same(tst1, tex1),
-          expect.same(e1.size, 1),
-          expect.same(a1.size, 1)
-        )
-        .reduce
-    yield res1
+      s1 <- swts.get
+      // second command: Stop
+      tst2 <- fsm.runS(
+        tst1,
+        Consumer.Msg("id2", Map.empty, TradeCommand.Stop(id, cid, ts))
+      )
+      tex2 = TradeState(Off, tex1.prices)
+      e2 <- evts.get
+      a2 <- acks.get
+      s2 <- swts.get
+    yield NonEmptyList
+      .of(
+        expect.same(tst1, tex1),
+        expect.same(e1.size, 1),
+        expect.same(a1, List("id1")),
+        expect.same(s1.size, 0),
+        expect.same(tst2, tex2),
+        expect.same(e2.size, 2),
+        expect.same(a2, List("id1", "id2")),
+        expect.same(s2.size, 1)
+      )
+      .reduce
+
   }

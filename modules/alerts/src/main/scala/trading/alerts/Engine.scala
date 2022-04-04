@@ -26,22 +26,20 @@ object Engine:
       (producer.send(alert) *> ack(msgId)).attempt.void
 
     FSM {
-      case (st @ TradeState(Off, _), Msg(msgId, _, TradeEvent.Started(_, cid, _))) =>
+      // if the same event was previously sent by other instance, Pulsar will deduplicate it
+      // also, no need to keep track of TradingStatus in this FSM, so we don't flip the switch
+      case (st, Msg(msgId, _, TradeEvent.Started(_, cid, _))) =>
         mkIdTs.map(TradeUpdate(_, cid, On, _)).flatMap { alert =>
-          val nst = TradeState._Status.replace(On)(st)
-          sendAck(alert, msgId).tupleLeft(nst)
+          sendAck(alert, msgId).tupleLeft(st)
         }
-      case (st @ TradeState(On, _), Msg(msgId, _, TradeEvent.Stopped(_, cid, _))) =>
+      case (st, Msg(msgId, _, TradeEvent.Stopped(_, cid, _))) =>
         mkIdTs.map(TradeUpdate(_, cid, Off, _)).flatMap { alert =>
-          val nst = TradeState._Status.replace(Off)(st)
-          sendAck(alert, msgId).tupleLeft(nst)
+          sendAck(alert, msgId).tupleLeft(st)
         }
-      case (st @ TradeState(On, _), Msg(msgId, _, TradeEvent.Started(_, _, _))) =>
-        (Logger[F].warn(s"Status already On") *> ack(msgId)).tupleLeft(st)
-      case (st @ TradeState(Off, _), Msg(msgId, _, TradeEvent.Stopped(_, _, _))) =>
-        (Logger[F].warn(s"Status already Off") *> ack(msgId)).tupleLeft(st)
+      // no alert emitted, just ack the message
       case (st, Msg(msgId, _, TradeEvent.CommandRejected(_, _, _, _, _))) =>
         ack(msgId).tupleLeft(st)
+      // send price alert accordingly
       case (st, Msg(msgId, _, TradeEvent.CommandExecuted(_, cid, cmd, _))) =>
         TradeCommand._Symbol.get(cmd).fold(ack(msgId).attempt.void.tupleLeft(st)) { symbol =>
           val nst = TradeEngine.fsm.runS(st, cmd)
