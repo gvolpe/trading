@@ -19,12 +19,11 @@ object Main extends IOApp.Simple:
       .resource(resources)
       .flatMap { (server, consumer, snapshots, fsm) =>
         Stream.eval(server.useForever).concurrently {
-          val st = TradeState.empty
-          Stream.eval(snapshots.getLastId).flatMap {
-            case Some(id) =>
+          Stream.eval(snapshots.latest).flatMap {
+            case Some(st, id) =>
               consumer.receiveM(id).evalMapAccumulate(st)(fsm.run)
             case None =>
-              consumer.receiveM.evalMapAccumulate(st)(fsm.run)
+              consumer.receiveM.evalMapAccumulate(TradeState.empty)(fsm.run)
           }
         }
       }
