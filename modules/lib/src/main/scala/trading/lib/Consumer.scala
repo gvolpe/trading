@@ -16,12 +16,6 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
 import org.apache.pulsar.client.api.{ DeadLetterPolicy, MessageId }
 
-trait Acker[F[_], A]:
-  def ack(id: Consumer.MsgId): F[Unit]
-  def ack(ids: Set[Consumer.MsgId]): F[Unit]
-  def ack(id: Consumer.MsgId, tx: Txn): F[Unit]
-  def nack(id: Consumer.MsgId): F[Unit]
-
 trait Consumer[F[_], A] extends Acker[F, A]:
   def receiveM: Stream[F, Consumer.Msg[A]]
   def receiveM(id: Consumer.MsgId): Stream[F, Consumer.Msg[A]]

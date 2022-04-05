@@ -29,9 +29,10 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     def save(state: TradeState, id: Consumer.MsgId): IO[Unit] = IO.raiseError(new Exception("boom"))
 
   def mkAcker(acks: Ref[IO, List[MsgId]]): Acker[IO, TradeEvent] = new:
-    def ack(id: MsgId): IO[Unit]       = acks.update(_ :+ id)
-    def ack(ids: Set[MsgId]): IO[Unit] = acks.update(_ ::: ids.toList)
-    def nack(id: MsgId): IO[Unit]      = IO.unit
+    def ack(id: MsgId): IO[Unit]                   = acks.update(_ :+ id)
+    def ack(ids: Set[MsgId]): IO[Unit]             = acks.update(_ ::: ids.toList)
+    def ack(id: Consumer.MsgId, tx: Txn): IO[Unit] = ack(id)
+    def nack(id: MsgId): IO[Unit]                  = IO.unit
 
   val msgId: MsgId = UUID.randomUUID().toString
 
