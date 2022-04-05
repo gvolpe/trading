@@ -19,23 +19,23 @@ object Main extends IOApp.Simple:
       .resource(resources)
       .flatMap { (server, consumer, snapshots, fsm) =>
         Stream.eval(server.useForever).concurrently {
-          val st = TradeState.empty
-          Stream.eval(snapshots.getLastId).flatMap {
-            case Some(id) =>
+          Stream.eval(snapshots.latest).flatMap {
+            case Some(st, id) =>
               consumer.receiveM(id).evalMapAccumulate(st)(fsm.run)
             case None =>
-              consumer.receiveM.evalMapAccumulate(st)(fsm.run)
+              consumer.receiveM.evalMapAccumulate(TradeState.empty)(fsm.run)
           }
         }
       }
       .compile
       .drain
 
-  // sharded by symbol (see Shard[TradeEvent] instance)
+  // Even though events are sharded by symbol or status, using KeyShared in alerts can be
+  // problematic when an instance goes does, due to consumers rebalance.
   val sub =
     Subscription.Builder
       .withName("alerts")
-      .withType(Subscription.Type.KeyShared)
+      .withType(Subscription.Type.Failover)
       .build
 
   // Alert producer settings, dedup and partitioned (for topic compaction in WS)
