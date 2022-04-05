@@ -1,5 +1,9 @@
 package trading.processor
 
+import java.util.UUID
+
+import scala.concurrent.duration.*
+
 import trading.commands.TradeCommand
 import trading.core.AppTopic
 import trading.core.http.Ember
@@ -10,10 +14,9 @@ import trading.state.TradeState
 
 import cats.effect.*
 import cats.syntax.all.*
-import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Producer as PulsarProducer, Pulsar, Subscription }
+import dev.profunktor.pulsar.{ Config as _, Consumer as PulsarConsumer, Producer as PulsarProducer, * }
+import dev.profunktor.pulsar.transactions.PulsarTx
 import fs2.Stream
-import dev.profunktor.pulsar.SeqIdMaker
-import java.util.UUID
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -42,15 +45,18 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.KeyShared)
       .build
 
+  // TradeEvent.Switch subscription (one per instance, thus the UUID)
   def swtSub(id: UUID) =
     Subscription.Builder
       .withName(s"processor-${id.show}")
       .withType(Subscription.Type.Exclusive)
       .build
 
+  // TradeEvent.Switch consumer settings (for topic compaction)
   val compact =
     PulsarConsumer.Settings[IO, TradeEvent.Switch]().withReadCompacted.some
 
+  // TradeEvent producer settings, dedup and sharded
   val evtSettings =
     PulsarProducer
       .Settings[IO, TradeEvent]()
@@ -58,6 +64,7 @@ object Main extends IOApp.Simple:
       .withShardKey(Shard[TradeEvent].key)
       .some
 
+  // TradeEvent.Switch producer settings, dedup and partitioned (for topic compaction)
   val swtSettings =
     PulsarProducer
       .Settings[IO, TradeEvent.Switch]()
@@ -68,7 +75,7 @@ object Main extends IOApp.Simple:
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
-      pulsar <- Pulsar.make[IO](config.pulsar.url)
+      pulsar <- Pulsar.make[IO](config.pulsar.url, Pulsar.Settings().withTransactions)
       uuid   <- Resource.eval(GenUUID[IO].make[UUID])
       _      <- Resource.eval(Logger[IO].info(s"Initializing processor service: ${uuid.show}"))
       server   = Ember.default[IO](config.httpPort)
@@ -80,4 +87,4 @@ object Main extends IOApp.Simple:
       snapshots <- SnapshotReader.make[IO](config.redisUri)
       consumer  <- Consumer.pulsar[IO, TradeCommand](pulsar, cmdTopic, cmdSub)
       events    <- Consumer.pulsar[IO, TradeEvent.Switch](pulsar, evtTopic, swtSub(uuid), compact).map(_.receive)
-    yield (server, consumer, events, snapshots, Engine.fsm(producer, switcher, consumer.ack))
+    yield (server, consumer, events, snapshots, Engine.fsm(producer, switcher, Txn.make(pulsar), consumer.ack))

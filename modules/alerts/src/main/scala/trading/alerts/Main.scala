@@ -38,6 +38,7 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.KeyShared)
       .build
 
+  // Alert producer settings, dedup and partitioned (for topic compaction in WS)
   val pSettings =
     PulsarProducer
       .Settings[IO, Alert]()

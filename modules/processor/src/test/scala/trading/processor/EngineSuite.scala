@@ -12,7 +12,7 @@ import trading.lib.Logger.NoOp.given
 import trading.state.*
 
 import cats.data.NonEmptyList
-import cats.effect.IO
+import cats.effect.{ IO, Resource }
 import cats.syntax.all.*
 import weaver.SimpleIOSuite
 import weaver.scalacheck.Checkers
@@ -36,7 +36,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       acks <- IO.ref(List.empty[Consumer.MsgId])
       prod     = Producer.testMany(evts)
       switcher = Producer.testMany(swts)
-      fsm      = Engine.fsm(prod, switcher, i => acks.update(_ :+ i))
+      fsm      = Engine.fsm(prod, switcher, Txn.dummy, (i, _) => acks.update(_ :+ i))
       // first command: Create
       tst1 <- fsm.runS(
         TradeState.empty,

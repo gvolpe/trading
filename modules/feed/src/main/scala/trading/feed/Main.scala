@@ -20,6 +20,7 @@ object Main extends IOApp.Simple:
         .drain
     }
 
+  // TradeCommand producer settings, dedup and sharded
   val tcSettings =
     PulsarProducer
       .Settings[IO, TradeCommand]()
@@ -27,6 +28,7 @@ object Main extends IOApp.Simple:
       .withShardKey(Shard[TradeCommand].key)
       .some
 
+  // ForecastCommand producer settings, dedup and sharded
   val fcSettings =
     PulsarProducer
       .Settings[IO, ForecastCommand]()

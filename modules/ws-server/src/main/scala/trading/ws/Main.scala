@@ -24,6 +24,7 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
+  // Alert subscription (one per SocketId, Exclusive for topic compaction)
   val mkSub = (sid: SocketId) =>
     Subscription.Builder
       .withName(s"ws-server-${sid.show}")
@@ -31,6 +32,7 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.Exclusive)
       .build
 
+  // Alert consumer settings (for topic compaction)
   val compact =
     PulsarConsumer.Settings[IO, Alert]().withReadCompacted.some
 

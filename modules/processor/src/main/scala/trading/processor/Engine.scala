@@ -9,26 +9,33 @@ import trading.events.TradeEvent.Switch
 import trading.lib.*
 import trading.state.TradeState
 
-import cats.MonadThrow
+import cats.effect.kernel.{ MonadCancelThrow, Resource }
 import cats.syntax.all.*
 
 object Engine:
   type In = Consumer.Msg[TradeCommand] | Switch
 
-  def fsm[F[_]: GenUUID: Logger: MonadThrow: Time](
+  def fsm[F[_]: GenUUID: Logger: MonadCancelThrow: Time](
       producer: Producer[F, TradeEvent],
       switcher: Producer[F, TradeEvent.Switch],
-      ack: Consumer.MsgId => F[Unit]
+      txRes: Resource[F, Txn],
+      ack: (Consumer.MsgId, Txn) => F[Unit]
   ): FSM[F, TradeState, In, Unit] =
     FSM {
       case (st, Consumer.Msg(msgId, _, cmd)) =>
         val (nst, evt) = TradeEngine.fsm.run(st, cmd)
-        for
-          e <- (GenUUID[F].make[EventId], Time[F].timestamp).mapN(evt)
-          _ <- producer.send(e)
-          _ <- Switch.from(e).traverse_(switcher.send)
-          _ <- ack(msgId).attempt.void // don't care if this fails (de-dup)
-        yield nst -> ()
+        txRes
+          .use { tx =>
+            for
+              e <- (GenUUID[F].make[EventId], Time[F].timestamp).mapN(evt)
+              _ <- Switch.from(e).traverse_(switcher.send)
+              _ <- producer.send(e)
+              _ <- ack(msgId, tx)
+            yield nst -> ()
+          }
+          .handleErrorWith { e =>
+            Logger[F].warn(s"Transaction failed: ${e.getMessage}").tupleLeft(st)
+          }
       case (st, Switch(Left(_: TradeEvent.Started))) =>
         ().pure[F].tupleLeft(TradeState._Status.replace(On)(st))
       case (st, Switch(Right(_: TradeEvent.Stopped))) =>
