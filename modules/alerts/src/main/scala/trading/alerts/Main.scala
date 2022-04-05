@@ -9,7 +9,8 @@ import trading.lib.{ given, * }
 import trading.state.TradeState
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Pulsar, Subscription }
+import cats.syntax.all.*
+import dev.profunktor.pulsar.{ Producer as PulsarProducer, Pulsar, SeqIdMaker, Subscription }
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -18,22 +19,32 @@ object Main extends IOApp.Simple:
       .resource(resources)
       .flatMap { (server, consumer, snapshots, fsm) =>
         Stream.eval(server.useForever).concurrently {
-          Stream.eval(snapshots.latest).flatMap {
-            case Some(st, id) =>
+          val st = TradeState.empty
+          Stream.eval(snapshots.getLastId).flatMap {
+            case Some(id) =>
               consumer.receiveM(id).evalMapAccumulate(st)(fsm.run)
             case None =>
-              consumer.receiveM.evalMapAccumulate(TradeState.empty)(fsm.run)
+              consumer.receiveM.evalMapAccumulate(st)(fsm.run)
           }
         }
       }
       .compile
       .drain
 
+  // sharded by symbol (see Shard[TradeEvent] instance)
   val sub =
     Subscription.Builder
       .withName("alerts")
-      .withType(Subscription.Type.Shared)
+      .withType(Subscription.Type.KeyShared)
       .build
+
+  // Alert producer settings, dedup and partitioned (for topic compaction in WS)
+  val pSettings =
+    PulsarProducer
+      .Settings[IO, Alert]()
+      .withDeduplication(SeqIdMaker.fromEq)
+      .withMessageKey(Partition[Alert].key)
+      .some
 
   def resources =
     for
@@ -43,7 +54,7 @@ object Main extends IOApp.Simple:
       alertsTopic = AppTopic.Alerts.make(config.pulsar)
       eventsTopic = AppTopic.TradingEvents.make(config.pulsar)
       snapshots <- SnapshotReader.make[IO](config.redisUri)
-      producer  <- Producer.dedup[IO, Alert](pulsar, alertsTopic)
+      producer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic, pSettings)
       consumer  <- Consumer.pulsar[IO, TradeEvent](pulsar, eventsTopic, sub)
       server = Ember.default[IO](config.httpPort)
     yield (server, consumer, snapshots, Engine.fsm(producer, consumer.ack))

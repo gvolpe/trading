@@ -17,6 +17,8 @@ services:
       /bin/bash -c "bin/pulsar standalone"
     networks:
       - app
+    volumes:
+      - ./pulsarconf/standalone.conf:/pulsar/conf/standalone.conf
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers/health"]
       interval: 2s

@@ -7,19 +7,14 @@ import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.Queue
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, * }
+import dev.profunktor.pulsar.transactions.Tx
 import fs2.Stream
 import fs2.kafka.{ ConsumerSettings, KafkaConsumer }
 import io.circe.{ Decoder, Encoder }
 import io.circe.parser.decode as jsonDecode
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
-import org.apache.pulsar.client.api.MessageId
-import org.apache.pulsar.client.api.DeadLetterPolicy
-
-trait Acker[F[_], A]:
-  def ack(id: Consumer.MsgId): F[Unit]
-  def ack(ids: Set[Consumer.MsgId]): F[Unit]
-  def nack(id: Consumer.MsgId): F[Unit]
+import org.apache.pulsar.client.api.{ DeadLetterPolicy, MessageId }
 
 trait Consumer[F[_], A] extends Acker[F, A]:
   def receiveM: Stream[F, Consumer.Msg[A]]
@@ -41,6 +36,7 @@ object Consumer:
     def receive: Stream[F, A]                                    = Stream.fromQueueNoneTerminated(queue)
     def ack(id: Consumer.MsgId): F[Unit]                         = Applicative[F].unit
     def ack(ids: Set[Consumer.MsgId]): F[Unit]                   = Applicative[F].unit
+    def ack(id: Consumer.MsgId, tx: Txn): F[Unit]                = Applicative[F].unit
     def nack(id: Consumer.MsgId): F[Unit]                        = Applicative[F].unit
 
   def pulsar[F[_]: Async: Logger, A: Decoder: Encoder](
@@ -77,7 +73,8 @@ object Consumer:
         def receive: Stream[F, A]                  = c.autoSubscribe
         def ack(id: Consumer.MsgId): F[Unit]       = c.ack(MessageId.fromByteArray(id.getBytes(UTF_8)))
         def ack(ids: Set[Consumer.MsgId]): F[Unit] = c.ack(ids.map(id => MessageId.fromByteArray(id.getBytes(UTF_8))))
-        def nack(id: Consumer.MsgId): F[Unit]      = c.nack(MessageId.fromByteArray(id.getBytes(UTF_8)))
+        def ack(id: Consumer.MsgId, tx: Txn): F[Unit] = c.ack(MessageId.fromByteArray(id.getBytes(UTF_8)), tx.get)
+        def nack(id: Consumer.MsgId): F[Unit]         = c.nack(MessageId.fromByteArray(id.getBytes(UTF_8)))
     }
 
   type KafkaOffset = Map[TopicPartition, OffsetAndMetadata]
@@ -103,6 +100,8 @@ object Consumer:
               ref.get >>= c.commitAsync
             def ack(ids: Set[Consumer.MsgId]): F[Unit] =
               ref.get >>= c.commitAsync
+            def ack(id: MsgId, tx: Txn): F[Unit] =
+              ack(id)
             def nack(id: Consumer.MsgId): F[Unit] =
               Applicative[F].unit
         }

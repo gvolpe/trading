@@ -71,9 +71,10 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       IO.pure(ForecastNotFound.asLeft)
 
   class DummyAcker extends Acker[IO, ForecastCommand]:
-    def ack(id: Consumer.MsgId): IO[Unit]       = IO.unit
-    def ack(ids: Set[Consumer.MsgId]): IO[Unit] = IO.unit
-    def nack(id: Consumer.MsgId): IO[Unit]      = IO.unit
+    def ack(id: Consumer.MsgId): IO[Unit]          = IO.unit
+    def ack(ids: Set[Consumer.MsgId]): IO[Unit]    = IO.unit
+    def ack(id: Consumer.MsgId, tx: Txn): IO[Unit] = ack(id)
+    def nack(id: Consumer.MsgId): IO[Unit]         = IO.unit
 
   def mkNAcker(ref: Ref[IO, Option[Consumer.MsgId]]): Acker[IO, ForecastCommand] = new DummyAcker:
     override def nack(id: Consumer.MsgId): IO[Unit] = ref.set(id.some)

@@ -35,14 +35,14 @@ object Alert:
       createdAt: Timestamp
   ) extends Alert
 
-  // Eq instances are used for deduplication
+  // Eq instances are used for deduplication (we don't consider `cid` so the topic can be compacted more often)
   // FIXME: should not be necessary to use `show` on `alertType` (related to typeclass derivation)
   given Eq[TradeAlert] = Eq.instance { (x, y) =>
-    x.cid === y.cid && x.alertType.show === y.alertType.show && x.symbol === y.symbol && x.askPrice === y.askPrice && x.bidPrice === y.bidPrice && x.high === y.high && x.low === y.low
+    x.alertType.show === y.alertType.show && x.symbol === y.symbol && x.askPrice === y.askPrice && x.bidPrice === y.bidPrice && x.high === y.high && x.low === y.low
   }
 
   given Eq[TradeUpdate] = Eq.instance { (x, y) =>
-    x.cid === y.cid && x.status === y.status
+    x.status === y.status
   }
 
   given Eq[Alert] = Eq.instance {

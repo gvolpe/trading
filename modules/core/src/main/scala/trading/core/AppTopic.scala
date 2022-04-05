@@ -19,6 +19,10 @@ object AppTopic:
     val name: String                    = "trading-events"
     def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
 
+  case object SwitchEvents extends AppTopic:
+    val name: String                    = "trading-switch-events"
+    def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
+
   case object ForecastCommands extends AppTopic:
     val name: String                    = "forecast-commands"
     def make(cfg: Config): Topic.Single = mkNonPersistent(cfg, name)

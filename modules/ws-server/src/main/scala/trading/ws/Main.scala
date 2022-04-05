@@ -6,8 +6,8 @@ import trading.domain.{ Alert, SocketId }
 import trading.lib.{ Consumer, Logger }
 
 import cats.effect.*
-import cats.syntax.show.*
-import dev.profunktor.pulsar.{ Pulsar, Subscription }
+import cats.syntax.all.*
+import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -24,12 +24,17 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
+  // Alert subscription (one per SocketId, Exclusive for topic compaction)
   val mkSub = (sid: SocketId) =>
     Subscription.Builder
       .withName(s"ws-server-${sid.show}")
       .withMode(Subscription.Mode.NonDurable)
       .withType(Subscription.Type.Exclusive)
       .build
+
+  // Alert consumer settings (for topic compaction)
+  val compact =
+    PulsarConsumer.Settings[IO, Alert]().withReadCompacted.some
 
   def resources =
     for
@@ -38,7 +43,7 @@ object Main extends IOApp.Simple:
       _      <- Resource.eval(Logger[IO].info("Initializing ws-server service"))
       ptopic = AppTopic.Alerts.make(config.pulsar)
       conns <- Resource.eval(WsConnections.make[IO])
-      mkConsumer = (sid: SocketId) => Consumer.pulsar[IO, Alert](pulsar, ptopic, mkSub(sid))
+      mkConsumer = (sid: SocketId) => Consumer.pulsar[IO, Alert](pulsar, ptopic, mkSub(sid), compact)
       mkAlerts   = (sid: SocketId) => Stream.resource(mkConsumer(sid)).flatMap(_.receive)
       mkHandler  = (sid: SocketId) => Handler.make[IO](sid, conns, mkAlerts(sid))
       server     = Ember.websocket[IO](config.httpPort, WsRoutes[IO](_, mkHandler).routes)
