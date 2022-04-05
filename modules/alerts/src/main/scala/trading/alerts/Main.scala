@@ -31,11 +31,12 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  // sharded by symbol (see Shard[TradeEvent] instance)
+  // Even though events are sharded by symbol or status, using KeyShared in alerts can be
+  // problematic when an instance goes does, due to consumers rebalance.
   val sub =
     Subscription.Builder
       .withName("alerts")
-      .withType(Subscription.Type.KeyShared)
+      .withType(Subscription.Type.Failover)
       .build
 
   // Alert producer settings, dedup and partitioned (for topic compaction in WS)
