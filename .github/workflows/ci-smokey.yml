@@ -45,7 +45,7 @@ jobs:
         run: docker build -t jdk17-curl modules/
 
       - name: "Build Docker images 🚀"
-        run: nix develop -c sbt 'processor/docker:publishLocal;alerts/docker:publishLocal;ws-server/docker:publishLocal'
+        run: nix develop -c sbt 'processor/docker:publishLocal;alerts/docker:publishLocal;ws/docker:publishLocal'
 
       - name: "Starting up trading core services 🐳"
         run: docker-compose up -d processor alerts ws-server
