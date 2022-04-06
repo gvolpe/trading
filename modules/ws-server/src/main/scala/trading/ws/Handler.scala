@@ -52,6 +52,8 @@ object Handler:
             }
             .unNone
 
+        val close = conns.unsubscribe(sid)
+
         val receive: Pipe[F, WebSocketFrame, Unit] =
           _.evalMap {
             decode(_) match
@@ -61,13 +63,13 @@ object Handler:
                 ().pure[F]
               case Right(WsIn.Close) =>
                 Logger[F].info(s"[$sid] - Closing WS connection") *>
-                  conns.unsubscribe(sid) *> switch.complete(().asRight).void
+                  close *> switch.complete(().asRight).void
               case Right(WsIn.Subscribe(symbol)) =>
                 Logger[F].info(s"[$sid] - Subscribing to $symbol alerts") *>
                   subs.update(_ + symbol)
               case Right(WsIn.Unsubscribe(symbol)) =>
                 Logger[F].info(s"[$sid] - Unsubscribing from $symbol alerts") *>
                   subs.update(_ - symbol)
-          }.onFinalize(Logger[F].info(s"[$sid] - WS connection terminated"))
+          }.onFinalize(Logger[F].info(s"[$sid] - WS connection terminated") *> close)
             .onFirstMessage(fuze.complete(()).void)
     }

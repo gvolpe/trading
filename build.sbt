@@ -173,6 +173,16 @@ lazy val it = (project in file("modules/it"))
   .dependsOn(domain.jvm % "compile->compile;compile->test")
   .dependsOn(forecasts)
 
+// extension qa smoke tests
+lazy val smokey = (project in file("modules/x-qa"))
+  .settings(commonSettings: _*)
+  .dependsOn(core, domain.jvm)
+  .settings(
+    libraryDependencies ++= List(
+      Libraries.http4sJdkWs
+    )
+  )
+
 // extension demo
 lazy val demo = (project in file("modules/x-demo"))
   .settings(commonSettings: _*)

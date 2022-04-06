@@ -52,8 +52,7 @@ object TradeEvent:
       case e: Stopped => Switch(e.asRight).some
       case _          => none
 
-    given Eq[Switch] = new:
-      def eqv(x: Switch, y: Switch): Boolean = x.getEvent === y.getEvent
+    given Eq[Switch] = Eq.by(_.getEvent)
 
   // EventId and Timestamp are regenerated when reprocessed so we don't consider them for deduplication.
   given Eq[TradeEvent] = Eq.and(Eq.by(_.cid), Eq.by(_Command.get))

@@ -13,6 +13,7 @@ object Dependencies {
     val fs2Core       = "3.2.7"
     val fs2Kafka      = "2.4.0"
     val http4s        = "1.0.0-M32"
+    val http4sWs      = "1.0.0-M1"
     val kittens       = "3.0.0-M1"
     val monocle       = "3.1.0"
     val natchez       = "0.1.6"
@@ -57,6 +58,8 @@ object Dependencies {
     val http4sClient  = http4s("ember-client")
     val http4sCirce   = http4s("circe")
     val http4sMetrics = http4s("prometheus-metrics")
+
+    val http4sJdkWs = "org.http4s" %% "http4s-jdk-http-client" % V.http4sWs
 
     val natchezCore      = "org.tpolecat" %% "natchez-core"      % V.natchez
     val natchezHoneycomb = "org.tpolecat" %% "natchez-honeycomb" % V.natchez

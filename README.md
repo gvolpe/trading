@@ -200,8 +200,31 @@ All unit tests can be executed via `sbt test`. There's also a small suite of int
 
 It contains all the standalone examples shown in the book. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
 
+### X QA
+
+It contains the `smokey` project that models the smoke test for trading.
+
 ## Monitoring
 
 JVM stats are provided for every service via Prometheus and Grafana.
 
 ![grafana](./imgs/grafana.png)
+
+## Topic compaction
+
+Two Pulsar topics can be compacted to speed-up reads on startup, corresponding to `Alert` and `TradeEvent.Switch`.
+
+To compact a topic on demand (useful for manual testing), run these commands.
+
+```console
+$ docker-compose exec pulsar bin/pulsar-admin topics compact persistent://public/default/trading-alerts
+Topic compaction requested for persistent://public/default/trading-alerts.
+$ docker-compose exec pulsar bin/pulsar-admin topics compact persistent://public/default/trading-switch-events
+Topic compaction requested for persistent://public/default/trading-switch-events
+```
+
+In production, one would configure topic compaction to be triggered automatically at the namespace level when certain threshold is reached. For example, to trigger compaction when the backlog reaches 10MB:
+
+```console
+$ docker-compose exec pulsar bin/pulsar-admin namespaces set-compaction-threshold --threshold 10M public/default
+```
