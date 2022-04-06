@@ -44,5 +44,26 @@ jobs:
       - name: "Run trading tests 🚀"
         run: nix develop -c sbt 'test;it/test;webapp/fastOptJS'
 
+      # ---- Build and push Docker images ----
+
+      - name: "Login to GitHub Container Registry "
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Build `jdk17-curl` Docker image 🚀"
+        run: docker build -t jdk17-curl modules/
+
+      - name: "Build Docker images 🚀"
+        run: nix develop -c sbt 'processor/docker:publishLocal;alerts/docker:publishLocal;ws/docker:publishLocal'
+
+      - name: "Push trading Docker images 🐳"
+        run: |
+          docker push ghcr.io/gvolpe/trading-alerts:latest
+          docker push ghcr.io/gvolpe/trading-processor:latest
+          docker push ghcr.io/gvolpe/trading-ws:latest
+
       - name: "Shutting down Redis 🐳"
         run: docker-compose down
