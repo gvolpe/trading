@@ -61,11 +61,9 @@ jobs:
 
       - name: "Push trading Docker images 🐳"
         run: |
-          docker images
           docker tag trading-alerts ghcr.io/gvolpe/trading-alerts:latest
           docker tag trading-processor ghcr.io/gvolpe/trading-processor:latest
           docker tag trading-ws ghcr.io/gvolpe/trading-ws:latest
-          docker images
           docker push ghcr.io/gvolpe/trading-alerts:latest
           docker push ghcr.io/gvolpe/trading-processor:latest
           docker push ghcr.io/gvolpe/trading-ws:latest

@@ -3,8 +3,7 @@ name: Smokey
 on:
   workflow_run:
     workflows: ["Scala"]
-    pull_request:
-      branches: [main]
+    branches: [main]
     types:
       - completed
 
@@ -35,11 +34,9 @@ jobs:
           docker pull ghcr.io/gvolpe/trading-alerts:latest
           docker pull ghcr.io/gvolpe/trading-processor:latest
           docker pull ghcr.io/gvolpe/trading-ws:latest
-          docker images
           docker tag ghcr.io/gvolpe/trading-alerts trading-alerts:latest
           docker tag ghcr.io/gvolpe/trading-processor trading-processor:latest
           docker tag ghcr.io/gvolpe/trading-ws trading-ws:latest
-          docker images
 
       - name: "Starting up trading core services 🐳"
         run: docker-compose up -d processor alerts ws-server
