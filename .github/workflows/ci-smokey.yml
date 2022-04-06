@@ -3,7 +3,8 @@ name: Smokey
 on:
   workflow_run:
     workflows: ["Scala"]
-    branches: [main]
+    pull_request:
+      branches: [main]
     types:
       - completed
 
