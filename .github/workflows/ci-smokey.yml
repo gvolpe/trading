@@ -41,6 +41,9 @@ jobs:
           name: feda
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
+      - name: "Build `jdk17-curl` Docker image 🚀"
+        run: docker build -t jdk17-curl modules/
+
       - name: "Build Docker images 🚀"
         run: nix develop -c sbt 'processor/docker:publishLocal;alerts/docker:publishLocal;ws-server/docker:publishLocal'
 
