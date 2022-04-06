@@ -9,6 +9,7 @@ import cats.effect.*
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Pulsar, Subscription }
 import fs2.Stream
+import org.apache.pulsar.client.api.SubscriptionInitialPosition
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -32,9 +33,13 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.Exclusive)
       .build
 
-  // Alert consumer settings (for topic compaction)
+  // Alert consumer settings (topic compaction & previous reads)
   val compact =
-    PulsarConsumer.Settings[IO, Alert]().withReadCompacted.some
+    PulsarConsumer
+      .Settings[IO, Alert]()
+      .withInitialPosition(SubscriptionInitialPosition.Earliest)
+      .withReadCompacted
+      .some
 
   def resources =
     for
