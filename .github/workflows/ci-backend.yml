@@ -61,9 +61,9 @@ jobs:
 
       - name: "Push trading Docker images 🐳"
         run: |
-          docker push ghcr.io/gvolpe/trading-alerts:latest
-          docker push ghcr.io/gvolpe/trading-processor:latest
-          docker push ghcr.io/gvolpe/trading-ws:latest
+          docker push trading-alerts:latest
+          docker push trading-processor:latest
+          docker push trading-ws:latest
 
       - name: "Shutting down Redis 🐳"
         run: docker-compose down
