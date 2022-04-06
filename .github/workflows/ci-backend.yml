@@ -53,17 +53,22 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "Build `jdk17-curl` Docker image 🚀"
+      - name: "Build jdk17-curl Docker image 🚀"
         run: docker build -t jdk17-curl modules/
 
-      - name: "Build Docker images 🚀"
+      - name: "Build trading Docker images 🚀"
         run: nix develop -c sbt 'processor/docker:publishLocal;alerts/docker:publishLocal;ws/docker:publishLocal'
 
       - name: "Push trading Docker images 🐳"
         run: |
-          docker push trading-alerts:latest
-          docker push trading-processor:latest
-          docker push trading-ws:latest
+          docker images
+          docker tag trading-alerts ghcr.io/gvolpe/trading-alerts:latest
+          docker tag trading-processor ghcr.io/gvolpe/trading-processor:latest
+          docker tag trading-ws ghcr.io/gvolpe/trading-ws:latest
+          docker images
+          docker push ghcr.io/gvolpe/trading-alerts:latest
+          docker push ghcr.io/gvolpe/trading-processor:latest
+          docker push ghcr.io/gvolpe/trading-ws:latest
 
       - name: "Shutting down Redis 🐳"
         run: docker-compose down
