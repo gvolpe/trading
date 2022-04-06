@@ -44,6 +44,9 @@ jobs:
       - name: "Run trading tests 🚀"
         run: nix develop -c sbt 'test;it/test;webapp/fastOptJS'
 
+      - name: "Shutting down Redis 🐳"
+        run: docker-compose down
+
       # ---- Build and push Docker images ----
 
       - name: "Login to GitHub Container Registry "
@@ -67,6 +70,3 @@ jobs:
           docker push ghcr.io/gvolpe/trading-alerts:latest
           docker push ghcr.io/gvolpe/trading-processor:latest
           docker push ghcr.io/gvolpe/trading-ws:latest
-
-      - name: "Shutting down Redis 🐳"
-        run: docker-compose down
