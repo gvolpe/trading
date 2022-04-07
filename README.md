@@ -28,7 +28,9 @@ Reference application developed in the [Functional event-driven architecture: Po
    * [Tracing](#tracing)
    * [Tests](#tests)
    * [X Demo](#x-demo)
+   * [X QA](#x-qa)
 * [Monitoring](#monitoring)
+* [Topic compaction](#topic-compaction)
 
 ## Web App
 
