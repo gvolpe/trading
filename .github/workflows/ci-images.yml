@@ -1,0 +1,51 @@
+name: Registry
+
+on:
+  workflow_run:
+    workflows: ["Scala"]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  build:
+    name: Build and push images
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2.3.2
+
+      - name: "Cache for sbt & coursier ♨️"
+        uses: coursier/cache-action@v4.1
+
+      - name: "Install Nix ❄️"
+        uses: cachix/install-nix-action@v16
+
+      - name: "Install Cachix ❄️"
+        uses: cachix/cachix-action@v10
+        with:
+          name: feda
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: "Login to GitHub Container Registry "
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Build jdk17-curl Docker image 🚀"
+        run: docker build -t jdk17-curl modules/
+
+      - name: "Build trading Docker images 🚀"
+        run: nix develop -c sbt 'processor/docker:publishLocal;alerts/docker:publishLocal;ws/docker:publishLocal'
+
+      - name: "Push trading Docker images 🐳"
+        run: |
+          docker tag jdk17-curl ghcr.io/gvolpe/jdk17-curl:latest
+          docker tag trading-alerts ghcr.io/gvolpe/trading-alerts:latest
+          docker tag trading-processor ghcr.io/gvolpe/trading-processor:latest
+          docker tag trading-ws ghcr.io/gvolpe/trading-ws:latest
+          docker push ghcr.io/gvolpe/jdk17-curl:latest
+          docker push ghcr.io/gvolpe/trading-alerts:latest
+          docker push ghcr.io/gvolpe/trading-processor:latest
+          docker push ghcr.io/gvolpe/trading-ws:latest

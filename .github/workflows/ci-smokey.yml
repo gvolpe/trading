@@ -2,7 +2,7 @@ name: Smokey
 
 on:
   workflow_run:
-    workflows: ["Scala"]
+    workflows: ["Registry"]
     branches: [main]
     types:
       - completed
@@ -16,9 +16,6 @@ jobs:
 
       - name: "Cache for sbt & coursier ♨️"
         uses: coursier/cache-action@v4.1
-
-      - name: "Starting up Pulsar & Redis 🐳"
-        run: docker-compose up -d pulsar redis
 
       - name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v16
@@ -44,6 +41,9 @@ jobs:
           docker tag ghcr.io/gvolpe/trading-alerts trading-alerts:latest
           docker tag ghcr.io/gvolpe/trading-processor trading-processor:latest
           docker tag ghcr.io/gvolpe/trading-ws trading-ws:latest
+
+      - name: "Starting up Pulsar & Redis 🐳"
+        run: docker-compose up -d pulsar redis
 
       - name: "Starting up trading core services 🐳"
         run: docker-compose up -d processor alerts ws-server
