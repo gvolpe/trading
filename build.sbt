@@ -65,7 +65,10 @@ lazy val root = (project in file("."))
 lazy val domain = crossProject(JSPlatform, JVMPlatform)
   .in(file("modules/domain"))
   .settings(commonSettings: _*)
-  .jsSettings(test := {})
+  .jsSettings(
+    test := {},
+    scalacOptions ++= List("-scalajs")
+  )
 
 lazy val lib = (project in file("modules/lib"))
   .settings(commonSettings: _*)
