@@ -3,16 +3,16 @@ package trading.core
 import java.time.Instant
 import java.util.UUID
 
-import trading.commands.TradeCommand
+import trading.commands.*
 import trading.core.TradeEngine.fsm
 import trading.domain.TradingStatus.*
 import trading.domain.*
+import trading.events.*
 import trading.state.*
 
 import cats.data.NonEmptyList
 import weaver.FunSuite
 import weaver.scalacheck.Checkers
-import trading.events.TradeEvent
 
 object TradeEngineSuite extends FunSuite with Checkers:
   val id  = CommandId(UUID.randomUUID())
@@ -48,10 +48,10 @@ object TradeEngineSuite extends FunSuite with Checkers:
     val xst4       = TradeState(On, Map(s -> Prices(ask = Map(p2 -> q2), bid = Map(p1 -> q1), p2, p1)))
     val xev4       = TradeEvent.CommandExecuted(eid, cid, cmd4, ts)
 
-    val cmd5       = TradeCommand.Stop(id, cid, ts)
+    val cmd5       = SwitchCommand.Stop(id, cid, ts)
     val (st5, ev5) = fsm.run(st4, cmd5)
     val xst5       = TradeState(Off, xst4.prices)
-    val xev5       = TradeEvent.Stopped(eid, cid, ts)
+    val xev5       = SwitchEvent.Stopped(eid, cid, ts)
 
     val cmd6       = TradeCommand.Create(id, cid, s, TradeAction.Bid, p1, q1, "test", ts)
     val (st6, ev6) = fsm.run(st5, cmd6)

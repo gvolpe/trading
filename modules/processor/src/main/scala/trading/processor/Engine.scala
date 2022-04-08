@@ -1,11 +1,10 @@
 package trading.processor
 
-import trading.commands.TradeCommand
+import trading.commands.*
 import trading.core.TradeEngine
-import trading.domain.EventId
+import trading.domain.{ EventId, Timestamp }
 import trading.domain.TradingStatus.{ Off, On }
-import trading.events.TradeEvent
-import trading.events.TradeEvent.Switch
+import trading.events.*
 import trading.lib.*
 import trading.state.TradeState
 
@@ -13,31 +12,36 @@ import cats.effect.kernel.{ MonadCancelThrow, Resource }
 import cats.syntax.all.*
 
 object Engine:
-  type In = Consumer.Msg[TradeCommand] | Switch
+  type In = Either[Consumer.Msg[TradeCommand], Consumer.Msg[SwitchCommand]]
 
   def fsm[F[_]: GenUUID: Logger: MonadCancelThrow: Time](
       producer: Producer[F, TradeEvent],
-      switcher: Producer[F, TradeEvent.Switch],
-      txRes: Resource[F, Txn],
-      ack: (Consumer.MsgId, Txn) => F[Unit]
+      switcher: Producer[F, SwitchEvent],
+      pulsarTx: Resource[F, Txn],
+      tradeAcker: Acker[F, TradeCommand],
+      switchAcker: Acker[F, SwitchCommand]
   ): FSM[F, TradeState, In, Unit] =
+    def sendEvent(
+        f: (EventId, Timestamp) => TradeEvent | SwitchEvent,
+        msgId: Consumer.MsgId,
+        ack: F[Unit]
+    ): F[Unit] =
+      (GenUUID[F].make[EventId], Time[F].timestamp).mapN(f).flatMap {
+        case e: TradeEvent  => producer.send(e)
+        case e: SwitchEvent => switcher.send(e)
+      } *> ack
+
     FSM {
-      case (st, Consumer.Msg(msgId, _, cmd)) =>
+      case (st, Right(Consumer.Msg(msgId, _, cmd))) =>
         val (nst, evt) = TradeEngine.fsm.run(st, cmd)
-        txRes
+        pulsarTx
           .use { tx =>
-            for
-              e <- (GenUUID[F].make[EventId], Time[F].timestamp).mapN(evt)
-              _ <- Switch.from(e).traverse_(switcher.send)
-              _ <- producer.send(e)
-              _ <- ack(msgId, tx)
-            yield nst -> ()
+            sendEvent(evt, msgId, switchAcker.ack(msgId, tx)).tupleLeft(nst)
           }
           .handleErrorWith { e =>
             Logger[F].warn(s"Transaction failed: ${e.getMessage}").tupleLeft(st)
           }
-      case (st, Switch(Left(_: TradeEvent.Started))) =>
-        ().pure[F].tupleLeft(TradeState._Status.replace(On)(st))
-      case (st, Switch(Right(_: TradeEvent.Stopped))) =>
-        ().pure[F].tupleLeft(TradeState._Status.replace(Off)(st))
+      case (st, Left(Consumer.Msg(msgId, _, cmd))) =>
+        val (nst, evt) = TradeEngine.fsm.run(st, cmd)
+        sendEvent(evt, msgId, tradeAcker.ack(msgId)).tupleLeft(nst)
     }

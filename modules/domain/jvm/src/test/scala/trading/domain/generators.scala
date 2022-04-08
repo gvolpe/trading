@@ -5,12 +5,12 @@ import java.util.UUID
 
 import trading.commands.*
 import trading.domain.*
-import trading.events.TradeEvent
+import trading.events.*
 import trading.state.*
 import trading.ws.*
 
 import cats.Order
-import cats.syntax.show.*
+import cats.syntax.all.*
 import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
 object arbitraries:
@@ -225,28 +225,32 @@ object generators:
       t <- timestampGen
     yield TradeCommand.Delete(i, d, s, a, p, c, t)
 
-  val startCommandGen: Gen[TradeCommand.Start] =
+  val startCommandGen: Gen[SwitchCommand.Start] =
     for
       i <- commandIdGen
       d <- correlationIdGen
       t <- timestampGen
-    yield TradeCommand.Start(i, d, t)
+    yield SwitchCommand.Start(i, d, t)
 
-  val stopCommandGen: Gen[TradeCommand.Stop] =
+  val stopCommandGen: Gen[SwitchCommand.Stop] =
     for
       i <- commandIdGen
       d <- correlationIdGen
       t <- timestampGen
-    yield TradeCommand.Stop(i, d, t)
+    yield SwitchCommand.Stop(i, d, t)
 
   val tradeCommandGen: Gen[TradeCommand] =
-    Gen.frequency(
-      2 -> Gen.oneOf(startCommandGen, stopCommandGen),
-      9 -> Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
-    )
+    Gen.oneOf(createCommandGen, updateCommandGen, deleteCommandGen)
 
-  def tradeCommandListGen: List[TradeCommand] =
-    Gen.listOfN(10, tradeCommandGen).sample.toList.flatten
+  val switchCommandGen: Gen[SwitchCommand] =
+    Gen.oneOf(startCommandGen, stopCommandGen)
+
+  def tradeCommandListGen: List[TradeCommand | SwitchCommand] =
+    val gen = Gen.frequency[TradeCommand | SwitchCommand](
+      2 -> switchCommandGen,
+      9 -> tradeCommandGen
+    )
+    Gen.listOfN(10, gen).sample.toList.flatten
 
   // ------ TradeEvent ------
   val genCommandExecEvt: Gen[TradeEvent] =
@@ -269,22 +273,25 @@ object generators:
       t <- timestampGen
     yield TradeEvent.CommandRejected(i, d, c, r, t)
 
-  val genStartedEvt: Gen[TradeEvent] =
+  val genStartedEvt: Gen[SwitchEvent] =
     for
       i <- eventIdGen
       d <- correlationIdGen
       t <- timestampGen
-    yield TradeEvent.Started(i, d, t)
+    yield SwitchEvent.Started(i, d, t)
 
-  val genStoppedEvt: Gen[TradeEvent] =
+  val genStoppedEvt: Gen[SwitchEvent] =
     for
       i <- eventIdGen
       d <- correlationIdGen
       t <- timestampGen
-    yield TradeEvent.Stopped(i, d, t)
+    yield SwitchEvent.Stopped(i, d, t)
 
-  val genTradeEventNoCmdExec: Gen[TradeEvent] =
-    Gen.oneOf(genCommandRejEvt, genStartedEvt, genStoppedEvt)
+  val genSwitchEvent: Gen[SwitchEvent] =
+    Gen.oneOf(genStartedEvt, genStoppedEvt)
+
+  val genTradeEventNoCmdExec: Gen[Either[TradeEvent, SwitchEvent]] =
+    Gen.oneOf(genCommandRejEvt.map(_.asLeft), genSwitchEvent.map(_.asRight))
 
   // ------ TradeState ------
 
