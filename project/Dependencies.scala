@@ -26,7 +26,7 @@ object Dependencies {
     val scalajsTime = "2.4.0-M1"
     val tyrian      = "0.3.2"
 
-    val scalacheck = "1.15.4"
+    val scalacheck = "1.16.0"
     val weaver     = "0.7.11"
 
     val organizeImports = "0.6.0"
