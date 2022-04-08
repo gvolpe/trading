@@ -13,14 +13,18 @@ object AppTopic:
 
   case object TradingCommands extends AppTopic:
     val name: String                    = "trading-commands"
-    def make(cfg: Config): Topic.Single = mkNonPersistent(cfg, name)
+    def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
+
+  case object SwitchCommands extends AppTopic:
+    val name: String                    = "switch-commands"
+    def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
 
   case object TradingEvents extends AppTopic:
     val name: String                    = "trading-events"
     def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
 
   case object SwitchEvents extends AppTopic:
-    val name: String                    = "trading-switch-events"
+    val name: String                    = "switch-events"
     def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
 
   case object ForecastCommands extends AppTopic:

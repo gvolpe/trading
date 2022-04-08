@@ -2,9 +2,9 @@ package trading.lib
 
 import java.nio.charset.StandardCharsets.UTF_8
 
-import trading.commands.{ ForecastCommand, TradeCommand }
+import trading.commands.*
 import trading.domain.Alert
-import trading.events.TradeEvent
+import trading.events.*
 
 import cats.syntax.all.*
 import dev.profunktor.pulsar.ShardKey
@@ -24,23 +24,21 @@ object Shard:
     val key: String => ShardKey =
       str => ShardKey.Of(str.getBytes(UTF_8))
 
-  // Start and Stop should go to the same shard responsible for the trading switch
   given Shard[TradeCommand] with
-    val key: TradeCommand => ShardKey = {
-      case _: TradeCommand.Start | _: TradeCommand.Stop =>
-        Shard.by("trading-status-shard")
-      case cmd =>
-        Shard.by(TradeCommand._Symbol.get(cmd).get.show)
-    }
+    val key: TradeCommand => ShardKey =
+      cmd => Shard.by(cmd.symbol.show)
 
   given Shard[TradeEvent] with
     val key: TradeEvent => ShardKey =
-      TradeEvent._Command.get(_) match
-        case Some(cmd) => Shard[TradeCommand].key(cmd)
-        case None      => Shard.by("trading-status-shard")
+      ev => Shard[TradeCommand].key(ev.command)
 
-  given Shard[TradeEvent.Switch] with
-    val key: TradeEvent.Switch => ShardKey = s => Shard[TradeEvent].key(s.getEvent)
+  given Shard[SwitchCommand] with
+    val key: SwitchCommand => ShardKey =
+      _ => Shard.by("trading-status-shard")
+
+  given Shard[SwitchEvent] with
+    val key: SwitchEvent => ShardKey =
+      _ => Shard.by("trading-status-shard")
 
   given Shard[Alert] with
     val key: Alert => ShardKey = {

@@ -15,32 +15,36 @@ import cats.syntax.all.*
 object Feed:
   def random[F[_]: GenUUID: Logger: Parallel: Temporal: Time](
       trProducer: Producer[F, TradeCommand],
+      switcher: Producer[F, SwitchCommand],
       fcProducer: Producer[F, ForecastCommand]
   ): F[Unit] =
     val trading: F[Unit] =
       Ref.of[F, TradingStatus](TradingStatus.On).flatMap { ref =>
-        import TradeCommand.*
-
-        def switch(st: TradingStatus, cmd: TradeCommand): F[Unit] =
+        def switch(st: TradingStatus, cmd: SwitchCommand): F[Unit] =
           (Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap { (ts, cmdId) =>
+            import SwitchCommand.*
             val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
             Logger[F].warn(s">>> Trading $st <<<") *>
-              trProducer.send(uniqueCmd) *> ref.set(On) *> Temporal[F].sleep(1.second)
+              switcher.send(uniqueCmd) *> ref.set(On) *> Temporal[F].sleep(1.second)
+          }
+
+        def trade(cmd: TradeCommand): F[Unit] =
+          (ref.get, Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap {
+            case (On, ts, cmdId) =>
+              import TradeCommand.*
+              val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
+              Logger[F].info(cmd.show) *> trProducer.send(uniqueCmd) *> Temporal[F].sleep(300.millis)
+            case (Off, _, _) =>
+              ().pure[F]
           }
 
         tradeCommandListGen.replicateA(2).flatten.traverse_ {
-          case cmd @ TradeCommand.Start(_, _, _) =>
+          case cmd @ SwitchCommand.Start(_, _, _) =>
             switch(On, cmd)
-          case cmd @ TradeCommand.Stop(_, _, _) =>
+          case cmd @ SwitchCommand.Stop(_, _, _) =>
             switch(Off, cmd)
-          case cmd =>
-            (ref.get, Time[F].timestamp, GenUUID[F].make[CommandId]).tupled.flatMap {
-              case (On, ts, cmdId) =>
-                val uniqueCmd = _CommandId.replace(cmdId).andThen(_CreatedAt.replace(ts))(cmd)
-                Logger[F].info(cmd.show) *> trProducer.send(uniqueCmd) *> Temporal[F].sleep(300.millis)
-              case (Off, _, _) =>
-                ().pure[F]
-            }
+          case cmd: TradeCommand =>
+            trade(cmd)
         }
       }
 

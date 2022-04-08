@@ -1,16 +1,16 @@
 package trading.core
 
-import trading.commands.TradeCommand
+import trading.commands.*
 import trading.domain.TradingStatus.*
 import trading.domain.*
-import trading.events.TradeEvent
+import trading.events.*
 import trading.lib.FSM
 import trading.state.TradeState
 
 import cats.Id
 
 object TradeEngine:
-  val fsm = FSM.id[TradeState, TradeCommand, (EventId, Timestamp) => TradeEvent] {
+  val fsm = FSM.id[TradeState, TradeCommand | SwitchCommand, (EventId, Timestamp) => TradeEvent | SwitchEvent] {
     // Trading status: On
     case (st @ TradeState(On, _), cmd @ TradeCommand.Create(_, cid, symbol, action, price, quantity, _, _)) =>
       val nst = st.modify(symbol)(action, price, quantity)
@@ -21,16 +21,18 @@ object TradeEngine:
     case (st @ TradeState(On, _), cmd @ TradeCommand.Delete(_, cid, symbol, action, price, _, _)) =>
       val nst = st.remove(symbol)(action, price)
       nst -> ((id, ts) => TradeEvent.CommandExecuted(id, cid, cmd, ts))
-    // Trading switch: On / Off
-    case (st @ TradeState(Off, _), TradeCommand.Start(_, cid, _)) =>
-      val nst = TradeState._Status.replace(On)(st)
-      nst -> ((id, ts) => TradeEvent.Started(id, cid, ts))
-    case (st @ TradeState(On, _), TradeCommand.Stop(_, cid, _)) =>
-      val nst = TradeState._Status.replace(Off)(st)
-      nst -> ((id, ts) => TradeEvent.Stopped(id, cid, ts))
     // Trading status: Off
-    case (st @ TradeState(Off, _), cmd) =>
+    case (st @ TradeState(Off, _), cmd: TradeCommand) =>
       st -> ((id, ts) => TradeEvent.CommandRejected(id, cmd.cid, cmd, Reason("Trading is Off"), ts))
-    case (st @ TradeState(On, _), cmd @ TradeCommand.Start(_, cid, _)) =>
-      st -> ((id, ts) => TradeEvent.CommandRejected(id, cid, cmd, Reason("Trading already On"), ts))
+    // Trading switch: On / Off
+    case (st @ TradeState(Off, _), SwitchCommand.Start(_, cid, _)) =>
+      val nst = TradeState._Status.replace(On)(st)
+      nst -> ((id, ts) => SwitchEvent.Started(id, cid, ts))
+    case (st @ TradeState(On, _), SwitchCommand.Stop(_, cid, _)) =>
+      val nst = TradeState._Status.replace(Off)(st)
+      nst -> ((id, ts) => SwitchEvent.Stopped(id, cid, ts))
+    case (st @ TradeState(On, _), SwitchCommand.Start(_, cid, _)) =>
+      st -> ((id, ts) => SwitchEvent.Ignored(id, cid, ts))
+    case (st @ TradeState(Off, _), SwitchCommand.Stop(_, cid, _)) =>
+      st -> ((id, ts) => SwitchEvent.Ignored(id, cid, ts))
   }

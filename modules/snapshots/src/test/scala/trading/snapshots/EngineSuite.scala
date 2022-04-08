@@ -2,11 +2,11 @@ package trading.snapshots
 
 import java.util.UUID
 
-import trading.commands.TradeCommand
+import trading.commands.*
 import trading.core.snapshots.SnapshotWriter
 import trading.domain.*
 import trading.domain.generators.*
-import trading.events.TradeEvent
+import trading.events.*
 import trading.lib.*
 import trading.lib.Consumer.{ Msg, MsgId }
 import trading.lib.Logger.NoOp.given
@@ -28,7 +28,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   val failingWriter: SnapshotWriter[IO] = new:
     def save(state: TradeState, id: Consumer.MsgId): IO[Unit] = IO.raiseError(new Exception("boom"))
 
-  def mkAcker(acks: Ref[IO, List[MsgId]]): Acker[IO, TradeEvent] = new:
+  def mkAcker[A](acks: Ref[IO, List[MsgId]]): Acker[IO, A] = new:
     def ack(id: MsgId): IO[Unit]                   = acks.update(_ :+ id)
     def ack(ids: Set[MsgId]): IO[Unit]             = acks.update(_ ::: ids.toList)
     def ack(id: Consumer.MsgId, tx: Txn): IO[Unit] = ack(id)
@@ -39,7 +39,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   val tick: Tick = ()
 
   def baseTest(
-      gen: Gen[TradeEvent],
+      gen: Gen[Either[TradeEvent, SwitchEvent]],
       mkWriter: Ref[IO, Option[TradeState]] => SnapshotWriter[IO],
       expWrites: TradeState => Option[TradeState],
       expAcks: List[MsgId]
@@ -48,8 +48,9 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       for
         writes <- IO.ref(none[TradeState])
         acks   <- IO.ref(List.empty[MsgId])
-        fsm = Engine.fsm[IO](mkAcker(acks), mkWriter(writes))
-        nst1 <- fsm.runS(TradeState.empty -> List.empty, Msg(msgId, Map.empty, evt))
+        msg = evt.bimap(Msg(msgId, Map.empty, _), Msg(msgId, Map.empty, _))
+        fsm = Engine.fsm[IO](mkAcker(acks), mkAcker(acks), mkWriter(writes))
+        nst1 <- fsm.runS(TradeState.empty -> List.empty, msg)
         res1 <- writes.get
         nst2 <- fsm.runS(nst1, tick)
         res2 <- writes.get
@@ -66,7 +67,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   // Should ack AND write the new trade state
   test("forecast fsm with command executed events") {
     baseTest(
-      gen = genCommandExecEvt,
+      gen = genCommandExecEvt.map(_.asLeft),
       mkWriter = succesfulWriter,
       expWrites = nst => Some(nst),
       expAcks = List(msgId)
@@ -86,7 +87,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   // Should Nack without writing new state
   test("forecast fsm with failing snapshot writer") {
     baseTest(
-      gen = genCommandExecEvt,
+      gen = genCommandExecEvt.map(_.asLeft),
       mkWriter = _ => failingWriter,
       expWrites = _ => None,
       expAcks = List.empty
