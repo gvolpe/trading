@@ -28,18 +28,17 @@ object Engine:
     def sendAck(alert: Alert, ack: F[Unit]): F[Unit] =
       (producer.send(alert) *> ack).attempt.void
 
+    def switch(cid: CorrelationId, msgId: MsgId, nst: TradeState): F[(TradeState, Unit)] =
+      mkIdTs.map(TradeUpdate(_, cid, nst.status, _)).flatMap { alert =>
+        sendAck(alert, switchAcker.ack(msgId)).tupleLeft(nst)
+      }
+
     FSM {
       // switch events
       case (st, Right(Msg(msgId, _, SwitchEvent.Started(_, cid, _)))) =>
-        val nst = TradeState._Status.replace(On)(st)
-        mkIdTs.map(TradeUpdate(_, cid, nst.status, _)).flatMap { alert =>
-          sendAck(alert, switchAcker.ack(msgId)).tupleLeft(nst)
-        }
+        switch(cid, msgId, TradeState._Status.replace(On)(st))
       case (st, Right(Msg(msgId, _, SwitchEvent.Stopped(_, cid, _)))) =>
-        val nst = TradeState._Status.replace(Off)(st)
-        mkIdTs.map(TradeUpdate(_, cid, nst.status, _)).flatMap { alert =>
-          sendAck(alert, switchAcker.ack(msgId)).tupleLeft(nst)
-        }
+        switch(cid, msgId, TradeState._Status.replace(Off)(st))
       // no alert emitted, just ack the message
       case (st, Right(Msg(msgId, _, SwitchEvent.Ignored(_, _, _)))) =>
         switchAcker.ack(msgId).tupleLeft(st)
