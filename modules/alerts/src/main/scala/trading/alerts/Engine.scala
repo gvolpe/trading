@@ -11,39 +11,59 @@ import trading.lib.*
 import trading.lib.Consumer.{ Msg, MsgId }
 import trading.state.TradeState
 
-import cats.MonadThrow
+import cats.effect.kernel.{ MonadCancelThrow, Resource }
 import cats.syntax.all.*
 
 object Engine:
-  type In = Either[Msg[TradeEvent], Msg[SwitchEvent]]
+  type In = Msg[TradeEvent | SwitchEvent | PriceUpdate]
 
-  def fsm[F[_]: GenUUID: Logger: MonadThrow: Time](
-      producer: Producer[F, Alert],
+  def fsm[F[_]: GenUUID: Logger: MonadCancelThrow: Time](
+      appId: AppId,
+      alertProducer: Producer[F, Alert],
+      pricesProducer: Producer[F, PriceUpdate],
+      pulsarTx: Resource[F, Txn],
       tradeAcker: Acker[F, TradeEvent],
-      switchAcker: Acker[F, SwitchEvent]
+      switchAcker: Acker[F, SwitchEvent],
+      pricesAcker: Acker[F, PriceUpdate]
   ): FSM[F, TradeState, In, Unit] =
     def mkIdTs: F[(AlertId, Timestamp)] =
       (GenUUID[F].make[AlertId], Time[F].timestamp).tupled
 
-    def sendAck(alert: Alert, ack: F[Unit]): F[Unit] =
-      (producer.send(alert) *> ack).attempt.void
+    def sendAck(alert: Alert, priceUpdate: Option[PriceUpdate], ack: Txn => F[Unit]): F[Unit] =
+      pulsarTx.use { tx =>
+        for
+          _ <- alertProducer.send(alert)
+          _ <- priceUpdate.traverse_(pricesProducer.send(_, Map("app-id" -> appId.id.show)))
+          _ <- ack(tx)
+        yield ()
+      }
 
     def switch(cid: CorrelationId, msgId: MsgId, nst: TradeState): F[(TradeState, Unit)] =
       mkIdTs.map(TradeUpdate(_, cid, nst.status, _)).flatMap { alert =>
-        sendAck(alert, switchAcker.ack(msgId)).tupleLeft(nst)
+        sendAck(alert, None, switchAcker.ack(msgId, _)).tupleLeft(nst)
       }
 
     FSM {
       // no alert emitted, just ack the message
-      case (st, Right(Msg(msgId, _, SwitchEvent.Ignored(_, _, _)))) =>
+      case (st, Msg(msgId, _, SwitchEvent.Ignored(_, _, _))) =>
         switchAcker.ack(msgId).tupleLeft(st)
-      case (st, Left(Msg(msgId, _, TradeEvent.CommandRejected(_, _, _, _, _)))) =>
+      case (st, Msg(msgId, _, TradeEvent.CommandRejected(_, _, _, _, _))) =>
         tradeAcker.ack(msgId).tupleLeft(st)
       // switch started / stopped events
-      case (st, Right(Msg(msgId, _, evt: SwitchEvent))) =>
+      case (st, Msg(msgId, _, evt: SwitchEvent)) =>
         switch(evt.cid, msgId, TradeEngine.eventsFsm.runS(st, evt))
+          .handleErrorWith { e =>
+            Logger[F].warn(s"Transaction failed: ${e.getMessage}").tupleLeft(st)
+          }
+      // price update
+      case (st, Msg(msgId, props, PriceUpdate(symbol, prices))) =>
+        val nst = props.get("app-id") match
+          case Some(id) if id === appId.id.show =>
+            TradeState.__Prices.at(symbol).replace(Some(prices))(st)
+          case _ => st
+        pricesAcker.ack(msgId).tupleLeft(nst)
       // send price alert accordingly
-      case (st, Left(Msg(msgId, _, evt: TradeEvent.CommandExecuted))) =>
+      case (st, Msg(msgId, _, evt: TradeEvent.CommandExecuted)) =>
         val nst = TradeEngine.eventsFsm.runS(st, evt)
         val cmd = evt.command
         val p   = st.prices.get(cmd.symbol)
@@ -69,7 +89,16 @@ object Engine:
             TradeAlert(id, evt.cid, Sell, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
           else TradeAlert(id, evt.cid, Neutral, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
 
+        // if current symbol prices changed, send a price update
+        val priceUpdate = c.flatMap { prices =>
+          (p =!= c).guard[Option].as(PriceUpdate(cmd.symbol, prices))
+        }
+
         mkIdTs.map(mkAlert).flatMap { alert =>
-          sendAck(alert, tradeAcker.ack(msgId)).tupleLeft(nst)
+          sendAck(alert, priceUpdate, tradeAcker.ack(msgId, _))
+            .tupleLeft(nst)
+            .handleErrorWith { e =>
+              Logger[F].warn(s"Transaction failed: ${e.getMessage}").tupleLeft(st)
+            }
         }
     }
