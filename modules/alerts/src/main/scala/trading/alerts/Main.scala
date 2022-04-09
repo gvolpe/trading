@@ -3,7 +3,7 @@ package trading.alerts
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
-import trading.domain.Alert
+import trading.domain.{ Alert, AppId }
 import trading.events.*
 import trading.lib.{ given, * }
 import trading.state.TradeState
@@ -36,12 +36,18 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  // Even though events are sharded by symbol or status, using KeyShared in alerts can be
-  // problematic when an instance goes does, due to consumers rebalance.
-  val sub =
+  // TradeEvent subscription, sharded by symbol
+  def trSub(appId: AppId) =
     Subscription.Builder
-      .withName("alerts")
-      .withType(Subscription.Type.Failover)
+      .withName(appId.name)
+      .withType(Subscription.Type.KeyShared)
+      .build
+
+  // SwitchEvent subscription, exclusive per instance
+  def swSub(appId: AppId) =
+    Subscription.Builder
+      .withName(appId.show)
+      .withType(Subscription.Type.Exclusive)
       .build
 
   // Alert producer settings, dedup and partitioned (for topic compaction in WS)
@@ -65,8 +71,8 @@ object Main extends IOApp.Simple:
       tradingTopic = AppTopic.TradingEvents.make(config.pulsar)
       snapshots  <- SnapshotReader.make[IO](config.redisUri)
       producer   <- Producer.pulsar[IO, Alert](pulsar, alertsTopic, pSettings)
-      trConsumer <- Consumer.pulsar[IO, TradeEvent](pulsar, tradingTopic, sub)
-      swConsumer <- Consumer.pulsar[IO, SwitchEvent](pulsar, switchTopic, sub, compact)
+      trConsumer <- Consumer.pulsar[IO, TradeEvent](pulsar, tradingTopic, trSub(config.appId))
+      swConsumer <- Consumer.pulsar[IO, SwitchEvent](pulsar, switchTopic, swSub(config.appId), compact)
       engine = Engine.fsm(producer, trConsumer, swConsumer)
       server = Ember.default[IO](config.httpPort)
     yield (server, trConsumer, swConsumer, snapshots, engine)
