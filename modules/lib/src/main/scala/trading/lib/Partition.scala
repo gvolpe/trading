@@ -1,10 +1,8 @@
 package trading.lib
 
-import java.nio.charset.StandardCharsets.UTF_8
-
-import trading.commands.{ ForecastCommand, TradeCommand }
+import trading.commands.SwitchCommand
 import trading.domain.Alert
-import trading.events.TradeEvent
+import trading.events.SwitchEvent
 
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ MessageKey, ShardKey }
@@ -18,7 +16,23 @@ object Partition:
   def default[A]: Partition[A] = new:
     val key: A => MessageKey = _ => MessageKey.Empty
 
-  given [A](using ev: Shard[A]): Partition[A] with
-    val key: A => MessageKey = ev.key(_) match
-      case ShardKey.Default => MessageKey.Empty
-      case ShardKey.Of(bs)  => MessageKey.Of(new String(bs, UTF_8))
+  def by(s: String): MessageKey = MessageKey.Of(s)
+
+  given Partition[SwitchCommand] with
+    val key: SwitchCommand => MessageKey = {
+      case _: SwitchCommand.Start => by("start")
+      case _: SwitchCommand.Stop  => by("stop")
+    }
+
+  given Partition[SwitchEvent] with
+    val key: SwitchEvent => MessageKey = {
+      case _: SwitchEvent.Started => by("started")
+      case _: SwitchEvent.Stopped => by("stopped")
+      case _: SwitchEvent.Ignored => by("ignored")
+    }
+
+  given Partition[Alert] with
+    val key: Alert => MessageKey = {
+      case a: Alert.TradeAlert  => by(a.symbol.show)
+      case a: Alert.TradeUpdate => by(a.status.show)
+    }

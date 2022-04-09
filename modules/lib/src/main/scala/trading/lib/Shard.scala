@@ -2,9 +2,9 @@ package trading.lib
 
 import java.nio.charset.StandardCharsets.UTF_8
 
-import trading.commands.*
+import trading.commands.{ ForecastCommand, TradeCommand }
 import trading.domain.Alert
-import trading.events.*
+import trading.events.TradeEvent
 
 import cats.syntax.all.*
 import dev.profunktor.pulsar.ShardKey
@@ -31,14 +31,6 @@ object Shard:
   given Shard[TradeEvent] with
     val key: TradeEvent => ShardKey =
       ev => Shard[TradeCommand].key(ev.command)
-
-  given Shard[SwitchCommand] with
-    val key: SwitchCommand => ShardKey =
-      _ => Shard.by("trading-status-shard")
-
-  given Shard[SwitchEvent] with
-    val key: SwitchEvent => ShardKey =
-      _ => Shard.by("trading-status-shard")
 
   given Shard[Alert] with
     val key: Alert => ShardKey = {
