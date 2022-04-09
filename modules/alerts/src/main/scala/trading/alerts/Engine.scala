@@ -34,19 +34,18 @@ object Engine:
       }
 
     FSM {
-      // switch events
-      case (st, Right(Msg(msgId, _, SwitchEvent.Started(_, cid, _)))) =>
-        switch(cid, msgId, TradeState._Status.replace(On)(st))
-      case (st, Right(Msg(msgId, _, SwitchEvent.Stopped(_, cid, _)))) =>
-        switch(cid, msgId, TradeState._Status.replace(Off)(st))
       // no alert emitted, just ack the message
       case (st, Right(Msg(msgId, _, SwitchEvent.Ignored(_, _, _)))) =>
         switchAcker.ack(msgId).tupleLeft(st)
       case (st, Left(Msg(msgId, _, TradeEvent.CommandRejected(_, _, _, _, _)))) =>
         tradeAcker.ack(msgId).tupleLeft(st)
+      // switch started / stopped events
+      case (st, Right(Msg(msgId, _, evt: SwitchEvent))) =>
+        switch(evt.cid, msgId, TradeEngine.eventsFsm.runS(st, evt))
       // send price alert accordingly
-      case (st, Left(Msg(msgId, _, TradeEvent.CommandExecuted(_, cid, cmd, _)))) =>
-        val nst = TradeEngine.fsm.runS(st, cmd)
+      case (st, Left(Msg(msgId, _, evt: TradeEvent.CommandExecuted))) =>
+        val nst = TradeEngine.eventsFsm.runS(st, evt)
+        val cmd = evt.command
         val p   = st.prices.get(cmd.symbol)
         val c   = nst.prices.get(cmd.symbol)
 
@@ -61,14 +60,14 @@ object Engine:
         // dummy logic to simulate the trading market
         def mkAlert(id: AlertId, ts: Timestamp): Alert =
           if previousAskMax - currentAskMax > Price(0.3) then
-            TradeAlert(id, cid, StrongBuy, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
+            TradeAlert(id, evt.cid, StrongBuy, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
           else if previousAskMax - currentAskMax > Price(0.2) then
-            TradeAlert(id, cid, Buy, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
+            TradeAlert(id, evt.cid, Buy, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
           else if currentBidMax - previousBidMax > Price(0.3) then
-            TradeAlert(id, cid, StrongSell, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
+            TradeAlert(id, evt.cid, StrongSell, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
           else if currentBidMax - previousBidMax > Price(0.2) then
-            TradeAlert(id, cid, Sell, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
-          else TradeAlert(id, cid, Neutral, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
+            TradeAlert(id, evt.cid, Sell, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
+          else TradeAlert(id, evt.cid, Neutral, cmd.symbol, currentAskMax, currentBidMax, high, low, ts)
 
         mkIdTs.map(mkAlert).flatMap { alert =>
           sendAck(alert, tradeAcker.ack(msgId)).tupleLeft(nst)

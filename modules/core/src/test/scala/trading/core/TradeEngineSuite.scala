@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import trading.commands.*
-import trading.core.TradeEngine.fsm
+import trading.core.TradeEngine.{ eventsFsm, fsm }
 import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.*
@@ -27,7 +27,7 @@ object TradeEngineSuite extends FunSuite with Checkers:
   val p2 = Price(3.5782)
   val q2 = Quantity(20)
 
-  test("Trade engine fsm") {
+  test("Trade engine commands fsm") {
     val cmd1       = TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts)
     val (st1, ev1) = fsm.run(TradeState.empty, cmd1)
     val xst1       = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
@@ -72,6 +72,48 @@ object TradeEngineSuite extends FunSuite with Checkers:
         expect.same(ev4(eid, ts), xev4),
         expect.same(ev5(eid, ts), xev5),
         expect.same(ev6(eid, ts), xev6)
+      )
+      .reduce
+  }
+
+  test("Trade engine events fsm") {
+    val cmd1 = TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts)
+    val evt1 = TradeEvent.CommandExecuted(eid, cid, cmd1, ts)
+    val st1  = eventsFsm.runS(TradeState.empty, evt1)
+    val xst1 = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
+
+    val cmd2 = TradeCommand.Update(id, cid, s, TradeAction.Ask, p2, q2, "test", ts)
+    val evt2 = TradeEvent.CommandExecuted(eid, cid, cmd2, ts)
+    val st2  = eventsFsm.runS(st1, evt2)
+    val xst2 = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1, p2 -> q2), bid = Map.empty, p2, p1)))
+
+    val cmd3 = TradeCommand.Delete(id, cid, s, TradeAction.Ask, p1, "test", ts)
+    val evt3 = TradeEvent.CommandExecuted(eid, cid, cmd3, ts)
+    val st3  = eventsFsm.runS(st2, evt3)
+    val xst3 = TradeState(On, Map(s -> Prices(ask = Map(p2 -> q2), bid = Map.empty, p2, p1)))
+
+    val cmd4 = TradeCommand.Create(id, cid, s, TradeAction.Bid, p1, q1, "test", ts)
+    val evt4 = TradeEvent.CommandExecuted(eid, cid, cmd4, ts)
+    val st4  = eventsFsm.runS(st3, evt4)
+    val xst4 = TradeState(On, Map(s -> Prices(ask = Map(p2 -> q2), bid = Map(p1 -> q1), p2, p1)))
+
+    val evt5 = SwitchEvent.Stopped(eid, cid, ts)
+    val st5  = eventsFsm.runS(st4, evt5)
+    val xst5 = TradeState(Off, xst4.prices)
+
+    val cmd6 = TradeCommand.Create(id, cid, s, TradeAction.Bid, p1, q1, "test", ts)
+    val evt6 = TradeEvent.CommandRejected(eid, cid, cmd6, Reason("Trading is Off"), ts)
+    val st6  = eventsFsm.runS(st5, evt6)
+    val xst6 = xst5
+
+    NonEmptyList
+      .of(
+        expect.same(st1, xst1),
+        expect.same(st2, xst2),
+        expect.same(st3, xst3),
+        expect.same(st4, xst4),
+        expect.same(st5, xst5),
+        expect.same(st6, xst6)
       )
       .reduce
   }

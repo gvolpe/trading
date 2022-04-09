@@ -15,13 +15,6 @@ sealed trait SwitchEvent derives Codec.AsObject, Show:
   def cid: CorrelationId
   def createdAt: Timestamp
 
-  // this is used to run the command via the trading fsm, only cid matters
-  def getCommand: Option[SwitchCommand] =
-    this match
-      case SwitchEvent.Started(id, cid, ts) => SwitchCommand.Start(CommandId(id.value), cid, ts).some
-      case SwitchEvent.Stopped(id, cid, ts) => SwitchCommand.Stop(CommandId(id.value), cid, ts).some
-      case SwitchEvent.Ignored(_, _, _)     => none
-
 object SwitchEvent:
   final case class Started(
       id: EventId,

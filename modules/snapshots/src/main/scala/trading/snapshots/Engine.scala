@@ -21,13 +21,13 @@ object Engine:
       writer: SnapshotWriter[F]
   ): FSM[F, (TradeState, List[MsgId]), In, Unit] =
     FSM {
-      case ((st, ids), Left(Msg(msgId, _, TradeEvent.CommandExecuted(_, _, cmd, _)))) =>
-        ().pure[F].tupleLeft(TradeEngine.fsm.runS(st, cmd) -> (ids :+ msgId))
+      case ((st, ids), Left(Msg(msgId, _, evt @ TradeEvent.CommandExecuted(_, _, _, _)))) =>
+        ().pure[F].tupleLeft(TradeEngine.eventsFsm.runS(st, evt) -> (ids :+ msgId))
       case (st, Left(Msg(msgId, _, evt))) =>
         Logger[F].debug(s"Event ID: ${evt.id}, no persistence") *>
           tradeAcker.ack(msgId).attempt.void.tupleLeft(st)
       case ((st, ids), Right(Msg(msgId, _, evt))) =>
-        val nst = evt.getCommand.map(TradeEngine.fsm.runS(st, _)).getOrElse(st)
+        val nst = TradeEngine.eventsFsm.runS(st, evt)
         switchAcker.ack(msgId).attempt.void.tupleLeft(nst, ids)
       case ((st, ids), (_: Tick)) if ids.nonEmpty =>
         val lastId = ids.last
