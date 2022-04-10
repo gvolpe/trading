@@ -52,9 +52,15 @@ object Smokey extends IOSuite:
   val cid = mkCid
 
   // See Eq[TradeAlert]: AlertId, CorrelationId and Timestamp are not used for equality.
-  val expected: List[WsOut] = List(
+  val expected1: List[WsOut] = List(
     Alert.TradeAlert(aid, cid, AlertType.Neutral, Symbol.EURUSD, Price(4.5), Price(0), Price(4.5), Price(4.5), mkTs),
-    Alert.TradeAlert(aid, cid, AlertType.StrongSell, Symbol.USDCAD, Price(0), Price(3.7), Price(3.7), Price(3.7), mkTs)
+    Alert.TradeAlert(aid, cid, AlertType.StrongSell, Symbol.USDCAD, Price(0), Price(3.7), Price(3.7), Price(3.7), mkTs),
+    Alert.TradeAlert(aid, cid, AlertType.StrongSell, Symbol.GBPUSD, Price(0), Price(2.6), Price(2.6), Price(2.6), mkTs),
+    Alert.TradeAlert(aid, cid, AlertType.Neutral, Symbol.GBPUSD, Price(0), Price(2.8), Price(2.8), Price(2.6), mkTs)
+  ).map(_.wsOut)
+
+  val expected2: List[WsOut] = List(
+    Alert.TradeAlert(aid, cid, AlertType.Neutral, Symbol.CHFEUR, Price(2.3), Price(0), Price(2.3), Price(2.3), mkTs)
   ).map(_.wsOut)
 
   def encode(wsIn: WsIn): WSDataFrame =
@@ -75,8 +81,7 @@ object Smokey extends IOSuite:
         Stream.emits(commands).metered[IO](100.millis).evalMap(p.send).compile.drain
     }
 
-  // TODO: Next we could add a second WSClient subscribing to symbols2
-  def p2(client: WSClient[IO]): IO[List[WsOut]] =
+  def p2(client: WSClient[IO], symbols: List[WsIn], exp: Int): IO[List[WsOut]] =
     (IO.ref(List.empty[WsOut]), IO.deferred[Either[Throwable, Unit]]).tupled.flatMap { (ref, switch) =>
       client
         .connectHighLevel(connectReq)
@@ -92,18 +97,15 @@ object Smokey extends IOSuite:
                   IO.unit
               }
               .evalMapAccumulate(1) { (acc, _) =>
-                switch.complete(().asRight).whenA(acc == 3).tupleLeft(acc + 1)
+                switch.complete(().asRight).whenA(acc === exp + 1).tupleLeft(acc + 1)
               }
 
-          val heartbeats =
-            Stream.eval(ws.send(encode(WsIn.Heartbeat))).metered[IO](5.seconds)
-
           val send =
-            Stream.emits(symbols1).evalMap { s =>
+            Stream.emits(symbols).evalMap { s =>
               ws.send(encode(s))
             }
 
-          Stream(heartbeats, recv, send)
+          Stream(send, recv)
             .parJoin(3)
             .interruptWhen(switch)
             .compile
@@ -114,15 +116,18 @@ object Smokey extends IOSuite:
         } *> ref.get
     }
 
+  // Two WS clients subscribe to different symbols and expect different alerts
   test("Trading smoke test") { case (pulsar, ws) =>
-    (p1(pulsar) &> p2(ws))
+    (p1(pulsar) &> (p2(ws, symbols1, expected1.size), p2(ws, symbols2, expected2.size)).parTupled)
       .flatMap {
-        case ((x: WsOut.Attached) :: xs) =>
-          IO.pure(expect.same(xs, expected))
+        case (((_: WsOut.Attached) :: xs), ((_: WsOut.Attached) :: ys)) =>
+          IO.pure {
+            expect.same(xs, expected1) && expect.same(ys, expected2)
+          }
         case xs =>
           for
             _ <- IO.println("\n--- WsOut list ---\n")
             _ <- xs.traverse_(IO.println)
-          yield failure("Expected 3 messages")
+          yield failure(s"Expected ${expected1.size + 1} messages")
       }
   }
