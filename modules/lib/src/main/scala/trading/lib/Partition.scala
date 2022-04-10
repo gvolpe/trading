@@ -1,7 +1,7 @@
 package trading.lib
 
 import trading.commands.SwitchCommand
-import trading.domain.Alert
+import trading.domain.{ Alert, PriceUpdate }
 import trading.events.SwitchEvent
 
 import cats.syntax.all.*
@@ -17,6 +17,9 @@ object Partition:
     val key: A => MessageKey = _ => MessageKey.Empty
 
   def by(s: String): MessageKey = MessageKey.Of(s)
+
+  given Partition[PriceUpdate] with
+    val key: PriceUpdate => MessageKey = p => by(p.symbol.show)
 
   given Partition[SwitchCommand] with
     val key: SwitchCommand => MessageKey = {

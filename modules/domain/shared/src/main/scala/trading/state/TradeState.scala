@@ -5,7 +5,7 @@ import trading.domain.*
 import cats.derived.semiauto.*
 import cats.syntax.all.*
 import cats.{ Eq, Show }
-import io.circe.Codec
+import io.circe.*
 import monocle.function.{ At, Index }
 import monocle.{ Focus, Optional }
 
@@ -79,6 +79,29 @@ object Prices:
   val _Bid  = Focus[Prices](_.bid)
   val _High = Focus[Prices](_.high)
   val _Low  = Focus[Prices](_.low)
+
+  given Codec[Prices] =
+    val encoder = Encoder.instance[Prices] { p =>
+      Json.obj(
+        "ask"  -> Encoder.encodeMap[String, Quantity].apply(p.ask.map { case (k, v) => k.show -> v }),
+        "bid"  -> Encoder.encodeMap[String, Quantity].apply(p.bid.map { case (k, v) => k.show -> v }),
+        "high" -> Json.fromBigDecimal(p.high.value),
+        "low"  -> Json.fromBigDecimal(p.low.value)
+      )
+    }
+
+    val decoder = Decoder.instance { c =>
+      for
+        a <- c.downField("ask").as[Map[String, Quantity]]
+        k = a.map { case (k, v) => Price(BigDecimal(k)) -> v }
+        b <- c.downField("bid").as[Map[String, Quantity]]
+        d = b.map { case (k, v) => Price(BigDecimal(k)) -> v }
+        h <- c.downField("high").as[Price]
+        l <- c.downField("low").as[Price]
+      yield Prices(k, d, h, l)
+    }
+
+    Codec.from(decoder, encoder)
 
   object __AtAsk:
     def apply(p: AskPrice): Optional[Prices, Option[Quantity]] =

@@ -2,6 +2,8 @@ package trading.lib
 
 import scala.reflect.ClassTag
 
+import trading.lib.Consumer.Msg
+
 import cats.MonadThrow
 import cats.syntax.all.*
 import fs2.{ Pull, Stream }
@@ -17,6 +19,18 @@ extension [F[_], A](src: Stream[F, A])
         Pull.eval(action) >> Pull.output(chunk) >> tl.pull.echo
       case None => Pull.done
     }.stream
+
+extension [F[_], A, B](src: Stream[F, Either[Msg[A], Msg[B]]])
+  def union: Stream[F, Msg[A | B]] =
+    src.map(_.fold(identity, identity).asInstanceOf[Msg[A | B]])
+
+extension [F[_], A, B, C](src: Stream[F, Either[Either[Msg[A], Msg[B]], Msg[C]]])
+  def union2: Stream[F, Msg[A | B | C]] =
+    src.map {
+      case Left(Left(ma))  => ma.asInstanceOf[Msg[A | B | C]]
+      case Left(Right(mb)) => mb.asInstanceOf[Msg[A | B | C]]
+      case Right(mc)       => mc.asInstanceOf[Msg[A | B | C]]
+    }
 
 extension [F[_]: MonadThrow, A](fa: F[A])
   /** Lift an F[A] into an F[Either[E, A]] where E can be an union type.

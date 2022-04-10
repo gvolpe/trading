@@ -3,7 +3,7 @@ package trading.alerts
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
-import trading.domain.{ Alert, AppId }
+import trading.domain.{ Alert, AppId, PriceUpdate }
 import trading.events.*
 import trading.lib.{ given, * }
 import trading.state.TradeState
@@ -23,13 +23,22 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] =
     Stream
       .resource(resources)
-      .flatMap { (server, trConsumer, swConsumer, snapshots, fsm) =>
+      .flatMap { (server, trConsumer, swConsumer, puConsumer, snapshots, fsm) =>
         Stream.eval(server.useForever).concurrently {
           Stream.eval(snapshots.latest).flatMap {
             case Some(st, id) =>
-              trConsumer.receiveM(id).either(swConsumer.receiveM).evalMapAccumulate(st)(fsm.run)
+              trConsumer
+                .receiveM(id)
+                .either(swConsumer.receiveM)
+                .either(puConsumer.receiveM)
+                .union2
+                .evalMapAccumulate(st)(fsm.run)
             case None =>
-              trConsumer.receiveM.either(swConsumer.receiveM).evalMapAccumulate(TradeState.empty)(fsm.run)
+              trConsumer.receiveM
+                .either(swConsumer.receiveM)
+                .either(puConsumer.receiveM)
+                .union2
+                .evalMapAccumulate(TradeState.empty)(fsm.run)
           }
         }
       }
@@ -43,7 +52,7 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.KeyShared)
       .build
 
-  // SwitchEvent subscription, exclusive per instance
+  // SwitchEvent & PriceUpdate subscription, exclusive per instance
   def swSub(appId: AppId) =
     Subscription.Builder
       .withName(appId.show)
@@ -51,11 +60,19 @@ object Main extends IOApp.Simple:
       .build
 
   // Alert producer settings, dedup and partitioned (for topic compaction in WS)
-  val pSettings =
+  val altSettings =
     PulsarProducer
       .Settings[IO, Alert]()
       .withDeduplication(SeqIdMaker.fromEq)
       .withMessageKey(Partition[Alert].key)
+      .some
+
+  // PriceUpdate producer settings, dedup and partitioned (for topic compaction in WS)
+  val priSettings =
+    PulsarProducer
+      .Settings[IO, PriceUpdate]()
+      .withDeduplication(SeqIdMaker.fromEq)
+      .withMessageKey(Partition[PriceUpdate].key)
       .some
 
   val compact =
@@ -64,15 +81,33 @@ object Main extends IOApp.Simple:
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
-      pulsar <- Pulsar.make[IO](config.pulsar.url)
-      _      <- Resource.eval(Logger[IO].info("Initializing alerts service"))
+      pulsar <- Pulsar.make[IO](config.pulsar.url, Pulsar.Settings().withTransactions)
+      _      <- Resource.eval(Logger[IO].info(s"Initializing service: ${config.appId.show}"))
       alertsTopic  = AppTopic.Alerts.make(config.pulsar)
+      pricesTopic  = AppTopic.PriceUpdates.make(config.pulsar)
       switchTopic  = AppTopic.SwitchEvents.make(config.pulsar)
       tradingTopic = AppTopic.TradingEvents.make(config.pulsar)
-      snapshots  <- SnapshotReader.make[IO](config.redisUri)
-      producer   <- Producer.pulsar[IO, Alert](pulsar, alertsTopic, pSettings)
+      snapshots      <- SnapshotReader.make[IO](config.redisUri)
+      alertProducer  <- Producer.pulsar[IO, Alert](pulsar, alertsTopic, altSettings)
+      pricesProducer <- Producer.pulsar[IO, PriceUpdate](pulsar, pricesTopic, priSettings)
+      xSub = swSub(config.appId)
       trConsumer <- Consumer.pulsar[IO, TradeEvent](pulsar, tradingTopic, trSub(config.appId))
-      swConsumer <- Consumer.pulsar[IO, SwitchEvent](pulsar, switchTopic, swSub(config.appId), compact)
-      engine = Engine.fsm(producer, trConsumer, swConsumer)
+      swConsumer <- Consumer.pulsar[IO, SwitchEvent](pulsar, switchTopic, xSub, compact)
+      puConsumer <- Consumer.pulsar[IO, PriceUpdate](pulsar, pricesTopic, xSub)
       server = Ember.default[IO](config.httpPort)
-    yield (server, trConsumer, swConsumer, snapshots, engine)
+    yield (
+      server,
+      trConsumer,
+      swConsumer,
+      puConsumer,
+      snapshots,
+      Engine.fsm(
+        config.appId,
+        alertProducer,
+        pricesProducer,
+        Txn.make(pulsar),
+        trConsumer,
+        swConsumer,
+        puConsumer
+      )
+    )
