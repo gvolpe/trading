@@ -27,12 +27,14 @@ object Main extends IOApp.Simple:
         Stream.eval(server.useForever).concurrently {
           Stream.eval(snapshots.latest).flatMap {
             case Some(st, id) =>
-              trConsumer
-                .receiveM(id)
-                .either(swConsumer.receiveM)
-                .either(puConsumer.receiveM)
-                .union2
-                .evalMapAccumulate(st)(fsm.run)
+              Stream.eval(IO.deferred[Unit]).flatMap { gate =>
+                trConsumer
+                  .rewind(id, gate)
+                  .either(Stream.exec(gate.get) ++ swConsumer.receiveM)
+                  .either(Stream.exec(gate.get) ++ puConsumer.receiveM)
+                  .union2
+                  .evalMapAccumulate(st)(fsm.run)
+              }
             case None =>
               trConsumer.receiveM
                 .either(swConsumer.receiveM)

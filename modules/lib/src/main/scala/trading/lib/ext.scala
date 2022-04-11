@@ -4,12 +4,21 @@ import scala.reflect.ClassTag
 
 import trading.lib.Consumer.Msg
 
-import cats.MonadThrow
+import cats.{ Monad, MonadThrow }
+import cats.effect.kernel.Deferred
 import cats.syntax.all.*
 import fs2.{ Pull, Stream }
 import monocle.Iso
 
 export Logger.redisLog
+
+extension [F[_]: Monad, A](c: Consumer[F, A])
+  def rewind(id: Consumer.MsgId, gate: Deferred[F, Unit]): Stream[F, Msg[A]] =
+    Stream.eval(c.lastMsgId).flatMap { lastId =>
+      c.receiveM(id).evalTap { msg =>
+        gate.complete(()).whenA(lastId === Some(msg.id))
+      }
+    }
 
 extension [F[_], A](src: Stream[F, A])
   /* Perform an action when we get the first message without consuming it twice */
