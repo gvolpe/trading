@@ -27,14 +27,15 @@ object Main extends IOApp.Simple:
           Stream.eval(reader.latest).flatMap {
             case Some(st, id) =>
               Stream.exec(Logger[IO].debug(s"SNAPSHOTS: $st")) ++
-                trConsumer
-                  .receiveM(id)
-                  .either(swConsumer.receiveM)
-                  .merge(ticks)
-                  .evalMapAccumulate(st -> List.empty)(fsm.run)
+                Stream.eval(IO.deferred[Unit]).flatMap { gate =>
+                  trConsumer
+                    .rewind(id, gate)
+                    .either(Stream.exec(gate.get) ++ swConsumer.receiveM)
+                    .merge(ticks)
+                    .evalMapAccumulate(st -> List.empty)(fsm.run)
+                }
             case None =>
-              trConsumer
-                .receiveM
+              trConsumer.receiveM
                 .either(swConsumer.receiveM)
                 .merge(ticks)
                 .evalMapAccumulate(TradeState.empty -> List.empty)(fsm.run)

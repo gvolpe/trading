@@ -58,7 +58,7 @@ object Engine:
       // price update
       case (st, Msg(msgId, props, PriceUpdate(symbol, prices))) =>
         val nst = props.get("app-id") match
-          case Some(id) if id === appId.id.show =>
+          case Some(id) if id =!= appId.id.show =>
             TradeState.__Prices.at(symbol).replace(Some(prices))(st)
           case _ => st
         pricesAcker.ack(msgId).tupleLeft(nst)
