@@ -38,9 +38,12 @@ object Engine:
         yield ()
       }
 
-    def switch(cid: CorrelationId, msgId: MsgId, nst: TradeState): F[(TradeState, Unit)] =
+    def switch(cid: CorrelationId, msgId: MsgId, st: TradeState, nst: TradeState): F[(TradeState, Unit)] =
       mkIdTs.map(TradeUpdate(_, cid, nst.status, _)).flatMap { alert =>
         sendAck(alert, None, switchAcker.ack(msgId, _)).tupleLeft(nst)
+          .handleErrorWith { e =>
+            Logger[F].warn(s"Transaction failed: ${e.getMessage}").tupleLeft(st)
+          }
       }
 
     FSM {
@@ -51,10 +54,7 @@ object Engine:
         tradeAcker.ack(msgId).tupleLeft(st)
       // switch started / stopped events
       case (st, Msg(msgId, _, evt: SwitchEvent)) =>
-        switch(evt.cid, msgId, TradeEngine.eventsFsm.runS(st, evt))
-          .handleErrorWith { e =>
-            Logger[F].warn(s"Transaction failed: ${e.getMessage}").tupleLeft(st)
-          }
+        switch(evt.cid, msgId, st, TradeEngine.eventsFsm.runS(st, evt))
       // price update
       case (st, Msg(msgId, props, PriceUpdate(symbol, prices))) =>
         val nst = props.get("app-id") match
