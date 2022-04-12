@@ -14,7 +14,6 @@ import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.parser.decode as jsonDecode
 
 trait SnapshotReader[F[_]]:
-  def getLastId: F[Option[Consumer.MsgId]]
   def latest: F[Option[(TradeState, Consumer.MsgId)]]
 
 object SnapshotReader:

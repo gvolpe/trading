@@ -74,7 +74,7 @@ object Consumer:
           Msg(MsgId.from(m.id), m.properties, m.payload)
         }
         def receiveM(id: MsgId): Stream[F, Consumer.Msg[A]] =
-          c.subscribe(MessageId.fromByteArray(id.getBytes(UTF_8))).map { m =>
+          c.subscribe(MsgId.to(id)).map { m =>
             Msg(MsgId.from(m.id), m.properties, m.payload)
           }
 

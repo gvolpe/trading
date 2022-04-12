@@ -5,6 +5,7 @@ import trading.core.snapshots.SnapshotWriter
 import trading.lib.{ Acker, FSM, Logger }
 import trading.lib.Consumer.{ Msg, MsgId }
 import trading.events.*
+import trading.events.TradeEvent.*
 import trading.state.TradeState
 
 import cats.MonadThrow
@@ -21,14 +22,14 @@ object Engine:
       writer: SnapshotWriter[F]
   ): FSM[F, (TradeState, List[MsgId]), In, Unit] =
     FSM {
-      case ((st, ids), Left(Msg(msgId, _, evt @ TradeEvent.CommandExecuted(_, _, _, _)))) =>
+      case ((st, ids), Left(Msg(msgId, _, evt @ CommandExecuted(_, _, _, _)))) =>
         ().pure[F].tupleLeft(TradeEngine.eventsFsm.runS(st, evt) -> (ids :+ msgId))
-      case (st, Left(Msg(msgId, _, evt))) =>
-        Logger[F].debug(s"Event ID: ${evt.id}, no persistence") *>
+      case (st, Left(Msg(msgId, _, CommandRejected(evId, _, _, _, _)))) =>
+        Logger[F].debug(s"Event ID: $evId, no persistence") *>
           tradeAcker.ack(msgId).attempt.void.tupleLeft(st)
       case ((st, ids), Right(Msg(msgId, _, evt))) =>
         val nst = TradeEngine.eventsFsm.runS(st, evt)
-        switchAcker.ack(msgId).attempt.void.tupleLeft(nst, ids)
+        switchAcker.ack(msgId).tupleLeft(nst, ids)
       case ((st, ids), (_: Tick)) if ids.nonEmpty =>
         val lastId = ids.last
         writer
