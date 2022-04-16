@@ -80,7 +80,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   def mkNAcker(ref: Ref[IO, Option[Consumer.MsgId]]): Acker[IO, ForecastCommand] = new DummyAcker:
     override def nack(id: Consumer.MsgId): IO[Unit] = ref.set(id.some)
 
-  val msgId: MsgId = MsgId.Test(UUID.randomUUID().toString)
+  val msgId: MsgId = MsgId.latest
 
   private def baseTest(
       authorStore: AuthorStore[IO] = okAuthorStore,

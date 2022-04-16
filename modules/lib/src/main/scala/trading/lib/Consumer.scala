@@ -1,6 +1,6 @@
 package trading.lib
 
-import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.charset.StandardCharsets.{ UTF_16BE, UTF_8 }
 
 import scala.concurrent.duration.*
 
@@ -29,21 +29,23 @@ object Consumer:
   enum MsgId:
     case Pulsar(id: MessageId)
     case Dummy
-    case Test(id: String)
 
     def serialize: String =
-      new String(getPulsar.toByteArray, UTF_8)
+      this match
+        case Pulsar(id) => new String(id.toByteArray, UTF_16BE)
+        case Dummy      => "dummy"
 
     def getPulsar: MessageId =
       this match
         case Pulsar(mid) => mid
-        case _           => throw new IllegalArgumentException()
+        case Dummy       => throw new IllegalArgumentException()
 
   type Properties = Map[String, String]
 
   object MsgId:
     def earliest: MsgId          = MsgId.Pulsar(MessageId.earliest)
-    def from(str: String): MsgId = MsgId.Pulsar(MessageId.fromByteArray(str.getBytes(UTF_8)))
+    def latest: MsgId            = MsgId.Pulsar(MessageId.latest)
+    def from(str: String): MsgId = MsgId.Pulsar(MessageId.fromByteArray(str.getBytes(UTF_16BE)))
 
   final case class Msg[A](id: MsgId, props: Properties, payload: A)
 
