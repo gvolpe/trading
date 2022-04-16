@@ -26,7 +26,7 @@ object Engine:
         ().pure[F].tupleLeft(TradeEngine.eventsFsm.runS(st, evt) -> (ids :+ msgId))
       case (st, Left(Msg(msgId, _, CommandRejected(evId, _, _, _, _)))) =>
         Logger[F].debug(s"Event ID: $evId, no persistence") *>
-          tradeAcker.ack(msgId).attempt.void.tupleLeft(st)
+          tradeAcker.ack(msgId).tupleLeft(st)
       case ((st, ids), Right(Msg(msgId, _, evt))) =>
         val nst = TradeEngine.eventsFsm.runS(st, evt)
         switchAcker.ack(msgId).tupleLeft(nst, ids)
@@ -40,9 +40,9 @@ object Engine:
               Logger[F].warn(s"Failed to persist state: $lastId").tupleLeft(st -> ids)
             case Right(_) =>
               Logger[F].debug(s"State persisted: $lastId. Acking ${ids.size} messages.") *>
-                tradeAcker.ack(ids.toSet).attempt.map {
-                  case Left(_)  => (st -> ids)        -> ()
-                  case Right(_) => (st -> List.empty) -> ()
+                tradeAcker.ack(ids.toSet).attempt.flatMap {
+                  case Left(e)  => Logger[F].error(e.getMessage).tupleLeft(st -> ids)
+                  case Right(_) => ((st -> List.empty) -> ()).pure[F]
                 }
           }
       case (st, (_: Tick)) =>

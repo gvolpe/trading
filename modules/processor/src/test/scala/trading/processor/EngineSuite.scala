@@ -8,6 +8,7 @@ import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.*
 import trading.lib.*
+import trading.lib.Consumer.{ Msg, MsgId }
 import trading.lib.Logger.NoOp.given
 import trading.state.*
 
@@ -46,7 +47,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       // first command: Create
       tst1 <- fsm.runS(
         TradeState.empty,
-        Consumer.Msg("id1", Map.empty, TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts)).asLeft
+        Msg(MsgId.Test("id1"), Map.empty, TradeCommand.Create(id, cid, s, TradeAction.Ask, p1, q1, "test", ts)).asLeft
       )
       tex1 = TradeState(On, Map(s -> Prices(ask = Map(p1 -> q1), bid = Map.empty, p1, p1)))
       e1 <- evts.get
@@ -55,7 +56,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       // second command: Stop
       tst2 <- fsm.runS(
         tst1,
-        Consumer.Msg("id2", Map.empty, SwitchCommand.Stop(id, cid, ts)).asRight
+        Msg(MsgId.Test("id2"), Map.empty, SwitchCommand.Stop(id, cid, ts)).asRight
       )
       tex2 = TradeState(Off, tex1.prices)
       e2 <- evts.get
@@ -65,11 +66,11 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       .of(
         expect.same(tst1, tex1),
         expect.same(e1.size, 1),
-        expect.same(a1, List("id1")),
+        expect.same(a1, List("id1").map(MsgId.Test(_))),
         expect.same(s1.size, 0),
         expect.same(tst2, tex2),
         expect.same(e2.size, 1),
-        expect.same(a2, List("id1", "id2")),
+        expect.same(a2, List("id1", "id2").map(MsgId.Test(_))),
         expect.same(s2.size, 1)
       )
       .reduce

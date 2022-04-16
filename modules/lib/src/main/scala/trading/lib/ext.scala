@@ -2,7 +2,7 @@ package trading.lib
 
 import scala.reflect.ClassTag
 
-import trading.lib.Consumer.Msg
+import trading.lib.Consumer.{ Msg, MsgId }
 
 import cats.{ Monad, MonadThrow }
 import cats.effect.kernel.Deferred
@@ -16,7 +16,7 @@ extension [F[_]: Monad, A](c: Consumer[F, A])
   def rewind(id: Consumer.MsgId, gate: Deferred[F, Unit]): Stream[F, Msg[A]] =
     Stream.eval(c.lastMsgId).flatMap { lastId =>
       c.receiveM(id).evalTap { msg =>
-        gate.complete(()).whenA(lastId === Some(msg.id))
+        gate.complete(()).whenA(lastId == Some(msg.id))
       }
     }
 

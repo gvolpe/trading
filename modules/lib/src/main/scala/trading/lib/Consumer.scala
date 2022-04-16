@@ -2,6 +2,8 @@ package trading.lib
 
 import java.nio.charset.StandardCharsets.UTF_8
 
+import scala.concurrent.duration.*
+
 import cats.Applicative
 import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.Queue
@@ -23,22 +25,32 @@ trait Consumer[F[_], A] extends Acker[F, A]:
   def lastMsgId: F[Option[Consumer.MsgId]]
 
 object Consumer:
-  //Pulsar: serialized version of MessageId(ledgerId: Long, entryId: Long, partitionIndex: Int)
-  type MsgId      = String
+  //Pulsar: MessageId(ledgerId: Long, entryId: Long, partitionIndex: Int)
+  enum MsgId:
+    case Pulsar(id: MessageId)
+    case Dummy
+    case Test(id: String)
+
+    def serialize: String =
+      new String(getPulsar.toByteArray, UTF_8)
+
+    def getPulsar: MessageId =
+      this match
+        case Pulsar(mid) => mid
+        case _           => throw new IllegalArgumentException()
+
   type Properties = Map[String, String]
 
   object MsgId:
-    def from(id: MessageId): MsgId =
-      new String(id.toByteArray(), UTF_8)
-    def to(id: MsgId): MessageId =
-      MessageId.fromByteArray(id.getBytes(UTF_8))
+    def earliest: MsgId          = MsgId.Pulsar(MessageId.earliest)
+    def from(str: String): MsgId = MsgId.Pulsar(MessageId.fromByteArray(str.getBytes(UTF_8)))
 
   final case class Msg[A](id: MsgId, props: Properties, payload: A)
 
   def local[F[_]: Applicative, A](
       queue: Queue[F, Option[A]]
   ): Consumer[F, A] = new:
-    def receiveM: Stream[F, Msg[A]]            = receive.map(Msg("N/A", Map.empty, _))
+    def receiveM: Stream[F, Msg[A]]            = receive.map(Msg(MsgId.Dummy, Map.empty, _))
     def receiveM(id: MsgId): Stream[F, Msg[A]] = receiveM
     def receive: Stream[F, A]                  = Stream.fromQueueNoneTerminated(queue)
     def ack(id: MsgId): F[Unit]                = Applicative[F].unit
@@ -71,19 +83,19 @@ object Consumer:
     PulsarConsumer.make[F, A](client, topic, sub, decoder, handler, _settings).map { c =>
       new:
         def receiveM: Stream[F, Msg[A]] = c.subscribe.map { m =>
-          Msg(MsgId.from(m.id), m.properties, m.payload)
+          Msg(MsgId.Pulsar(m.id), m.properties, m.payload)
         }
         def receiveM(id: MsgId): Stream[F, Consumer.Msg[A]] =
-          c.subscribe(MsgId.to(id)).map { m =>
-            Msg(MsgId.from(m.id), m.properties, m.payload)
+          c.subscribe(id.getPulsar).map { m =>
+            Msg(MsgId.Pulsar(m.id), m.properties, m.payload)
           }
 
         def receive: Stream[F, A]            = c.autoSubscribe
-        def lastMsgId: F[Option[MsgId]]      = c.lastMessageId.map(_.map(MsgId.from))
-        def ack(id: MsgId): F[Unit]          = c.ack(MsgId.to(id))
-        def ack(ids: Set[MsgId]): F[Unit]    = c.ack(ids.map(MsgId.to))
-        def ack(id: MsgId, tx: Txn): F[Unit] = c.ack(MsgId.to(id), tx.get)
-        def nack(id: MsgId): F[Unit]         = c.nack(MsgId.to(id))
+        def lastMsgId: F[Option[MsgId]]      = c.lastMessageId.map(_.map(MsgId.Pulsar(_)))
+        def ack(id: MsgId): F[Unit]          = c.ack(id.getPulsar)
+        def ack(ids: Set[MsgId]): F[Unit]    = c.ack(ids.map(_.getPulsar))
+        def ack(id: MsgId, tx: Txn): F[Unit] = c.ack(id.getPulsar, tx.get)
+        def nack(id: MsgId): F[Unit]         = c.nack(id.getPulsar)
     }
 
   type KafkaOffset = Map[TopicPartition, OffsetAndMetadata]
@@ -100,19 +112,14 @@ object Consumer:
           new:
             def receiveM: Stream[F, Msg[A]] =
               c.stream.evalMap { c =>
-                ref.set(c.offset.offsets).as(Msg("N/A", Map.empty, c.record.value))
+                ref.set(c.offset.offsets).as(Msg(MsgId.Dummy, Map.empty, c.record.value))
               }
             def receiveM(id: MsgId): Stream[F, Consumer.Msg[A]] = receiveM
-            def receive: Stream[F, A] =
-              c.stream.evalMap(c => c.offset.commit.as(c.record.value))
-            def lastMsgId: F[Option[MsgId]] = none.pure[F]
-            def ack(id: MsgId): F[Unit] =
-              ref.get >>= c.commitAsync
-            def ack(ids: Set[MsgId]): F[Unit] =
-              ref.get >>= c.commitAsync
-            def ack(id: MsgId, tx: Txn): F[Unit] =
-              ack(id)
-            def nack(id: MsgId): F[Unit] =
-              Applicative[F].unit
+            def receive: Stream[F, A]            = c.stream.evalMap(c => c.offset.commit.as(c.record.value))
+            def lastMsgId: F[Option[MsgId]]      = none.pure[F]
+            def ack(id: MsgId): F[Unit]          = ref.get >>= c.commitAsync
+            def ack(ids: Set[MsgId]): F[Unit]    = ref.get >>= c.commitAsync
+            def ack(id: MsgId, tx: Txn): F[Unit] = ack(id)
+            def nack(id: MsgId): F[Unit]         = Applicative[F].unit
         }
     }
