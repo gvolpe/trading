@@ -34,7 +34,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     def ack(id: Consumer.MsgId, tx: Txn): IO[Unit] = ack(id)
     def nack(id: MsgId): IO[Unit]                  = IO.unit
 
-  val msgId: MsgId = UUID.randomUUID().toString
+  val msgId: MsgId = MsgId.latest
 
   val tick: Tick = ()
 

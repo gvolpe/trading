@@ -21,7 +21,7 @@ object SnapshotReader:
       redis: RedisCommands[F, String, String]
   ): SnapshotReader[F] = new:
     def getLastId: F[Option[Consumer.MsgId]] =
-      redis.get("trading-last-id")
+      redis.get("trading-last-id").map(_.map(Consumer.MsgId.from))
 
     def getStatus: F[TradingStatus] =
       redis.get("trading-status").map {

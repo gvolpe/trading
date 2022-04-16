@@ -16,17 +16,15 @@ import io.circe.syntax.*
 trait SnapshotWriter[F[_]]:
   def save(state: TradeState, id: Consumer.MsgId): F[Unit]
 
-/** This model only allows for a single snapshots service running at a time. Thus, the snapshots service uses a
-  * Failover subscription mode and it's recommended to run two instances: a main one, and a failover one.
-  */
 object SnapshotWriter:
   def from[F[_]: MonadThrow](
       redis: RedisCommands[F, String, String],
       exp: KeyExpiration
   ): SnapshotWriter[F] = new:
+    // TODO: This should run in a transaction
     def save(state: TradeState, id: Consumer.MsgId): F[Unit] =
       redis.set("trading-status", state.status.show) *>
-        redis.set("trading-last-id", id) *>
+        redis.set("trading-last-id", id.serialize) *>
         state.prices.toList.traverse_ { case (symbol, prices) =>
           val key = s"snapshot-$symbol"
           redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces) *>

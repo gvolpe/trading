@@ -10,6 +10,7 @@ import trading.domain.*
 import trading.events.*
 import trading.forecasts.store.*
 import trading.lib.*
+import trading.lib.Consumer.{ Msg, MsgId }
 import trading.lib.Logger.NoOp.given
 import trading.state.*
 
@@ -79,7 +80,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   def mkNAcker(ref: Ref[IO, Option[Consumer.MsgId]]): Acker[IO, ForecastCommand] = new DummyAcker:
     override def nack(id: Consumer.MsgId): IO[Unit] = ref.set(id.some)
 
-  val msgId: Consumer.MsgId = UUID.randomUUID().toString
+  val msgId: MsgId = MsgId.latest
 
   private def baseTest(
       authorStore: AuthorStore[IO] = okAuthorStore,
