@@ -10,6 +10,7 @@ import trading.domain.{ AppId, KeyExpiration, TradingStatus }
 import trading.domain.generators.*
 import trading.forecasts.store.*
 import trading.lib.{ given, * }
+import trading.lib.Consumer.MsgId
 import trading.lib.Logger.NoOp.given
 import trading.it.suite.ResourceSuite
 import trading.state.Prices
@@ -31,7 +32,7 @@ object RedisSuite extends ResourceSuite:
   test("snapshots reader and writer") { redis =>
     val reader = SnapshotReader.from[IO](redis)
     val writer = SnapshotWriter.from[IO](redis, KeyExpiration(30.seconds))
-    val msgId  = "id-123"
+    val msgId  = MsgId.Test("id-123")
 
     NonEmptyList
       .of(tradeStateGen.sample.replicateA(3).toList.flatten.last)
