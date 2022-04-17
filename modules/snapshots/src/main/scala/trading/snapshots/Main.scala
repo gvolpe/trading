@@ -47,16 +47,8 @@ object Main extends IOApp.Simple:
       .compile
       .drain
 
-  // TradeEvent subscription: one per instance
-  def trSub(appId: AppId) =
-    Subscription.Builder
-      .withName(appId.show)
-      .withType(Subscription.Type.Exclusive)
-      .withMode(Subscription.Mode.NonDurable)
-      .build
-
-  // SwitchEvent subscription: one per instance (could also be failover, though)
-  def swSub(appId: AppId) =
+  // TradeEvent and SwitchEvent subscription: one per instance
+  def mkSub(appId: AppId) =
     Subscription.Builder
       .withName(appId.show)
       .withType(Subscription.Type.Exclusive)
@@ -70,15 +62,16 @@ object Main extends IOApp.Simple:
     for
       config <- Resource.eval(Config.load[IO])
       pulsar <- Pulsar.make[IO](config.pulsar.url)
-      _      <- Resource.eval(Logger[IO].info("Initializing snapshots service"))
+      _      <- Resource.eval(Logger[IO].info(s"Initializing service: ${config.appId.show}"))
       teTopic = AppTopic.TradingEvents.make(config.pulsar)
       swTopic = AppTopic.SwitchEvents.make(config.pulsar)
       redis <- RedisClient[IO].from(config.redisUri.value)
       distLock = DistLock.make[IO]("snap-lock", config.appId, redis)
-      reader     <- SnapshotReader.fromClient[IO](redis)
-      writer     <- SnapshotWriter.fromClient[IO](redis, config.keyExpiration)
-      trConsumer <- Consumer.pulsar[IO, TradeEvent](pulsar, teTopic, trSub(config.appId))
-      swConsumer <- Consumer.pulsar[IO, SwitchEvent](pulsar, swTopic, swSub(config.appId), compact)
+      reader <- SnapshotReader.fromClient[IO](redis)
+      writer <- SnapshotWriter.fromClient[IO](redis, config.keyExpiration)
+      sub = mkSub(config.appId)
+      trConsumer <- Consumer.pulsar[IO, TradeEvent](pulsar, teTopic, sub)
+      swConsumer <- Consumer.pulsar[IO, SwitchEvent](pulsar, swTopic, sub, compact)
       fsm    = Engine.fsm(trConsumer, swConsumer, writer)
       server = Ember.default[IO](config.httpPort)
     yield (server, distLock, trConsumer, swConsumer, reader, fsm)
