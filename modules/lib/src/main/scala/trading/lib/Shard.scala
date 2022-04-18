@@ -12,7 +12,7 @@ import dev.profunktor.pulsar.ShardKey
 /** A shard corresponds to the `orderingKey` of a Pulsar `Message`, which is used for routing in `KeyShared`
   * subscriptions.
   *
-  * For topic compaction, see the [[Partition]] typeclass.
+  * For topic compaction, see the [[Compaction]] typeclass.
   */
 trait Shard[A]:
   def key: A => ShardKey

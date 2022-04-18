@@ -34,7 +34,7 @@ object Main extends IOApp.Simple:
     PulsarProducer
       .Settings[IO, SwitchCommand]()
       .withDeduplication(SeqIdMaker.fromEq)
-      .withMessageKey(Partition[SwitchCommand].key)
+      .withMessageKey(Compaction[SwitchCommand].key)
       .some
 
   def resources =

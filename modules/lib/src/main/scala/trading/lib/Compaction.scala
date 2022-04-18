@@ -7,39 +7,39 @@ import trading.events.SwitchEvent
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ MessageKey, ShardKey }
 
-/** A partition corresponds to the `key` of a Pulsar `Message`, which is used for topic compaction as well as for
-  * routing messages when the `orderingKey` is not set.
+/** A compaction key corresponds to the (partitioning) `key` of a Pulsar `Message`, which is used for topic compaction
+  * as well as for routing messages when the `orderingKey` is absent.
   *
   * For `KeyShared` subscriptions, see the [[Shard]] typeclass.
   */
-trait Partition[A]:
+trait Compaction[A]:
   def key: A => MessageKey
 
-object Partition:
-  def apply[A: Partition]: Partition[A] = summon
+object Compaction:
+  def apply[A: Compaction]: Compaction[A] = summon
 
-  def default[A]: Partition[A] = new:
+  def default[A]: Compaction[A] = new:
     val key: A => MessageKey = _ => MessageKey.Empty
 
   def by(s: String): MessageKey = MessageKey.Of(s)
 
-  given Partition[PriceUpdate] with
+  given Compaction[PriceUpdate] with
     val key: PriceUpdate => MessageKey = p => by(p.symbol.show)
 
-  given Partition[SwitchCommand] with
+  given Compaction[SwitchCommand] with
     val key: SwitchCommand => MessageKey = {
       case _: SwitchCommand.Start => by("start")
       case _: SwitchCommand.Stop  => by("stop")
     }
 
-  given Partition[SwitchEvent] with
+  given Compaction[SwitchEvent] with
     val key: SwitchEvent => MessageKey = {
       case _: SwitchEvent.Started => by("started")
       case _: SwitchEvent.Stopped => by("stopped")
       case _: SwitchEvent.Ignored => by("ignored")
     }
 
-  given Partition[Alert] with
+  given Compaction[Alert] with
     val key: Alert => MessageKey = {
       case a: Alert.TradeAlert  => by(a.symbol.show)
       case a: Alert.TradeUpdate => by(a.status.show)

@@ -66,7 +66,7 @@ object Main extends IOApp.Simple:
     PulsarProducer
       .Settings[IO, Alert]()
       .withDeduplication(SeqIdMaker.fromEq)
-      .withMessageKey(Partition[Alert].key)
+      .withMessageKey(Compaction[Alert].key)
       .some
 
   // PriceUpdate producer settings, dedup and partitioned (for topic compaction in WS)
@@ -74,7 +74,7 @@ object Main extends IOApp.Simple:
     PulsarProducer
       .Settings[IO, PriceUpdate]()
       .withDeduplication(SeqIdMaker.fromEq)
-      .withMessageKey(Partition[PriceUpdate].key)
+      .withMessageKey(Compaction[PriceUpdate].key)
       .some
 
   val compact =

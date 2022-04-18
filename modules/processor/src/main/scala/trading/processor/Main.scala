@@ -63,7 +63,7 @@ object Main extends IOApp.Simple:
     PulsarProducer
       .Settings[IO, SwitchEvent]()
       .withDeduplication(SeqIdMaker.fromEq)
-      .withMessageKey(Partition[SwitchEvent].key)
+      .withMessageKey(Compaction[SwitchEvent].key)
       .some
 
   def resources =
