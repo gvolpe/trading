@@ -7,6 +7,11 @@ import trading.events.SwitchEvent
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ MessageKey, ShardKey }
 
+/** A partition corresponds to the `key` of a Pulsar `Message`, which is used for topic compaction as well as for
+  * routing messages when the `orderingKey` is not set.
+  *
+  * For `KeyShared` subscriptions, see the [[Shard]] typeclass.
+  */
 trait Partition[A]:
   def key: A => MessageKey
 
