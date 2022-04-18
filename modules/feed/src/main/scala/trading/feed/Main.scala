@@ -5,6 +5,7 @@ import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.lib.*
 
+import cats.Eq
 import cats.effect.*
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Producer as PulsarProducer, Pulsar, SeqIdMaker }
@@ -20,12 +21,12 @@ object Main extends IOApp.Simple:
         .drain
     }
 
-  // TradeCommand producer settings, dedup and sharded
-  val tcSettings =
+  // TradeCommand / ForecastCommand producer settings, dedup and sharded
+  def settings[A: Eq: Shard] =
     PulsarProducer
-      .Settings[IO, TradeCommand]()
+      .Settings[IO, A]()
       .withDeduplication(SeqIdMaker.fromEq)
-      .withShardKey(Shard[TradeCommand].key)
+      .withShardKey(Shard[A].key)
       .some
 
   // SwitchEvent producer settings, dedup and partitioned (for topic compaction)
@@ -36,14 +37,6 @@ object Main extends IOApp.Simple:
       .withMessageKey(Partition[SwitchCommand].key)
       .some
 
-  // ForecastCommand producer settings, dedup and sharded
-  val fcSettings =
-    PulsarProducer
-      .Settings[IO, ForecastCommand]()
-      .withDeduplication(SeqIdMaker.fromEq)
-      .withShardKey(Shard[ForecastCommand].key)
-      .some
-
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
@@ -52,8 +45,8 @@ object Main extends IOApp.Simple:
       trTopic = AppTopic.TradingCommands.make(config.pulsar)
       swTopic = AppTopic.SwitchCommands.make(config.pulsar)
       fcTopic = AppTopic.ForecastCommands.make(config.pulsar)
-      trading     <- Producer.pulsar[IO, TradeCommand](pulsar, trTopic, tcSettings)
+      trading     <- Producer.pulsar[IO, TradeCommand](pulsar, trTopic, settings)
       switcher    <- Producer.pulsar[IO, SwitchCommand](pulsar, swTopic, swSettings)
-      forecasting <- Producer.pulsar[IO, ForecastCommand](pulsar, fcTopic, fcSettings)
+      forecasting <- Producer.pulsar[IO, ForecastCommand](pulsar, fcTopic, settings)
       server = Ember.default[IO](config.httpPort)
     yield server -> Feed.random(trading, switcher, forecasting)
