@@ -24,9 +24,11 @@ import weaver.scalacheck.Checkers
 object EngineSuite extends SimpleIOSuite with Checkers:
   def succesfulWriter(ref: Ref[IO, Option[TradeState]]): SnapshotWriter[IO] = new:
     def save(state: TradeState, id: Consumer.MsgId): IO[Unit] = ref.set(state.some)
+    def saveStatus(st: TradingStatus): IO[Unit]               = ref.update(_.map(_.copy(status = st)))
 
   val failingWriter: SnapshotWriter[IO] = new:
     def save(state: TradeState, id: Consumer.MsgId): IO[Unit] = IO.raiseError(new Exception("boom"))
+    def saveStatus(st: TradingStatus): IO[Unit]               = IO.unit
 
   def mkAcker[A](acks: Ref[IO, List[MsgId]]): Acker[IO, A] = new:
     def ack(id: MsgId): IO[Unit]                   = acks.update(_ :+ id)

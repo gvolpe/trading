@@ -29,22 +29,19 @@ object Engine:
           tradeAcker.ack(msgId).tupleLeft(st)
       case ((st, ids), Right(Msg(msgId, _, evt))) =>
         val nst = TradeEngine.eventsFsm.runS(st, evt)
-        switchAcker.ack(msgId).tupleLeft(nst, ids)
+        writer.saveStatus(nst.status) *> switchAcker.ack(msgId).tupleLeft(nst, ids)
       case ((st, ids), (_: Tick)) if ids.nonEmpty =>
         val lastId = ids.last
-        writer
-          .save(st, lastId)
-          .attempt
-          .flatMap {
-            case Left(e) =>
-              Logger[F].warn(s"Failed to persist state: $lastId").tupleLeft(st -> ids)
-            case Right(_) =>
-              Logger[F].debug(s"State persisted: $lastId. Acking ${ids.size} messages.") *>
-                tradeAcker.ack(ids.toSet).attempt.flatMap {
-                  case Left(e)  => Logger[F].error(e.getMessage).tupleLeft(st -> ids)
-                  case Right(_) => ((st -> List.empty) -> ()).pure[F]
-                }
-          }
+        writer.save(st, lastId).attempt.flatMap {
+          case Left(e) =>
+            Logger[F].warn(s"Failed to persist state: $lastId").tupleLeft(st -> ids)
+          case Right(_) =>
+            Logger[F].debug(s"State persisted: $lastId. Acking ${ids.size} messages.") *>
+              tradeAcker.ack(ids.toSet).attempt.flatMap {
+                case Left(e)  => Logger[F].error(e.getMessage).tupleLeft(st -> ids)
+                case Right(_) => ((st -> List.empty) -> ()).pure[F]
+              }
+        }
       case (st, (_: Tick)) =>
         ().pure[F].tupleLeft(st)
     }
