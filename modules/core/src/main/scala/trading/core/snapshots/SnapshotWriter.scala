@@ -1,5 +1,7 @@
 package trading.core.snapshots
 
+import scala.concurrent.duration.*
+
 import trading.domain.*
 import trading.lib.Consumer
 import trading.state.TradeState
@@ -10,8 +12,7 @@ import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.data.RedisCodec
 import dev.profunktor.redis4cats.effect.Log
-import dev.profunktor.redis4cats.hlist.*
-import dev.profunktor.redis4cats.transactions.*
+import dev.profunktor.redis4cats.tx.{ RedisTx, TransactionDiscarded }
 import io.circe.syntax.*
 
 trait SnapshotWriter[F[_]]:
@@ -27,21 +28,35 @@ object SnapshotWriter:
       redis.set("trading-status", st.show)
 
     def save(state: TradeState, id: Consumer.MsgId): F[Unit] =
-      val tx = RedisTransaction(redis)
-      val c1 = saveStatus(state.status)
-      val c2 = redis.set("trading-last-id", id.serialize)
+      RedisTx.make(redis).use { tx =>
+        val xs1: List[F[Unit]] =
+          List(
+            saveStatus(state.status),
+            redis.set("trading-last-id", id.serialize)
+          )
 
-      // TODO: every inner command should be transactional (redis4cats limitation)
-      val c3 = state.prices.toList.traverse_ { case (symbol, prices) =>
-        val key = s"snapshot-$symbol"
-        redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces) *>
-          redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces) *>
-          redis.hSet(key, "high", prices.high.show) *>
-          redis.hSet(key, "low", prices.low.show) *>
-          redis.expire(key, exp.value)
+        val xs2: List[F[Unit]] =
+          state.prices.toList.flatMap { case (symbol, prices) =>
+            val key = s"snapshot-$symbol"
+            List(
+              redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces),
+              redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces),
+              redis.hSet(key, "high", prices.high.show),
+              redis.hSet(key, "low", prices.low.show),
+              redis.expire(key, exp.value)
+            ).map(_.void)
+          }
+
+        def exec(attempts: Int): F[Unit] =
+          tx.exec(xs1 ++ xs2).recoverWith {
+            case TransactionDiscarded if attempts < 2 =>
+              Async[F].sleep(100.millis) >> exec(attempts + 1)
+            case e =>
+              Log[F].error(e.getMessage)
+          }
+
+        exec(0)
       }
-
-      tx.exec(c1 :: c2 :: c3 :: HNil).void
 
   def fromClient[F[_]: Async: Log](
       client: RedisClient,
