@@ -12,7 +12,7 @@ import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.data.RedisCodec
 import dev.profunktor.redis4cats.effect.Log
-import dev.profunktor.redis4cats.tx.{ RedisTx, TransactionDiscarded }
+import dev.profunktor.redis4cats.tx.TransactionDiscarded
 import io.circe.syntax.*
 
 trait SnapshotWriter[F[_]]:
@@ -28,35 +28,33 @@ object SnapshotWriter:
       redis.set("trading-status", st.show)
 
     def save(state: TradeState, id: Consumer.MsgId): F[Unit] =
-      RedisTx.make(redis).use { tx =>
-        val xs1: List[F[Unit]] =
+      val xs1: List[F[Unit]] =
+        List(
+          saveStatus(state.status),
+          redis.set("trading-last-id", id.serialize)
+        )
+
+      val xs2: List[F[Unit]] =
+        state.prices.toList.flatMap { case (symbol, prices) =>
+          val key = s"snapshot-$symbol"
           List(
-            saveStatus(state.status),
-            redis.set("trading-last-id", id.serialize)
-          )
+            redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces),
+            redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces),
+            redis.hSet(key, "high", prices.high.show),
+            redis.hSet(key, "low", prices.low.show),
+            redis.expire(key, exp.value)
+          ).map(_.void)
+        }
 
-        val xs2: List[F[Unit]] =
-          state.prices.toList.flatMap { case (symbol, prices) =>
-            val key = s"snapshot-$symbol"
-            List(
-              redis.hSet(key, "ask", prices.ask.toList.asJson.noSpaces),
-              redis.hSet(key, "bid", prices.bid.toList.asJson.noSpaces),
-              redis.hSet(key, "high", prices.high.show),
-              redis.hSet(key, "low", prices.low.show),
-              redis.expire(key, exp.value)
-            ).map(_.void)
-          }
+      def exec(attempts: Int): F[Unit] =
+        redis.transact_(xs1 ++ xs2).recoverWith {
+          case TransactionDiscarded if attempts < 2 =>
+            Async[F].sleep(100.millis) >> exec(attempts + 1)
+          case e =>
+            Log[F].error(e.getMessage)
+        }
 
-        def exec(attempts: Int): F[Unit] =
-          tx.exec(xs1 ++ xs2).recoverWith {
-            case TransactionDiscarded if attempts < 2 =>
-              Async[F].sleep(100.millis) >> exec(attempts + 1)
-            case e =>
-              Log[F].error(e.getMessage)
-          }
-
-        exec(0)
-      }
+      exec(0)
 
   def fromClient[F[_]: Async: Log](
       client: RedisClient,

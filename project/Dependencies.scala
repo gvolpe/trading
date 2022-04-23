@@ -20,7 +20,7 @@ object Dependencies {
     val natchezHttp4s = "0.3.2"
     val neutron       = "0.4.0+15-6d8da965-SNAPSHOT"
     val odin          = "0.13.0"
-    val redis4cats    = "1.1.1+33-7f1a4c8a-SNAPSHOT"
+    val redis4cats    = "1.1.1+37-bfb98081-SNAPSHOT"
     val refined       = "0.9.28"
 
     val scalajsTime = "2.4.0-M1"
