@@ -6,7 +6,7 @@ object Dependencies {
   object V {
     val cats          = "2.7.0"
     val catsEffect    = "3.3.12"
-    val circe         = "0.14.1"
+    val circe         = "0.14.2"
     val ciris         = "2.3.2"
     val doobie        = "1.0.0-RC2"
     val flyway        = "8.5.11"
@@ -47,7 +47,6 @@ object Dependencies {
 
     val circeCore    = circe("core")
     val circeParser  = circe("parser")
-    val circeExtras  = circe("extras")
     val circeRefined = circe("refined")
 
     val doobieH2 = "org.tpolecat" %% "doobie-h2"   % V.doobie

@@ -24,7 +24,6 @@ val commonSettings = List(
     Libraries.catsEffect,
     Libraries.circeCore.value,
     Libraries.circeParser.value,
-    Libraries.circeExtras.value,
     Libraries.circeRefined.value,
     Libraries.cirisCore,
     Libraries.cirisRefined,
