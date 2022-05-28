@@ -3,7 +3,7 @@ package trading.events
 import trading.commands.SwitchCommand
 import trading.domain.{ given, * }
 
-import cats.{ Applicative, Eq, Show }
+import cats.{ Applicative, Show }
 // FIXME: importing all `given` yield ambiguous implicits
 import cats.derived.semiauto.{ derived, product }
 import cats.syntax.all.*
@@ -33,9 +33,6 @@ object SwitchEvent:
       cid: CorrelationId,
       createdAt: Timestamp
   ) extends SwitchEvent
-
-  // EventId and Timestamp are regenerated when reprocessed so we don't consider them for deduplication.
-  given Eq[SwitchEvent] = Eq.by(_.cid)
 
   val _CorrelationId: Traversal[SwitchEvent, CorrelationId] = new:
     def modifyA[F[_]: Applicative](f: CorrelationId => F[CorrelationId])(s: SwitchEvent): F[SwitchEvent] =

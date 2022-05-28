@@ -8,7 +8,8 @@ import trading.forecasts.store.*
 import trading.lib.{ given, * }
 
 import cats.effect.*
-import dev.profunktor.pulsar.{ Pulsar, Subscription }
+import cats.syntax.all.*
+import dev.profunktor.pulsar.{ Producer as PulsarProducer, Pulsar, Subscription }
 import fs2.Stream
 
 object Main extends IOApp.Simple:
@@ -22,6 +23,13 @@ object Main extends IOApp.Simple:
       }
       .compile
       .drain
+
+  def settings[A](name: String) =
+    PulsarProducer
+      .Settings[IO, A]()
+      .withDeduplication
+      .withName(s"fc-$name-event")
+      .some
 
   val sub =
     Subscription.Builder
@@ -37,8 +45,8 @@ object Main extends IOApp.Simple:
       cmdTopic      = AppTopic.ForecastCommands.make(config.pulsar)
       authorTopic   = AppTopic.AuthorEvents.make(config.pulsar)
       forecastTopic = AppTopic.ForecastEvents.make(config.pulsar)
-      authors   <- Producer.pulsar[IO, AuthorEvent](pulsar, authorTopic)
-      forecasts <- Producer.pulsar[IO, ForecastEvent](pulsar, forecastTopic)
+      authors   <- Producer.pulsar[IO, AuthorEvent](pulsar, authorTopic, settings("author"))
+      forecasts <- Producer.pulsar[IO, ForecastEvent](pulsar, forecastTopic, settings("forecast"))
       consumer  <- Consumer.pulsar[IO, ForecastCommand](pulsar, cmdTopic, sub)
       xa        <- DB.init[IO]
       atStore = AuthorStore.from(xa)

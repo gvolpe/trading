@@ -32,7 +32,7 @@ object TradeEvent:
       createdAt: Timestamp
   ) extends TradeEvent
 
-  // EventId and Timestamp are regenerated when reprocessed so we don't consider them for deduplication.
+  // EventId and Timestamp are regenerated when reprocessed so we don't consider them.
   given Eq[TradeEvent] = Eq.and(Eq.by(_.cid), Eq.by(_.command))
 
   val _CorrelationId: Traversal[TradeEvent, CorrelationId] = new:

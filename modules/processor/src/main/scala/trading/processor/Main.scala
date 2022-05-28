@@ -50,19 +50,19 @@ object Main extends IOApp.Simple:
   val compact =
     PulsarConsumer.Settings[IO, SwitchCommand]().withReadCompacted.some
 
-  // TradeEvent producer settings, dedup and sharded
+  // TradeEvent producer settings, dedup (retries) and sharded
   val evtSettings =
     PulsarProducer
       .Settings[IO, TradeEvent]()
-      .withDeduplication(SeqIdMaker.fromEq)
+      .withDeduplication
       .withShardKey(Shard[TradeEvent].key)
       .some
 
-  // SwitchEvent producer settings, dedup and partitioned (for topic compaction)
+  // SwitchEvent producer settings, dedup (retries) and partitioned (for topic compaction)
   val swtSettings =
     PulsarProducer
       .Settings[IO, SwitchEvent]()
-      .withDeduplication(SeqIdMaker.fromEq)
+      .withDeduplication
       .withMessageKey(Compaction[SwitchEvent].key)
       .some
 

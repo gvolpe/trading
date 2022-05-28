@@ -40,7 +40,8 @@ object Engine:
 
     def switch(cid: CorrelationId, msgId: MsgId, st: TradeState, nst: TradeState): F[(TradeState, Unit)] =
       mkIdTs.map(TradeUpdate(_, cid, nst.status, _)).flatMap { alert =>
-        sendAck(alert, None, switchAcker.ack(msgId, _)).tupleLeft(nst)
+        sendAck(alert, None, switchAcker.ack(msgId, _))
+          .tupleLeft(nst)
           .handleErrorWith { e =>
             Logger[F].warn(s"Transaction failed: ${e.getMessage}").tupleLeft(st)
           }
