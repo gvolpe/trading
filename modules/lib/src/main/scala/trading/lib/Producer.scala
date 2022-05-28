@@ -38,8 +38,8 @@ object Producer:
     def send(a: A): F[Unit]                                  = ref.set(Some(a))
     def send(a: A, properties: Map[String, String]): F[Unit] = send(a)
 
-  private def dummySeqIdMaker[A]: SeqIdMaker[A] = new:
-    def next(prevId: Long, prevPayload: Option[A], payload: A): Long = 0L
+  private def dummySeqIdMaker[F[_]: Applicative, A]: SeqIdMaker[F, A] = new:
+    def make(lastSeqId: Long, currentMsg: A): F[Long] = Applicative[F].pure(0L)
 
   def pulsar[F[_]: Async: Logger: Parallel, A: Encoder](
       client: Pulsar.T,

@@ -18,7 +18,7 @@ object Dependencies {
     val monocle       = "3.1.0"
     val natchez       = "0.1.6"
     val natchezHttp4s = "0.3.2"
-    val neutron       = "0.5.0"
+    val neutron       = "0.5.0+11-5da67d88-SNAPSHOT"
     val odin          = "0.13.0"
     val redis4cats    = "1.2.0"
     val refined       = "0.9.29"

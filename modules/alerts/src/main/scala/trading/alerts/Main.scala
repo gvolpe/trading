@@ -61,19 +61,19 @@ object Main extends IOApp.Simple:
       .withType(Subscription.Type.Exclusive)
       .build
 
-  // Alert producer settings, dedup and partitioned (for topic compaction in WS)
+  // Alert producer settings, dedup (retries) and partitioned (for topic compaction in WS)
   val altSettings =
     PulsarProducer
       .Settings[IO, Alert]()
-      .withDeduplication(SeqIdMaker.fromEq)
+      .withDeduplication
       .withMessageKey(Compaction[Alert].key)
       .some
 
-  // PriceUpdate producer settings, dedup and partitioned (for topic compaction in WS)
+  // PriceUpdate producer settings, dedup (retries) and partitioned (for topic compaction in WS)
   val priSettings =
     PulsarProducer
       .Settings[IO, PriceUpdate]()
-      .withDeduplication(SeqIdMaker.fromEq)
+      .withDeduplication
       .withMessageKey(Compaction[PriceUpdate].key)
       .some
 
