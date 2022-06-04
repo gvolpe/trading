@@ -15,7 +15,7 @@ import trading.ws.*
 
 import cats.effect.*
 import cats.syntax.all.*
-import dev.profunktor.pulsar.{ Config, Producer as PulsarProducer, Pulsar, SeqIdMaker }
+import dev.profunktor.pulsar.{ Config, Producer as PulsarProducer, Pulsar }
 import fs2.Stream
 import io.circe.parser.decode as jsonDecode
 import io.circe.syntax.*
@@ -69,7 +69,7 @@ object Smokey extends IOSuite:
   val tcSettings =
     PulsarProducer
       .Settings[IO, TradeCommand]()
-      .withDeduplication(SeqIdMaker.fromEq)
+      .withDeduplication
       .withShardKey(Shard[TradeCommand].key)
       .some
 
