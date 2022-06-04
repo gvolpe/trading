@@ -24,7 +24,7 @@ object Dependencies {
     val refined       = "0.9.29"
 
     val scalajsTime = "2.4.0-M1"
-    val tyrian      = "0.3.2"
+    val tyrian      = "0.5.0"
 
     val scalacheck = "1.16.0"
     val weaver     = "0.7.12"
@@ -77,6 +77,7 @@ object Dependencies {
     // webapp
     val scalajsTime = Def.setting("io.github.cquiroz" %%% "scala-java-time" % V.scalajsTime)
     val tyrian      = Def.setting("io.indigoengine" %%% "tyrian" % V.tyrian)
+    val tyrianIO    = Def.setting("io.indigoengine" %%% "tyrian-io" % V.tyrian)
 
     // test
     val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle

@@ -154,6 +154,7 @@ lazy val webapp = (project in file("modules/ws-client"))
   .enablePlugins(ScalaJSPlugin)
   .settings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    scalacOptions ++= Seq("-scalajs"),
     scalafmtOnCompile := false,
     libraryDependencies ++= Seq(
       Libraries.circeCore.value,
@@ -163,7 +164,8 @@ lazy val webapp = (project in file("modules/ws-client"))
       Libraries.refinedCore.value,
       Libraries.refinedCats.value,
       Libraries.scalajsTime.value,
-      Libraries.tyrian.value
+      Libraries.tyrian.value,
+      Libraries.tyrianIO.value
     )
   )
   .dependsOn(domain.js)

@@ -2,14 +2,15 @@ package trading.client
 
 import trading.ws.WsOut
 
+import cats.effect.IO
 import io.circe.parser.decode as jsonDecode
 
 import tyrian.*
 import tyrian.websocket.WebSocket
 import tyrian.websocket.WebSocketEvent as WSEvent
 
-def wsSub(ws: Option[WebSocket]): Sub[Msg] =
-  ws.fold(Sub.emit(Msg.NoOp)) {
+def wsSub(ws: Option[WebSocket[IO]]): Sub[IO, Msg] =
+  ws.fold(Sub.emit[IO, Msg](Msg.NoOp)) {
     _.subscribe {
       case WSEvent.Receive(str) =>
         jsonDecode[WsOut](str) match

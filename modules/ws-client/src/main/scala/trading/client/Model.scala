@@ -3,12 +3,14 @@ package trading.client
 import trading.domain.*
 import trading.ws.WsOut
 
+import cats.effect.IO
+
 import tyrian.websocket.WebSocket
 
 enum WsMsg:
   case Error(msg: String)
   case Connecting
-  case Connected(ws: WebSocket)
+  case Connected(ws: WebSocket[IO])
   case Heartbeat
   case Disconnected
 
@@ -27,7 +29,7 @@ enum Msg:
 case class Model(
     symbol: Symbol,
     input: String,
-    ws: Option[WebSocket],
+    ws: Option[WebSocket[IO]],
     wsUrl: String,
     socketId: Option[SocketId],
     onlineUsers: Int,
