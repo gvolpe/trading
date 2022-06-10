@@ -5,7 +5,6 @@ trading
 [![CI Scala](https://github.com/gvolpe/trading/workflows/Scala/badge.svg)](https://github.com/gvolpe/trading/actions)
 [![CI Registry](https://github.com/gvolpe/trading/actions/workflows/ci-images.yml/badge.svg)](https://github.com/gvolpe/trading/actions/workflows/ci-images.yml)
 [![CI Smokey](https://github.com/gvolpe/trading/actions/workflows/ci-smokey.yml/badge.svg?branch=main)](https://github.com/gvolpe/trading/actions/workflows/ci-smokey.yml)
-[![MergifyStatus](https://img.shields.io/endpoint.svg?url=https://gh.mergify.io/badges/gvolpe/trading&style=flat)](https://mergify.io)
 
 Reference application developed in the [Functional event-driven architecture: Powered by Scala 3](https://leanpub.com/feda) book.
 
