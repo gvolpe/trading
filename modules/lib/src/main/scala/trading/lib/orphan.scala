@@ -16,9 +16,15 @@ Trying to law-check this instance seems pointless; so many instances missing for
 [error]   Caused by: java.lang.NoSuchMethodError: 'cats.Comonad cats.Invariant$.catsInstancesForId()'
 [error]
 [error]   IsoLaws.scala:28          monocle.law.IsoLaws#consistentModifyModifyId
+ *
+ * Matchable: https://www-dev.scala-lang.org/scala3/reference/other-new-features/matchable.html
+ *
+ * The @nowarn goes awat by adding two constraints: (using TypeTest[E | A, E], TypeTest[E | A, A]),
+ * but it still causes issues at call site, not worth it.
+ * See: https://docs.scala-lang.org/scala3/reference/other-new-features/type-test.html
  */
 @nowarn
-def eitherUnionIso[E, A]: Iso[Either[E, A], E | A] =
+def eitherUnionIso[E <: Matchable, A <: Matchable]: Iso[Either[E, A], E | A] =
   Iso[Either[E, A], E | A] {
     case Left(e)  => e
     case Right(a) => a

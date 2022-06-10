@@ -41,7 +41,7 @@ extension [F[_], A, B, C](src: Stream[F, Either[Either[Msg[A], Msg[B]], Msg[C]]]
       case Right(mc)       => mc.asInstanceOf[Msg[A | B | C]]
     }
 
-extension [F[_]: MonadThrow, A](fa: F[A])
+extension [F[_]: MonadThrow, A <: Matchable](fa: F[A])
   /** Lift an F[A] into an F[Either[E, A]] where E can be an union type.
     *
     * Guarantees that:
@@ -90,7 +90,7 @@ extension [F[_]: MonadThrow, A](fa: F[A])
   def liftU[E <: Throwable: ClassTag]: F[E | A] =
     lift.map(eitherUnionIso[E, A].get)
 
-extension [F[_]: MonadThrow, E <: Throwable, A](fa: F[E | A])
+extension [F[_]: MonadThrow, E <: Throwable, A <: Matchable](fa: F[E | A])
   /* Same as `rethrow`, except it operates on `F[E | A]` instead of `F[Either[E, A]]` */
   def rethrowU: F[A] =
     fa.map(eitherUnionIso[E, A].reverseGet).rethrow
