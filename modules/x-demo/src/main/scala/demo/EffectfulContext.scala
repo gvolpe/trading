@@ -37,7 +37,7 @@ object EffectfulContext extends IOApp.Simple:
     IO.println("Running program #1") *> p2
 
   def p2(using ctx: Ctx): IO[Unit] =
-    IO.println("Running program #2") *> p4 *>
+    IO.println("Running program #2") *>
       ctx.sp
         .supervise {
           ctx.log.add(s"Start: ${ctx.id}") >>
@@ -50,10 +50,10 @@ object EffectfulContext extends IOApp.Simple:
         }
 
   val p3: Ctx ?=> IO[Unit] =
-    IO.sleep(100.millis) *> IO.println("Running program #3")
+    IO.sleep(100.millis) *> IO.println("Running program #3") *> p4
 
-  val p4: Ctx ?=> IO[Unit] =
-    IO.println("Running program #4")
+  def p4(using ctx: Ctx): IO[Unit] =
+    IO.println(s"Running program #4: ${ctx.id.show}")
 
   val run: IO[Unit] =
     withCtx {
