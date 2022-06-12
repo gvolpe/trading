@@ -12,7 +12,8 @@ object Dependencies {
     val flyway        = "8.5.12"
     val fs2Core       = "3.2.8"
     val fs2Kafka      = "2.4.0"
-    val http4s        = "1.0.0-M32"
+    val http4s        = "1.0.0-M33"
+    val http4sMetrics = "0.23.12"
     val http4sWs      = "1.0.0-M1"
     val kittens       = "3.0.0-M4"
     val monocle       = "3.1.0"
@@ -52,13 +53,13 @@ object Dependencies {
     val doobieH2 = "org.tpolecat" %% "doobie-h2"   % V.doobie
     val flyway   = "org.flywaydb"  % "flyway-core" % V.flyway
 
-    val http4sDsl     = http4s("dsl")
-    val http4sServer  = http4s("ember-server")
-    val http4sClient  = http4s("ember-client")
-    val http4sCirce   = http4s("circe")
-    val http4sMetrics = http4s("prometheus-metrics")
+    val http4sDsl    = http4s("dsl")
+    val http4sServer = http4s("ember-server")
+    val http4sClient = http4s("ember-client")
+    val http4sCirce  = http4s("circe")
 
-    val http4sJdkWs = "org.http4s" %% "http4s-jdk-http-client" % V.http4sWs
+    val http4sJdkWs   = "org.http4s" %% "http4s-jdk-http-client"    % V.http4sWs
+    val http4sMetrics = "org.http4s" %% "http4s-prometheus-metrics" % V.http4sMetrics
 
     val natchezCore      = "org.tpolecat" %% "natchez-core"      % V.natchez
     val natchezHoneycomb = "org.tpolecat" %% "natchez-honeycomb" % V.natchez
