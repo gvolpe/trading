@@ -1,7 +1,7 @@
 package trading.domain
 
 import cats.Show
-import cats.derived.semiauto.*
+import cats.derived.*
 import io.circe.Codec
 
 final case class Author(
