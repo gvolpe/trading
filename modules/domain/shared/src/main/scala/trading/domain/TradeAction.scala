@@ -1,8 +1,12 @@
 package trading.domain
 
 import cats.Show
-import cats.derived.semiauto.{ given, * }
 import io.circe.Codec
 
-enum TradeAction derives Codec.AsObject, Show:
+// FIXME: derivation does not work
+//enum TradeAction derives Codec.AsObject, Show:
+enum TradeAction derives Codec.AsObject:
   case Ask, Bid
+
+object TradeAction:
+  given Show[ForecastTag] = Show.fromToString

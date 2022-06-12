@@ -18,7 +18,7 @@ import io.circe.syntax.*
   assert(jsonDecode[Address](json) == Right(address))
 
 import cats.*
-import cats.derived.semiauto.*
+import cats.derived.*
 import cats.syntax.all.*
 
 case class Person(

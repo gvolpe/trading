@@ -3,7 +3,7 @@ package trading.ws
 import trading.domain.*
 
 import cats.{ Eq, Show }
-import cats.derived.semiauto.{ derived, product }
+import cats.derived.*
 import cats.syntax.eq.*
 import io.circe.Codec
 

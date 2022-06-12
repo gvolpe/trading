@@ -2,14 +2,15 @@ package trading.commands
 
 import trading.domain.{ given, * }
 
-// FIXME: importing all `given` yield ambiguous implicits
-import cats.derived.semiauto.{ coproductEq, product, productEq, * }
-import cats.syntax.all.*
 import cats.{ Applicative, Eq, Show }
+import cats.derived.*
+import cats.syntax.all.*
 import io.circe.Codec
 import monocle.Traversal
 
-enum TradeCommand derives Codec.AsObject, Eq, Show:
+// FIXME: Derivation does not work
+//enum TradeCommand derives Codec.AsObject, Eq, Show:
+enum TradeCommand derives Codec.AsObject:
   def id: CommandId
   def cid: CorrelationId
   def symbol: Symbol
@@ -48,6 +49,9 @@ enum TradeCommand derives Codec.AsObject, Eq, Show:
   )
 
 object TradeCommand:
+  given Eq[TradeCommand]   = Eq.fromUniversalEquals
+  given Show[TradeCommand] = Show.fromToString
+
   val _CommandId: Traversal[TradeCommand, CommandId] = new:
     def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
       f(s.id).map { newId =>

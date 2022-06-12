@@ -1,12 +1,13 @@
 package trading.domain
 
 import cats.{ Eq, Show }
-// FIXME: importing * does not work
-import cats.derived.semiauto.{ derived, product, productOrder }
+import cats.derived.*
 import cats.syntax.all.*
 import io.circe.{ Decoder, Encoder, Json }
 
-enum VoteResult derives Eq, Show:
+// FIXME: Derivation does not work
+//enum VoteResult derives Eq, Show:
+enum VoteResult:
   def asInt: Int = this match
     case Up   => 1
     case Down => -1
@@ -14,6 +15,9 @@ enum VoteResult derives Eq, Show:
   case Up, Down
 
 object VoteResult:
+  given Eq[VoteResult]   = Eq.fromUniversalEquals
+  given Show[VoteResult] = Show.fromToString
+
   given Decoder[VoteResult] = Decoder[String].emap[VoteResult] { str =>
     Either.catchNonFatal(valueOf(str)).leftMap(_.getMessage)
   }

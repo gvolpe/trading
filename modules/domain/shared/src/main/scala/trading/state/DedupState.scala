@@ -4,7 +4,7 @@ import scala.concurrent.duration.*
 
 import trading.domain.*
 
-import cats.derived.semiauto.*
+import cats.derived.*
 import cats.syntax.all.*
 import cats.{ Eq, Show }
 

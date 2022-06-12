@@ -3,8 +3,7 @@ package trading.domain
 import trading.state.Prices
 
 import cats.{ Eq, Show }
-// FIXME: importing * does not work
-import cats.derived.semiauto.{ derived, product, productOrder }
+import cats.derived.*
 import io.circe.Codec
 
 final case class PriceUpdate(

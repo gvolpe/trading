@@ -1,16 +1,19 @@
 package trading.domain
 
 import cats.{ Eq, Show }
-// FIXME: importing * does not work
-import cats.derived.semiauto.{ derived, product }
 import cats.syntax.all.*
 import io.circe.{ Decoder, Encoder, Json }
 
-enum AlertType derives Show:
+//FIXME: Derivation does not work
+//import cats.derived.*
+//enum AlertType derives Show:
+enum AlertType:
   case StrongBuy, StrongSell, Neutral, Buy, Sell
 
 object AlertType:
   given Eq[AlertType] = Eq.fromUniversalEquals
+
+  given Show[AlertType] = Show.fromToString
 
   given Decoder[AlertType] = Decoder[String].emap[AlertType] { str =>
     Either.catchNonFatal(valueOf(str)).leftMap(_.getMessage)
