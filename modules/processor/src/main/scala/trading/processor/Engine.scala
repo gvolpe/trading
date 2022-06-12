@@ -30,8 +30,8 @@ object Engine:
         .use { tx =>
           val (nst, evt) = TradeEngine.fsm.run(st, cmd)
           (GenUUID[F].make[EventId], Time[F].timestamp).mapN(evt).flatMap {
-            case e: TradeEvent  => producer.send(e)
-            case e: SwitchEvent => switcher.send(e)
+            case e: TradeEvent  => producer.send(e, tx)
+            case e: SwitchEvent => switcher.send(e, tx)
           } *> ack(tx).tupleLeft(nst)
         }
         .handleErrorWith { e =>
