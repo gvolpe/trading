@@ -5,24 +5,23 @@ import trading.domain.*
 
 import io.circe.Codec
 
-sealed trait AuthorEvent derives Codec.AsObject:
+enum AuthorEvent derives Codec.AsObject:
   def id: EventId
   def cid: CorrelationId
   def createdAt: Timestamp
 
-object AuthorEvent:
-  final case class Registered(
+  case Registered(
       id: EventId,
       cid: CorrelationId,
       authorId: AuthorId,
       authorName: AuthorName,
       createdAt: Timestamp
-  ) extends AuthorEvent
+  )
 
-  final case class NotRegistered(
+  case NotRegistered(
       id: EventId,
       cid: CorrelationId,
       authorName: AuthorName,
       reason: Reason,
       createdAt: Timestamp
-  ) extends AuthorEvent
+  )

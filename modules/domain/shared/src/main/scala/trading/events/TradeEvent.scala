@@ -10,28 +10,28 @@ import cats.syntax.all.*
 import io.circe.Codec
 import monocle.Traversal
 
-sealed trait TradeEvent derives Codec.AsObject, Show:
+enum TradeEvent derives Codec.AsObject, Show:
   def id: EventId
   def cid: CorrelationId
   def command: TradeCommand
   def createdAt: Timestamp
 
-object TradeEvent:
-  final case class CommandExecuted(
+  case CommandExecuted(
       id: EventId,
       cid: CorrelationId,
       command: TradeCommand,
       createdAt: Timestamp
-  ) extends TradeEvent
+  )
 
-  final case class CommandRejected(
+  case CommandRejected(
       id: EventId,
       cid: CorrelationId,
       command: TradeCommand,
       reason: Reason,
       createdAt: Timestamp
-  ) extends TradeEvent
+  )
 
+object TradeEvent:
   // EventId and Timestamp are regenerated when reprocessed so we don't consider them.
   given Eq[TradeEvent] = Eq.and(Eq.by(_.cid), Eq.by(_.command))
 

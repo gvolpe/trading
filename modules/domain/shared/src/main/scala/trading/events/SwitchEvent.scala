@@ -10,30 +10,30 @@ import cats.syntax.all.*
 import io.circe.Codec
 import monocle.Traversal
 
-sealed trait SwitchEvent derives Codec.AsObject, Show:
+enum SwitchEvent derives Codec.AsObject, Show:
   def id: EventId
   def cid: CorrelationId
   def createdAt: Timestamp
 
+  case Started(
+      id: EventId,
+      cid: CorrelationId,
+      createdAt: Timestamp
+  )
+
+  case Stopped(
+      id: EventId,
+      cid: CorrelationId,
+      createdAt: Timestamp
+  )
+
+  case Ignored(
+      id: EventId,
+      cid: CorrelationId,
+      createdAt: Timestamp
+  )
+
 object SwitchEvent:
-  final case class Started(
-      id: EventId,
-      cid: CorrelationId,
-      createdAt: Timestamp
-  ) extends SwitchEvent
-
-  final case class Stopped(
-      id: EventId,
-      cid: CorrelationId,
-      createdAt: Timestamp
-  ) extends SwitchEvent
-
-  final case class Ignored(
-      id: EventId,
-      cid: CorrelationId,
-      createdAt: Timestamp
-  ) extends SwitchEvent
-
   val _CorrelationId: Traversal[SwitchEvent, CorrelationId] = new:
     def modifyA[F[_]: Applicative](f: CorrelationId => F[CorrelationId])(s: SwitchEvent): F[SwitchEvent] =
       f(s.cid).map { newCid =>

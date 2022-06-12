@@ -9,14 +9,13 @@ import cats.syntax.all.*
 import io.circe.Codec
 import monocle.Traversal
 
-sealed trait Alert derives Codec.AsObject, Show:
+enum Alert derives Codec.AsObject, Show:
   def id: AlertId
   def cid: CorrelationId
   def createdAt: Timestamp
   def wsOut: WsOut = WsOut.Notification(this)
 
-object Alert:
-  final case class TradeAlert(
+  case TradeAlert(
       id: AlertId,
       cid: CorrelationId,
       alertType: AlertType,
@@ -26,16 +25,17 @@ object Alert:
       high: HighPrice,
       low: LowPrice,
       createdAt: Timestamp
-  ) extends Alert
+  )
 
-  final case class TradeUpdate(
+  case TradeUpdate(
       id: AlertId,
       cid: CorrelationId,
       status: TradingStatus,
       createdAt: Timestamp
-  ) extends Alert
+  )
 
-  // Eq instances are used for deduplication (we don't consider `cid` so the topic can be compacted more often)
+object Alert:
+  // Eq instances are used for topic compaction (we don't consider `cid` so the topic can be compacted more often)
   // FIXME: should not be necessary to use `show` on `alertType` (related to typeclass derivation)
   given Eq[TradeAlert] = Eq.instance { (x, y) =>
     x.alertType.show === y.alertType.show && x.symbol === y.symbol && x.askPrice === y.askPrice && x.bidPrice === y.bidPrice && x.high === y.high && x.low === y.low

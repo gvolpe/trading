@@ -9,45 +9,45 @@ import cats.{ Applicative, Eq, Show }
 import io.circe.Codec
 import monocle.Traversal
 
-sealed trait TradeCommand derives Codec.AsObject, Eq, Show:
+enum TradeCommand derives Codec.AsObject, Eq, Show:
   def id: CommandId
   def cid: CorrelationId
   def symbol: Symbol
   def createdAt: Timestamp
 
+  case Create(
+      id: CommandId,
+      cid: CorrelationId,
+      symbol: Symbol,
+      tradeAction: TradeAction,
+      price: Price,
+      quantity: Quantity,
+      source: Source,
+      createdAt: Timestamp
+  )
+
+  case Update(
+      id: CommandId,
+      cid: CorrelationId,
+      symbol: Symbol,
+      tradeAction: TradeAction,
+      price: Price,
+      quantity: Quantity,
+      source: Source,
+      createdAt: Timestamp
+  )
+
+  case Delete(
+      id: CommandId,
+      cid: CorrelationId,
+      symbol: Symbol,
+      tradeAction: TradeAction,
+      price: Price,
+      source: Source,
+      createdAt: Timestamp
+  )
+
 object TradeCommand:
-  final case class Create(
-      id: CommandId,
-      cid: CorrelationId,
-      symbol: Symbol,
-      tradeAction: TradeAction,
-      price: Price,
-      quantity: Quantity,
-      source: Source,
-      createdAt: Timestamp
-  ) extends TradeCommand
-
-  final case class Update(
-      id: CommandId,
-      cid: CorrelationId,
-      symbol: Symbol,
-      tradeAction: TradeAction,
-      price: Price,
-      quantity: Quantity,
-      source: Source,
-      createdAt: Timestamp
-  ) extends TradeCommand
-
-  final case class Delete(
-      id: CommandId,
-      cid: CorrelationId,
-      symbol: Symbol,
-      tradeAction: TradeAction,
-      price: Price,
-      source: Source,
-      createdAt: Timestamp
-  ) extends TradeCommand
-
   val _CommandId: Traversal[TradeCommand, CommandId] = new:
     def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
       f(s.id).map { newId =>
