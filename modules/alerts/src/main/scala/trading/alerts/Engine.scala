@@ -32,8 +32,8 @@ object Engine:
     def sendAck(alert: Alert, priceUpdate: Option[PriceUpdate], ack: Txn => F[Unit]): F[Unit] =
       pulsarTx.use { tx =>
         for
-          _ <- alertProducer.send(alert)
-          _ <- priceUpdate.traverse_(pricesProducer.send(_, Map("app-id" -> appId.id.show)))
+          _ <- alertProducer.send(alert, tx)
+          _ <- priceUpdate.traverse_(pricesProducer.send(_, Map("app-id" -> appId.id.show), tx))
           _ <- ack(tx)
         yield ()
       }
