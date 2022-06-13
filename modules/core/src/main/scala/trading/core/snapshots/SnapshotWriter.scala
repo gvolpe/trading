@@ -28,11 +28,8 @@ object SnapshotWriter:
       redis.set("trading-status", st.show)
 
     def save(state: TradeState, id: Consumer.MsgId): F[Unit] =
-      val xs1: List[F[Unit]] =
-        List(
-          saveStatus(state.status),
-          redis.set("trading-last-id", id.serialize)
-        )
+      val xs1: F[Unit] =
+        redis.set("trading-last-id", id.serialize)
 
       val xs2: List[F[Unit]] =
         state.prices.toList.flatMap { case (symbol, prices) =>
@@ -47,7 +44,7 @@ object SnapshotWriter:
         }
 
       def exec(attempts: Int): F[Unit] =
-        redis.transact_(xs1 ++ xs2).recoverWith {
+        redis.transact_(xs1 :: xs2).recoverWith {
           case TransactionDiscarded if attempts < 2 =>
             Async[F].sleep(100.millis) >> exec(attempts + 1)
           case e =>

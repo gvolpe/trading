@@ -29,7 +29,8 @@ object Engine:
           tradeAcker.ack(msgId).tupleLeft(st)
       case ((st, ids), Right(Msg(msgId, _, evt))) =>
         val nst = TradeEngine.eventsFsm.runS(st, evt)
-        writer.saveStatus(nst.status) *> switchAcker.ack(msgId).tupleLeft(nst, ids)
+        writer.saveStatus(nst.status).whenA(nst.status =!= st.status) *>
+          switchAcker.ack(msgId).tupleLeft(nst, ids)
       case ((st, ids), (_: Tick)) if ids.nonEmpty =>
         val lastId = ids.last
         writer.save(st, lastId).attempt.flatMap {
