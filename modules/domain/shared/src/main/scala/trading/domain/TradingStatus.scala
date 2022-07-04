@@ -5,15 +5,10 @@ import cats.derived.*
 import cats.syntax.all.*
 import io.circe.{ Decoder, Encoder, Json }
 
-// FIXME: derivation does not work
-//enum TradingStatus derives Eq, Show:
-enum TradingStatus:
+enum TradingStatus derives Eq, Show:
   case On, Off
 
 object TradingStatus:
-  given Eq[TradingStatus]   = Eq.fromUniversalEquals
-  given Show[TradingStatus] = Show.fromToString
-
   def from(str: String): Option[TradingStatus] =
     Either.catchNonFatal(valueOf(str)).toOption
 

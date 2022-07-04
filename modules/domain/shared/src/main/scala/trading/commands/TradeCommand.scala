@@ -8,9 +8,7 @@ import cats.syntax.all.*
 import io.circe.Codec
 import monocle.Traversal
 
-// FIXME: Derivation does not work
-//enum TradeCommand derives Codec.AsObject, Eq, Show:
-enum TradeCommand derives Codec.AsObject:
+enum TradeCommand derives Codec.AsObject, Eq, Show:
   def id: CommandId
   def cid: CorrelationId
   def symbol: Symbol
@@ -49,9 +47,6 @@ enum TradeCommand derives Codec.AsObject:
   )
 
 object TradeCommand:
-  given Eq[TradeCommand]   = Eq.fromUniversalEquals
-  given Show[TradeCommand] = Show.fromToString
-
   val _CommandId: Traversal[TradeCommand, CommandId] = new:
     def modifyA[F[_]: Applicative](f: CommandId => F[CommandId])(s: TradeCommand): F[TradeCommand] =
       f(s.id).map { newId =>
