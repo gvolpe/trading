@@ -42,6 +42,8 @@ object RedisSuite extends ResourceSuite:
         for
           x <- reader.latest
           _ <- writer.save(ts, msgId)
+          d <- redis.lastSave
+          _ <- IO.println(s"LAST SAVE: $d")
           y <- reader.latest
         yield NonEmptyList
           .of(
