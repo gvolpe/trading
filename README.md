@@ -94,7 +94,7 @@ Here's an overview of all the components of the system.
 
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
 
-Note: The `docker-compose` file depends on declared services to be published on the local docker server. All docker builds are handled within the `build.sbt` using `sbt-native-packager`. To build all of the service images, run `sbt docker:publishLocal`.
+Note: The `docker-compose` file depends on declared services to be published on the local docker server. All docker builds are handled within the `build.sbt` using `sbt-native-packager`. To build all of the service images, run `docker build -t jdk17-curl modules/` to create the base image and `sbt docker:publishLocal`.
 
 ```shell
 $ docker-compose up -d pulsar redis
