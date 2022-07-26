@@ -10,6 +10,8 @@ ThisBuild / scalafixDependencies += Libraries.organizeImports
 
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
+ThisBuild / pushRemoteCacheTo := Some(MavenCache("local-cache", file("tmp/remote-cache")))
+
 Compile / run / fork := true
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
