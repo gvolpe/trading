@@ -16,6 +16,8 @@ jobs:
 
       - name: "Cache for sbt & coursier ♨️"
         uses: coursier/cache-action@v4.1
+        with:
+          extraSbtFiles: 'tmp/remote-cache/**'
 
       - name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v16
@@ -37,7 +39,7 @@ jobs:
         run: docker build -t jdk17-curl modules/
 
       - name: "Build trading Docker images 🚀"
-        run: nix develop -c sbt 'processor/docker:publishLocal;alerts/docker:publishLocal;ws/docker:publishLocal'
+        run: nix develop -c sbt 'pullRemoteCache;processor/docker:publishLocal;alerts/docker:publishLocal;ws/docker:publishLocal'
 
       - name: "Push trading Docker images 🐳"
         run: |

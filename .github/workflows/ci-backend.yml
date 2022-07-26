@@ -28,6 +28,8 @@ jobs:
 
       - name: "Cache for sbt & coursier ♨️"
         uses: coursier/cache-action@v4.1
+        with:
+          extraSbtFiles: 'tmp/remote-cache/**'
 
       - name: "Starting up Redis 🐳"
         run: docker-compose up -d redis
@@ -42,7 +44,7 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: "Run trading tests 🚀"
-        run: nix develop -c sbt 'test;it/test;webapp/fastOptJS'
+        run: nix develop -c sbt 'pullRemoteCache;test;it/test;webapp/fastOptJS;pushRemoteCache'
 
       - name: "Shutting down Redis 🐳"
         run: docker-compose down
