@@ -8,7 +8,7 @@ ThisBuild / organizationName := "ProfunKtor"
 ThisBuild / evictionErrorLevel := Level.Warn
 ThisBuild / scalafixDependencies += Libraries.organizeImports
 
-ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+ThisBuild / resolvers := Resolver.sonatypeOssRepos("snapshots")
 
 ThisBuild / pushRemoteCacheTo := Some(MavenCache("local-cache", file("tmp/remote-cache")))
 

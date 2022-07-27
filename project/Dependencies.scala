@@ -13,7 +13,7 @@ object Dependencies {
     val fs2Core       = "3.2.11"
     val fs2Kafka      = "2.5.0"
     val http4s        = "1.0.0-M35"
-    val http4sMetrics = "0.24.0"
+    val http4sMetrics = "1.0.0-M35"
     val http4sWs      = "1.0.0-M3"
     val kittens       = "3.0.0-M4"
     val monocle       = "3.1.0"
