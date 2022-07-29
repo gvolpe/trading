@@ -62,10 +62,17 @@ $ xdg-open index.html # or specify browser
 
 ### ScalaJS
 
-There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. You can run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
+There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. First, we need to compile the Scala app to JavaScript.
 
 ```console
-$ cd modules/ws-client && nix develop
+$ cd modules/ws-client
+$ sbt webapp/fastOptJS
+```
+
+You can then run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
+
+```console
+$ nix develop
 $ yarn start
 yarn run v1.22.17
 warning package.json: No license field
