@@ -20,10 +20,9 @@ val acquireLock: IO[Lock] =
   redis
     .set(lockName, clientId, SetArgs(Nx, Px(30000.millis)))
     .flatMap {
-      case true  => IO.unit
+      case true  => IO.pure(clientId)
       case false => IO.sleep(50.millis) >> acquireLock
     }
-    .as(clientId)
 
 val deleteLock: Lock => IO[Unit] =
   id =>
