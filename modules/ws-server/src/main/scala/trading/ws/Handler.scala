@@ -28,18 +28,19 @@ object Handler:
       Ref.of[F, Set[Symbol]](Set.empty)     // keeps track of the symbol subscriptions
     ).mapN { case (switch, fuze, subs) =>
       new:
-        val encode: WsOut => F[Option[WebSocketFrame]] = {
-          case out @ WsOut.Notification(t: TradeAlert) =>
-            subs.get.map(_.find(_ === t.symbol).as(Text((out: WsOut).asJson.noSpaces)))
-          case out =>
-            Text(out.asJson.noSpaces).some.pure[F].widen
-        }
+        val toWsFrame: WsOut => WebSocketFrame =
+          out => Text(out.asJson.noSpaces)
 
-        val decode: WebSocketFrame => Either[String, WsIn] = {
+        val encode: WsOut => F[Option[WebSocketFrame]] =
+          case out @ WsOut.Notification(t: TradeAlert) =>
+            subs.get.map(_.find(_ === t.symbol).as(toWsFrame(out)))
+          case out =>
+            toWsFrame(out).some.pure[F].widen
+
+        val decode: WebSocketFrame => Either[String, WsIn] =
           case Close(_)     => WsIn.Close.asRight
           case Text(msg, _) => jsonDecode[WsIn](msg).leftMap(_.getMessage)
           case e            => s">>> [$sid] - Unexpected WS message: $e".asLeft
-        }
 
         val send: Stream[F, WebSocketFrame] =
           Stream
