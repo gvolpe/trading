@@ -11,6 +11,11 @@ import eu.timepit.refined.api.{ Refined, RefinedType, RefinedTypeOps }
 import io.circe.{ Decoder, Encoder }
 import monocle.Iso
 
+abstract class Newt[A]:
+  opaque type Type = A
+  inline def apply(a: A): Type            = a
+  extension (t: Type) inline def value: A = t
+
 abstract class Newtype[A](using
     eqv: Eq[A],
     ord: Order[A],
