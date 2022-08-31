@@ -101,15 +101,60 @@ Here's an overview of all the components of the system.
 
 The back-end application is structured as a mono-repo, and it requires both Apache Pulsar and Redis up and running. To make things easier, you can use the provided `docker-compose.yml` file.
 
-Note: The `docker-compose` file depends on declared services to be published on the local docker server. All docker builds are handled within the `build.sbt` using `sbt-native-packager`. To build all of the service images, run `docker build -t jdk17-curl modules/` to create the base image and `sbt docker:publishLocal`.
+### Build JDK image
+
+The `docker-compose` file depends on declared services to be published on the local docker server. All docker builds are handled within the `build.sbt` using `sbt-native-packager`. 
+
+To build all of the service images, we have a few options. 
+
+The first one via the given [Dockerfile](./modules/Dockerfile).
+
+```shell 
+$ docker build -t jdk17-curl modules/
+```
+
+The second one via Nix, from where we can build a slim image also based on `openjdk:17-slim-buster`.
+
+```console 
+$ nix build .#slimDocker -o result-jre
+$ docker load -i result-jre
+```
+
+The third one also via Nix, though building a layered image based on the same JDK we use for development.
+
+```console 
+$ nix build .#docker -o result-jre
+$ docker load -i result-jre
+```
+
+The main difference between these three options is the resulting image size.
+
+```console
+$ docker images | rg jdk17
+jdk17-curl                    latest               0ed94a723ce3   10 months ago   422MB
+jdk17-curl-nix                latest               c28f54e42c21   52 years ago    567MB
+jdk17-curl-slim               latest               dbe24e7a7163   52 years ago    465MB
+```
+
+Any image is valid. Feel free to pick your preferred method.
+
+### Build service images
+
+Once the base `jdk17-curl` image has been built, we can proceed with building all our services' images.
+
+```shell 
+$ sbt docker:publishLocal
+```
+
+### Run dependencies: Redis, Kafka, etc
 
 ```shell
 $ docker-compose up -d pulsar redis
 ```
 
-![pulsar](./imgs/pulsar.png)
+![pulsar]{./imgs/pulsar.png}
 
-To run the Kafka Demo (see more below), only Zookeeper and Kafka are needed.
+To run the Kafka Demo {see more below}, only Zookeeper and Kafka are needed.
 
 ```shell
 $ docker-compose -f kafka.yml up
