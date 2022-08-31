@@ -20,18 +20,20 @@ import weaver.scalacheck.Checkers
 
 object TradingFSMSuite extends SimpleIOSuite with Checkers:
 
-  val EmptyKernel = Kernel(Map.empty)
+  val EmptyKernel    = Kernel(Map.empty)
+  val EmptyCmdKernel = CmdKernel(EmptyKernel)
+  val EmptyEvtKernel = EvtKernel(EmptyKernel)
 
   def mkTracer(
       cmds: Ref[IO, Map[CorrelationId, TradeCommand]],
       evts: Ref[IO, Map[CorrelationId, TradeEvent]],
       alts: Ref[IO, Map[CorrelationId, Alert]]
   ): TradingTracer[IO] = new:
-    def command(cmd: TradeCommand): IO[Kernel] =
-      cmds.update(_.updated(cmd.cid, cmd)).as(EmptyKernel)
-    def event(kernel: Kernel, evt: TradeEvent): IO[Kernel] =
-      evts.update(_.updated(evt.cid, evt)).as(EmptyKernel)
-    def alert(kernel: Kernel, alt: Alert): IO[Unit] =
+    def command(cmd: TradeCommand): IO[CmdKernel] =
+      cmds.update(_.updated(cmd.cid, cmd)).as(EmptyCmdKernel)
+    def event(kernel: CmdKernel, evt: TradeEvent): IO[EvtKernel] =
+      evts.update(_.updated(evt.cid, evt)).as(EmptyEvtKernel)
+    def alert(kernel: EvtKernel, alt: Alert): IO[Unit] =
       alts.update(_.updated(alt.cid, alt))
 
   val gen =
