@@ -29,8 +29,8 @@ object Main extends IOApp.Simple:
             authorEvents,
             forecastEvents,
             forecastCommands,
-            fcTracer,
-            tdTracer
+            fcFsm,
+            tdFsm
         ) =>
           val ticks: Stream[IO, TradeIn] =
             Stream.fixedDelay[IO](2.seconds)
@@ -39,12 +39,12 @@ object Main extends IOApp.Simple:
             tradingCommands
               .merge[IO, TradeIn](tradingEvents.merge(alerts))
               .merge(ticks)
-              .evalMapAccumulate(TradeState.empty)(tradingFsm[IO](tdTracer).run)
+              .evalMapAccumulate(TradeState.empty)(tdFsm.run)
 
           val forecasting =
             authorEvents
               .merge[IO, ForecastIn](forecastEvents.merge(forecastCommands))
-              .evalMapAccumulate(ForecastState.empty)(forecastFsm[IO](fcTracer).run)
+              .evalMapAccumulate(ForecastState.empty)(fcFsm.run)
 
           Stream(
             Stream.eval(server.useForever),
@@ -67,8 +67,6 @@ object Main extends IOApp.Simple:
       pulsar <- Pulsar.make[IO](config.pulsar.url)
       _      <- Resource.eval(Logger[IO].info("Initializing tracing service"))
       ep     <- Honeycomb.makeEntryPoint(config.honeycombApiKey)
-      fcTracer         = ForecastingTracer.make[IO](ep)
-      tdTracer         = TradingTracer.make[IO](ep)
       alertsTopic      = AppTopic.Alerts.make(config.pulsar)
       tradingEvtTopic  = AppTopic.TradingEvents.make(config.pulsar)
       tradingCmdTopic  = AppTopic.TradingCommands.make(config.pulsar)
@@ -81,6 +79,8 @@ object Main extends IOApp.Simple:
       authorEvents     <- Consumer.pulsar[IO, AuthorEvent](pulsar, authorEvtTopic, sub).map(_.receive)
       forecastEvents   <- Consumer.pulsar[IO, ForecastEvent](pulsar, forecastEvtTopic, sub).map(_.receive)
       forecastCommands <- Consumer.pulsar[IO, ForecastCommand](pulsar, forecastCmdTopic, sub).map(_.receive)
+      fcFsm  = forecastFsm[IO].apply(ForecastingTracer.make[IO](ep))
+      tdFsm  = tradingFsm[IO].apply(TradingTracer.make[IO](ep))
       server = Ember.default[IO](config.httpPort)
     yield (
       server,
@@ -90,6 +90,6 @@ object Main extends IOApp.Simple:
       authorEvents,
       forecastEvents,
       forecastCommands,
-      fcTracer,
-      tdTracer
+      fcFsm,
+      tdFsm
     )

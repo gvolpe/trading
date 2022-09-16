@@ -30,7 +30,7 @@ import natchez.Kernel
 case class User(id: UUID, name: String) derives Codec.AsObject
 
 object TraceApp extends IOApp.Simple:
-  type Eff[A] = Kleisli[IO, Span[IO], A]
+  type Eff = [A] =>> Kleisli[IO, Span[IO], A]
 
   def run: IO[Unit] =
     Honeycomb.makeEntryPoint(apiKey, dataset = "dist-trace-demo").use { ep =>
@@ -77,7 +77,7 @@ object TraceApp extends IOApp.Simple:
       val runner =
         names(
           nameConsumer,
-          (msg, sp) => Engine.two[IO, Eff](userProducer, db, nameConsumer.ack)(msg).run(sp)
+          (msg, sp) => Engine.two[IO, Eff](userProducer, db, nameConsumer.ack).apply(msg).run(sp)
         )
 
       Stream(
@@ -103,7 +103,7 @@ object TraceApp extends IOApp.Simple:
             val runner =
               names(
                 nameConsumer,
-                (msg, sp) => Engine.one(userProducer, db, id => Kleisli.liftF(nameConsumer.ack(id)))(msg).run(sp)
+                (msg, sp) => Engine.one[Eff](userProducer, db, id => Kleisli.liftF(nameConsumer.ack(id))).apply(msg).run(sp)
               )
 
             Stream(
@@ -132,7 +132,7 @@ object TraceApp extends IOApp.Simple:
               nameConsumer,
               (msg, sp) =>
                 Trace.ioTrace(sp).flatMap { implicit trace =>
-                  Engine.one[IO](userProducer, db, nameConsumer.ack)(msg)
+                  Engine.one[IO](userProducer, db, nameConsumer.ack).apply(msg)
                 }
             )
 
