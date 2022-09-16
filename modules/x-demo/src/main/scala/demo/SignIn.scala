@@ -24,6 +24,6 @@ object UserEvent:
   final case class UserSignedIn(
       eventId: EventId,
       userId: UserId,
-      devices: List[UserDevice],
+      device: UserDevice,
       timestamp: Timestamp
   ) extends UserEvent

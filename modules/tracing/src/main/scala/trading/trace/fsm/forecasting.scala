@@ -21,9 +21,7 @@ object ForecastState:
   def empty: ForecastState =
     (List.empty, List.empty, List.empty)
 
-def forecastFsm[F[_]: Applicative: Logger](
-    tracer: ForecastingTracer[F]
-): FSM[F, ForecastState, ForecastIn, Unit] =
+def forecastFsm[F[_]: Applicative: Logger]: SM[F, ForecastIn] = tracer =>
   FSM {
     case ((atEvents, fcEvents, fcCommands), cmd: ForecastCommand) =>
       (atEvents.find(_.cid === cmd.cid), fcEvents.find(_.cid === cmd.cid)) match

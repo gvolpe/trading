@@ -50,7 +50,7 @@ object TradingFSMSuite extends SimpleIOSuite with Checkers:
         cmds <- IO.ref(Map.empty[CorrelationId, TradeCommand])
         evts <- IO.ref(Map.empty[CorrelationId, TradeEvent])
         alts <- IO.ref(Map.empty[CorrelationId, Alert])
-        fsm = tradingFsm(mkTracer(cmds, evts, alts))
+        fsm = tradingFsm.apply(mkTracer(cmds, evts, alts))
         // Command in should set the cmd kernel
         st1 <- fsm.runS(TradeState.empty, cmd)
         ckl1 = st1._3.get(cid).flatMap(_._2)
@@ -96,7 +96,7 @@ object TradingFSMSuite extends SimpleIOSuite with Checkers:
         cmds <- IO.ref(Map.empty[CorrelationId, TradeCommand])
         evts <- IO.ref(Map.empty[CorrelationId, TradeEvent])
         alts <- IO.ref(Map.empty[CorrelationId, Alert])
-        fsm = tradingFsm(mkTracer(cmds, evts, alts))
+        fsm = tradingFsm.apply(mkTracer(cmds, evts, alts))
         // First command in should set the cmd kernel
         st1 <- fsm.runS(TradeState.empty, cmd1)
         ckl1 = st1._3.get(cid1).flatMap(_._2)
@@ -171,14 +171,14 @@ object TradingFSMSuite extends SimpleIOSuite with Checkers:
         cmds <- IO.ref(Map.empty[CorrelationId, TradeCommand])
         evts <- IO.ref(Map.empty[CorrelationId, TradeEvent])
         alts <- IO.ref(Map.empty[CorrelationId, Alert])
-        fsm1 = tradingFsm(mkTracer(cmds, evts, alts))
+        fsm1 = tradingFsm.apply(mkTracer(cmds, evts, alts))
         // Command should be processed
         st1  <- fsm1.runS(TradeState.empty, cmd)
         res1 <- cmds.get
         // Event should be enqueued waiting for command kernel
         st2  <- fsm1.runS(st1, evt)
         res2 <- evts.get
-        fsm2 = tradingFsm[IO](mkTracer(cmds, evts, alts))(using Logger[IO], Monad[IO], ExpiredTimer)
+        fsm2 = tradingFsm[IO](using Logger[IO], Monad[IO], ExpiredTimer)(mkTracer(cmds, evts, alts))
         // Tick should trigger message expiration
         st3 <- fsm2.runS(st2, ())
       yield NonEmptyList
