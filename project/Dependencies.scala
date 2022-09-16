@@ -15,7 +15,7 @@ object Dependencies {
     val http4s        = "1.0.0-M35"
     val http4sMetrics = "1.0.0-M35"
     val http4sWs      = "1.0.0-M3"
-    val kittens       = "3.0.0-M4"
+    val kittens       = "3.0.0"
     val monocle       = "3.1.0"
     val natchez       = "0.1.6"
     val natchezHttp4s = "0.3.2"
