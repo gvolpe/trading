@@ -6,16 +6,16 @@ object Dependencies {
   object V {
     val cats          = "2.8.0"
     val catsEffect    = "3.3.14"
-    val circe         = "0.14.2"
+    val circe         = "0.14.3"
     val ciris         = "2.3.3"
     val doobie        = "1.0.0-RC2"
     val flyway        = "8.5.13"
-    val fs2Core       = "3.2.14"
+    val fs2Core       = "3.3.0"
     val fs2Kafka      = "2.5.0"
     val http4s        = "1.0.0-M35"
     val http4sMetrics = "1.0.0-M35"
     val http4sWs      = "1.0.0-M3"
-    val kittens       = "3.0.0-M4"
+    val kittens       = "3.0.0"
     val monocle       = "3.1.0"
     val natchez       = "0.1.6"
     val natchezHttp4s = "0.3.2"
@@ -27,7 +27,7 @@ object Dependencies {
     val scalajsTime = "2.4.0-M1"
     val tyrian      = "0.5.0"
 
-    val scalacheck = "1.16.0"
+    val scalacheck = "1.17.0"
     val weaver     = "0.7.15"
 
     val organizeImports = "0.6.0"

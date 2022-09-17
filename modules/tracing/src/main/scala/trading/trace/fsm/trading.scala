@@ -25,47 +25,46 @@ val MatchingIdsExpiration = 1.minute
 object TradeState:
   def empty: TradeState = (List.empty, List.empty, Map.empty)
 
-def tradingFsm[F[_]: Logger: Monad: Time](
-    tracer: TradingTracer[F]
-): FSM[F, TradeState, TradeIn, Unit] = FSM {
-  case ((events, alerts, ids), cmd: TradeCommand) =>
-    for
-      k <- tracer.command(cmd)
-      i <- updateMatchingIds(ids, cmd.cid, Left(k))
-    yield (events, alerts, i) -> ()
+def tradingFsm[F[_]: Logger: Monad: Time]: SM[F, TradeIn] = tracer =>
+  FSM {
+    case ((events, alerts, ids), cmd: TradeCommand) =>
+      for
+        k <- tracer.command(cmd)
+        i <- updateMatchingIds(ids, cmd.cid, Left(k))
+      yield (events, alerts, i) -> ()
 
-  case (st @ (events, alerts, ids), evt: TradeEvent) =>
-    ids.get(evt.cid).flatMap((_, k, _) => k) match
-      case Some(cmdKernel) =>
-        for
-          k <- tracer.event(cmdKernel, evt)
-          i <- updateMatchingIds(ids, evt.cid, Right(k))
-        yield (events, alerts, i) -> ()
-      case None =>
-        expireMatchingIds[F](ids).map(i => (events :+ evt, alerts, i) -> ())
+    case (st @ (events, alerts, ids), evt: TradeEvent) =>
+      ids.get(evt.cid).flatMap((_, k, _) => k) match
+        case Some(cmdKernel) =>
+          for
+            k <- tracer.event(cmdKernel, evt)
+            i <- updateMatchingIds(ids, evt.cid, Right(k))
+          yield (events, alerts, i) -> ()
+        case None =>
+          expireMatchingIds[F](ids).map(i => (events :+ evt, alerts, i) -> ())
 
-  case (st @ (events, alerts, ids), alt: Alert) =>
-    ids.get(alt.cid).flatMap((_, _, k) => k) match
-      case Some(evtKernel) =>
-        tracer.alert(evtKernel, alt).as(st -> ())
-      case None =>
-        expireMatchingIds[F](ids).map(i => (events, alerts :+ alt, i) -> ())
+    case (st @ (events, alerts, ids), alt: Alert) =>
+      ids.get(alt.cid).flatMap((_, _, k) => k) match
+        case Some(evtKernel) =>
+          tracer.alert(evtKernel, alt).as(st -> ())
+        case None =>
+          expireMatchingIds[F](ids).map(i => (events, alerts :+ alt, i) -> ())
 
-  case (st @ (events, alerts, ids), tick: Tick) =>
-    val fsm = tradingFsm(tracer)
+    case (st @ (events, alerts, ids), tick: Tick) =>
+      val fsm = tradingFsm[F].apply(tracer)
 
-    val processEvents: F[TradeState] =
-      events.foldLeft(st.pure[F]) { (getSt, evt) =>
-        getSt.flatMap(fsm.runS(_, evt))
-      }
+      val processEvents: F[TradeState] =
+        events.foldLeft(st.pure[F]) { (getSt, evt) =>
+          getSt.flatMap(fsm.runS(_, evt))
+        }
 
-    def processAlerts(st1: TradeState): F[TradeState] =
-      alerts.foldLeft(st1.pure[F]) { (getSt, alt) =>
-        getSt.flatMap(fsm.runS(_, alt))
-      }
+      def processAlerts(st1: TradeState): F[TradeState] =
+        alerts.foldLeft(st1.pure[F]) { (getSt, alt) =>
+          getSt.flatMap(fsm.runS(_, alt))
+        }
 
-    (processEvents >>= processAlerts).tupleRight(())
-}
+      (processEvents >>= processAlerts).tupleRight(())
+  }
 
 def updateMatchingIds[F[_]: Monad: Time](
     ids: MatchingIds,

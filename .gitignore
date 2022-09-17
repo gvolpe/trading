@@ -34,3 +34,4 @@ elm-stuff/
 .parcel-cache/
 dist/
 node_modules/
+modules/x-demo/src/main/scala/demo/Stuff.scala

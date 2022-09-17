@@ -1,6 +1,6 @@
 import Dependencies._
 
-ThisBuild / scalaVersion     := "3.2.1-RC1"
+ThisBuild / scalaVersion     := "3.2.1-RC2"
 ThisBuild / version          := "0.1.0"
 ThisBuild / organization     := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
@@ -18,7 +18,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 Global / semanticdbEnabled    := true // for metals
 
 val commonSettings = List(
-  scalacOptions ++= List("-source:future"),
+  scalacOptions ++= List(),
   scalafmtOnCompile := false, // recommended in Scala 3
   testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
   libraryDependencies ++= Seq(
