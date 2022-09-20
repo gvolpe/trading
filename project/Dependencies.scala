@@ -50,8 +50,9 @@ object Dependencies {
     val circeParser  = circe("parser")
     val circeRefined = circe("refined")
 
-    val doobieH2 = "org.tpolecat" %% "doobie-h2"   % V.doobie
-    val flyway   = "org.flywaydb"  % "flyway-core" % V.flyway
+    val doobieH2 = "org.tpolecat" %% "doobie-h2"       % V.doobie
+    val doobiePg = "org.tpolecat" %% "doobie-postgres" % V.doobie
+    val flyway   = "org.flywaydb"  % "flyway-core"     % V.flyway
 
     val http4sDsl    = http4s("dsl")
     val http4sServer = http4s("ember-server")

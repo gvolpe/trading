@@ -152,9 +152,9 @@ $ sbt docker:publishLocal
 $ docker-compose up -d pulsar redis
 ```
 
-![pulsar]{./imgs/pulsar.png}
+![pulsar](./imgs/pulsar.png)
 
-To run the Kafka Demo {see more below}, only Zookeeper and Kafka are needed.
+To run the Kafka Demo (see more below in [X Demo](#x-demo)), only Zookeeper and Kafka are needed.
 
 ```shell
 $ docker-compose -f kafka.yml up
@@ -164,7 +164,7 @@ $ docker-compose -f kafka.yml up
 
 If we don't specify any arguments, then all the containers will be started, including all our services (except `feed`), Prometheus, Grafana, and Pulsar Manager.
 
-```shell
+```console
 $ docker-compose up
 Creating network "trading_app" with the default driver
 Creating trading_pulsar_1 ... done
@@ -253,7 +253,29 @@ All unit tests can be executed via `sbt test`. There's also a small suite of int
 
 ### X Demo
 
-It contains all the standalone examples shown in the book. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module.
+It contains all the standalone examples shown in the book. It also showcases both `KafkaDemo` and `MemDemo` programs that use the same `Consumer` and `Producer` abstractions defined in the `lib` module. 
+
+#### Pulsar CDC
+
+To run the Pulsar CDC Demo, you need Postgres and Pulsar (make sure no other instances are running). Before running them, we need to download the connector NAR file.
+
+```shell
+$ mkdir -p pulsarconf/connectors && cd pulsarconf/connectors
+$ wget https://archive.apache.org/dist/pulsar/pulsar-2.10.1/connectors/pulsar-io-debezium-postgres-2.10.1.nar
+$ docker-compose -f pulsar-cdc.yml up
+```
+
+Once both instances are up and healthy, we can run the Pulsar Debezium connector.
+
+```console
+$ docker-compose exec -T pulsar bin/pulsar-admin source localrun --source-config-file /pulsar/conf/debezium-pg.yaml
+```
+
+You should see this in the logs.
+
+```console
+Snapshot step 3 - Locking captured tables [public.authors]
+```
 
 ### X QA
 
