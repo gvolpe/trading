@@ -1,0 +1,45 @@
+version: '3.6'
+
+networks:
+  cdc: {}
+
+services:
+  postgres:
+    restart: always
+    image: debezium/postgres:14-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=trading
+    ports:
+      - 5432:5432
+    networks:
+      - cdc
+    volumes: 
+      - ./modules/forecasts/src/main/resources/db/migration/V1__baseline.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trading"]
+      interval: 5s
+      timeout: 20s
+      retries: 15
+
+  pulsar:
+    restart: always
+    image: apachepulsar/pulsar:2.10.1
+    ports:
+      - 6650:6650
+      - 8080:8080
+    command: >
+      /bin/bash -c "bin/pulsar standalone"
+    networks:
+      - cdc
+    volumes:
+      - ./pulsarconf/standalone.conf:/pulsar/conf/standalone.conf
+      - ./pulsarconf/connectors/pulsar-io-debezium-postgres-2.10.1.nar:/pulsar/connectors/debezium-2.10.1.nar
+      - ./pulsarconf/debezium-postgres-config.yaml:/pulsar/conf/debezium-pg.yaml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 2m

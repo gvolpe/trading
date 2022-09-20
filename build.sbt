@@ -196,6 +196,7 @@ lazy val demo = (project in file("modules/x-demo"))
   .dependsOn(domain.jvm % "compile->compile;compile->test")
   .settings(
     libraryDependencies ++= List(
+      Libraries.doobiePg,
       Libraries.natchezHttp4s
     )
   )

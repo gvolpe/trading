@@ -1,0 +1,19 @@
+tenant: "public"
+namespace: "default"
+name: "debezium-postgres-source"
+topicName: "debezium-postgres-topic"
+archive: "connectors/debezium-2.10.1.nar"
+parallelism: 1
+
+configs:
+    database.hostname: "postgres"
+    database.port: "5432"
+    database.user: "postgres"
+    database.password: "postgres"
+    database.dbname: "trading"
+    database.server.name: "dbserver"
+    plugin.name: "pgoutput"
+    schema.whitelist: "public"
+    table.whitelist: "public.authors"
+    pulsar.service.url: "pulsar://pulsar:6650"
+    database.history.pulsar.service.url: "pulsar://pulsar:6650"
