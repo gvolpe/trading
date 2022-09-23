@@ -192,7 +192,7 @@ lazy val smokey = (project in file("modules/x-qa"))
 // extension demo
 lazy val demo = (project in file("modules/x-demo"))
   .settings(commonSettings: _*)
-  .dependsOn(core, tracing)
+  .dependsOn(core, forecasts, tracing)
   .dependsOn(domain.jvm % "compile->compile;compile->test")
   .settings(
     libraryDependencies ++= List(

@@ -4,8 +4,10 @@ import java.sql.SQLException
 
 import scala.util.control.NoStackTrace
 
-import cats.MonadThrow
+import cats.{ MonadThrow, ~> }
+import cats.effect.kernel.Resource
 import cats.syntax.all.*
+import doobie.{ ConnectionIO, Transactor }
 
 case object AuthorNotFound extends NoStackTrace
 type AuthorNotFound = AuthorNotFound.type
@@ -39,3 +41,8 @@ extension [F[_]: MonadThrow](fa: F[Int])
       case 1 => ().pure[F]
       case _ => err.raiseError[F, Unit]
     }
+
+/* Doobie's manual transactions */
+extension [F[_]: DoobieTx](xa: Transactor[F])
+  def transaction: Resource[F, ConnectionIO ~> F] =
+    DoobieTx[F].transaction(xa)
