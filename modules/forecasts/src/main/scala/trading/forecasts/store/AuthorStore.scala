@@ -3,20 +3,22 @@ package trading.forecasts.store
 import trading.domain.*
 import trading.lib.*
 
-import cats.effect.kernel.{ Async, MonadCancelThrow, Resource }
+import cats.~>
+import cats.effect.kernel.{ MonadCancelThrow, Resource }
 import cats.syntax.all.*
-import doobie.Transactor
+import doobie.{ ConnectionIO, Transactor }
 import doobie.h2.*
 import doobie.implicits.*
 
 trait AuthorStore[F[_]]:
   def fetch(id: AuthorId): F[Option[Author]]
-  def save(author: Author): F[Either[SaveError, Unit]]
+  def tx: Resource[F, TxAuthorStore[F]]
 
-type SaveError = DuplicateAuthorError | DuplicateForecastError | ForecastNotFound
+trait TxAuthorStore[F[_]]:
+  def save(author: Author): F[Unit]
 
 object AuthorStore:
-  def from[F[_]: MonadCancelThrow](
+  def from[F[_]: DoobieTx: MonadCancelThrow](
       xa: Transactor[F]
   ): AuthorStore[F] = new:
     def fetch(id: AuthorId): F[Option[Author]] =
@@ -25,14 +27,20 @@ object AuthorStore:
         case (x :: xs) => x.copy(forecasts = x.forecasts.union(xs.toSet.flatMap(_.forecasts))).some
       }
 
-    def save(author: Author): F[Either[SaveError, Unit]] =
+    def tx: Resource[F, TxAuthorStore[F]] =
+      xa.transaction.map(transactional)
+
+  private def transactional[F[_]: MonadCancelThrow](
+      fk: ConnectionIO ~> F
+  ): TxAuthorStore[F] = new:
+    def save(author: Author): F[Unit] =
       val saveAuthor =
         SQL
           .insertAuthor(author)
           .run
           .onDuplicate(DuplicateAuthorError)
 
-      // this is not used in Engine but it's here to demonstrate batch inserts
+      // this is not used in Engine (always Set.empty) but it's here to demonstrate batch inserts
       val saveForecasts =
         SQL
           .insertAuthorForecasts(author)
@@ -40,4 +48,4 @@ object AuthorStore:
           .onDuplicate(DuplicateForecastError)
           .onConstraintViolation(ForecastNotFound)
 
-      (saveAuthor *> saveForecasts).transact(xa).attemptNarrow
+      fk(saveAuthor *> saveForecasts)

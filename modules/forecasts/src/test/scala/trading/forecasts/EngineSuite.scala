@@ -16,7 +16,7 @@ import trading.state.*
 
 import cats.data.NonEmptyList
 import cats.effect.IO
-import cats.effect.kernel.Ref
+import cats.effect.kernel.{ Ref, Resource }
 import cats.syntax.all.*
 import weaver.{ Expectations, SimpleIOSuite }
 import weaver.scalacheck.Checkers
@@ -47,29 +47,48 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     def timestamp: IO[Timestamp] = IO.pure(ts)
 
   class DummyForecastStore extends ForecastStore[IO]:
-    def fetch(fid: ForecastId): IO[Option[Forecast]]                                   = IO.none
-    def save(aid: AuthorId, fc: Forecast): IO[Either[AuthorNotFound, Unit]]            = IO.unit.lift
-    def castVote(fid: ForecastId, res: VoteResult): IO[Either[ForecastNotFound, Unit]] = IO.unit.lift
+    def fetch(fid: ForecastId): IO[Option[Forecast]] = IO.none
+    def tx: Resource[IO, TxForecastStore[IO]]        = Resource.pure(new DummyTxForecastStore)
+
+  class DummyTxForecastStore extends TxForecastStore[IO]:
+    def save(aid: AuthorId, fc: Forecast): IO[Unit]          = IO.unit
+    def castVote(fid: ForecastId, res: VoteResult): IO[Unit] = IO.unit
 
   class DummyAuthorStore extends AuthorStore[IO]:
-    def fetch(id: AuthorId): IO[Option[Author]]           = IO.none
-    def save(author: Author): IO[Either[SaveError, Unit]] = IO.unit.lift
+    def fetch(id: AuthorId): IO[Option[Author]] = IO.none
+    def tx: Resource[IO, TxAuthorStore[IO]]     = Resource.pure(new DummyTxAuthorStore)
+
+  class DummyTxAuthorStore extends TxAuthorStore[IO]:
+    def save(author: Author): IO[Unit] = IO.unit
 
   val okAuthorStore: AuthorStore[IO]     = new DummyAuthorStore
   val okForecastStore: ForecastStore[IO] = new DummyForecastStore
 
   val failAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
-    override def save(author: Author): IO[Either[SaveError, Unit]] = IO.pure(DuplicateAuthorError.asLeft)
+    override def tx: Resource[IO, TxAuthorStore[IO]] = Resource.pure {
+      new TxAuthorStore[IO]:
+        def save(author: Author): IO[Unit] = IO.raiseError(DuplicateAuthorError)
+    }
 
   val unexpectedFailAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
-    override def save(author: Author): IO[Either[SaveError, Unit]] = IO.raiseError(new Exception("boom"))
+    override def tx: Resource[IO, TxAuthorStore[IO]] = Resource.pure {
+      new TxAuthorStore[IO]:
+        def save(author: Author): IO[Unit] = IO.raiseError(new Exception("boom"))
+    }
 
   val failForecastStore: ForecastStore[IO] = new DummyForecastStore:
-    override def save(aid: AuthorId, fc: Forecast): IO[Either[AuthorNotFound, Unit]] = IO.pure(AuthorNotFound.asLeft)
+    override def tx: Resource[IO, TxForecastStore[IO]] = Resource.pure {
+      new DummyTxForecastStore:
+        override def save(aid: AuthorId, fc: Forecast): IO[Unit] =
+          IO.raiseError(AuthorNotFound)
+    }
 
   val voteFailForecastStore: ForecastStore[IO] = new DummyForecastStore:
-    override def castVote(fid: ForecastId, res: VoteResult): IO[Either[ForecastNotFound, Unit]] =
-      IO.pure(ForecastNotFound.asLeft)
+    override def tx: Resource[IO, TxForecastStore[IO]] = Resource.pure {
+      new DummyTxForecastStore:
+        override def castVote(fid: ForecastId, res: VoteResult): IO[Unit] =
+          IO.raiseError(ForecastNotFound)
+    }
 
   class DummyAcker extends Acker[IO, ForecastCommand]:
     def ack(id: Consumer.MsgId): IO[Unit]          = IO.unit
@@ -94,7 +113,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       fc <- IO.ref(none[ForecastEvent])
       p1     = Producer.test(at)
       p2     = Producer.test(fc)
-      engine = Engine.make(p1, p2, authorStore, forecastStore, DummyAcker())
+      engine = Engine.make(p1, p2, authorStore, forecastStore, DummyAcker(), Txn.dummy)
       _  <- engine.run(in.asMsg)
       ae <- at.get
       fe <- fc.get
@@ -161,7 +180,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     for
       ref <- IO.ref(none[Consumer.MsgId])
       acker  = mkNAcker(ref)
-      engine = Engine.make(Producer.dummy, Producer.dummy, unexpectedFailAuthorStore, okForecastStore, acker)
+      engine = Engine.make(Producer.dummy, Producer.dummy, unexpectedFailAuthorStore, okForecastStore, acker, Txn.dummy)
       _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts).asMsg)
       nack <- ref.get
     yield expect.same(nack, Some(msgId))

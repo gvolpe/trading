@@ -18,6 +18,7 @@ object SQLSuite extends ResourceSuite:
 
   val aid  = AuthorId(UUID.randomUUID())
   val aid2 = AuthorId(UUID.randomUUID())
+  val aid3 = AuthorId(UUID.randomUUID())
   val fid  = ForecastId(UUID.randomUUID())
   val fid2 = ForecastId(UUID.randomUUID())
   val fid3 = ForecastId(UUID.randomUUID())
@@ -30,27 +31,27 @@ object SQLSuite extends ResourceSuite:
 
     for
       // forecast does not exist yet: ForecastNotFound
-      a <- at.save(Author(aid, AuthorName("gvolpe"), None, Set(fid)))
+      a <- at.tx.use(_.save(Author(aid, AuthorName("gvolpe"), None, Set(fid)))).attempt
       // registering a new author without any forecast succeeds
-      _ <- at.save(Author(aid, AuthorName("gvolpe"), None, Set())).rethrow
+      _ <- at.tx.use(_.save(Author(aid, AuthorName("gvolpe"), None, Set())))
       // create forecast with non-existing Author ID
-      b <- fc.save(aid2, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1)))
+      b <- fc.tx.use(_.save(aid2, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1)))).attempt
       // create forecast successfully with existing Author ID
-      _ <- fc.save(aid, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1))).rethrow
+      _ <- fc.tx.use(_.save(aid, Forecast(fid, Symbol.EURUSD, ForecastTag.Long, desc, ForecastScore(1))))
       // fetching the author record
       c <- at.fetch(aid)
       // trying to register a new author using the same name fails due to the unique constraint
-      d <- at.save(Author(aid2, AuthorName("gvolpe"), None, Set()))
+      d <- at.tx.use(_.save(Author(aid2, AuthorName("gvolpe"), None, Set()))).attempt
       // fetching the forecast record
       e <- fc.fetch(fid)
       // cast a vote to non-existing forecast
-      f <- fc.castVote(fid2, VoteResult.Up)
+      f <- fc.tx.use(_.castVote(fid2, VoteResult.Up)).attempt
       // cast a vote on legit forecast
-      _ <- fc.castVote(fid, VoteResult.Up).rethrow
+      _ <- fc.tx.use(_.castVote(fid, VoteResult.Up))
       // fetching the forecast record once again, which should have a raised score
       g <- fc.fetch(fid)
       // cast a down-vote three times
-      _ <- fc.castVote(fid, VoteResult.Down).rethrow.replicateA(3).void
+      _ <- fc.tx.use(_.castVote(fid, VoteResult.Down).replicateA(3).void)
       // fetching the forecast record once again, which should have a negative score
       h <- fc.fetch(fid)
     yield NonEmptyList
@@ -66,4 +67,3 @@ object SQLSuite extends ResourceSuite:
       )
       .reduce
   }
-
