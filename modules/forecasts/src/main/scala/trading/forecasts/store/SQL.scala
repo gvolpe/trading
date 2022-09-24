@@ -19,6 +19,11 @@ object SQL:
     Forecast(ForecastId(id), Symbol.unsafeFrom(sl), ForecastTag.from(tag), ForecastDescription(desc), ForecastScore(sc))
   }
 
+  extension (res: VoteResult)
+    def asInt: Int = res match
+      case VoteResult.Up   => 1
+      case VoteResult.Down => -1
+
   /* ---------------------- authors table ----------------------- */
   val selectAuthor: AuthorId => Query0[Author] = id => sql"""
       SELECT a.id, a.name, a.website, f.id FROM authors AS a

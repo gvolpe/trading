@@ -6,10 +6,6 @@ import cats.syntax.all.*
 import io.circe.{ Decoder, Encoder, Json }
 
 enum VoteResult derives Eq, Show:
-  def asInt: Int = this match
-    case Up   => 1
-    case Down => -1
-
   case Up, Down
 
 object VoteResult:

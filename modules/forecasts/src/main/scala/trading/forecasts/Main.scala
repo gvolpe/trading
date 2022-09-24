@@ -40,7 +40,7 @@ object Main extends IOApp.Simple:
   def resources =
     for
       config <- Resource.eval(Config.load[IO])
-      pulsar <- Pulsar.make[IO](config.pulsar.url)
+      pulsar <- Pulsar.make[IO](config.pulsar.url, Pulsar.Settings().withTransactions)
       _      <- Resource.eval(Logger[IO].info("Initializing forecasts service"))
       cmdTopic      = AppTopic.ForecastCommands.make(config.pulsar)
       authorTopic   = AppTopic.AuthorEvents.make(config.pulsar)
