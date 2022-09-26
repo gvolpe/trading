@@ -10,7 +10,7 @@
 Run the essential trading services from scratch.
 
 ```console
-$ dc up pulsar redis processor alerts ws-server
+$ docker-compose up pulsar redis processor alerts ws-server
 ```
 
 Run the smoke tests.

@@ -66,18 +66,16 @@ object EngineSuite extends SimpleIOSuite with Checkers:
         .reduce
     }
 
-  // Should ack AND write the new trade state
-  test("snapshot fsm with command executed events") {
+  test("snapshot fsm with command executed events should ack AND write the new state") {
     baseTest(
       gen = genCommandExecEvt.map(_.asLeft),
       mkWriter = succesfulWriter,
-      expWrites = nst => Some(nst),
+      expWrites = _.some,
       expAcks = List(msgId)
     )
   }
 
-  // Should ack without writing new state
-  test("snapshot fsm with other events") {
+  test("snapshot fsm with other events should ack without writing new state") {
     baseTest(
       gen = genTradeEventNoCmdExec,
       mkWriter = succesfulWriter,
@@ -86,8 +84,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     )
   }
 
-  // Should not ack when failing to write new state
-  test("snapshot fsm with failing snapshot writer") {
+  test("snapshot fsm with failing snapshot writer should NOT ack") {
     baseTest(
       gen = genCommandExecEvt.map(_.asLeft),
       mkWriter = _ => failingWriter,

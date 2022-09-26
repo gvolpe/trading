@@ -75,13 +75,13 @@ object Smokey extends IOSuite:
 
   val topic = AppTopic.TradingCommands.make(pulsarCfg)
 
-  def p1(pulsar: Pulsar.T): IO[Unit] =
+  def commandsProducer(pulsar: Pulsar.T): IO[Unit] =
     Producer.pulsar[IO, TradeCommand](pulsar, topic, tcSettings).use { p =>
       IO.sleep(2.seconds) *>
         Stream.emits(commands).metered[IO](100.millis).evalMap(p.send).compile.drain
     }
 
-  def p2(client: WSClient[IO], symbols: List[WsIn], exp: Int): IO[List[WsOut]] =
+  def clientSimulator(client: WSClient[IO], symbols: List[WsIn], exp: Int): IO[List[WsOut]] =
     (IO.ref(List.empty[WsOut]), IO.deferred[Either[Throwable, Unit]]).tupled.flatMap { (ref, switch) =>
       client
         .connectHighLevel(connectReq)
@@ -118,7 +118,9 @@ object Smokey extends IOSuite:
 
   // Two WS clients subscribe to different symbols and expect different alerts
   test("Trading smoke test") { case (pulsar, ws) =>
-    (p1(pulsar) &> (p2(ws, symbols1, expected1.size), p2(ws, symbols2, expected2.size)).parTupled)
+    val cli1 = clientSimulator(ws, symbols1, expected1.size)
+    val cli2 = clientSimulator(ws, symbols2, expected2.size)
+    (commandsProducer(pulsar) &> (cli1, cli2).parTupled)
       .flatMap {
         case (((_: WsOut.Attached) :: xs), ((_: WsOut.Attached) :: ys)) =>
           IO.pure {
