@@ -54,16 +54,16 @@ def runUpdates(msg: Msg, model: Model): (Model, Cmd[IO, Msg]) =
       model.copy(input = in) -> Cmd.None
 
     case Msg.Subscribe =>
-      if model.symbol === Symbol.XXXXXX then model.copy(error = Some("Invalid symbol")) -> Cmd.None
-      else
-        model.socketId match
-          case Some(_) =>
-            val nm       = model.copy(sub = Some(model.symbol), symbol = Symbol.XXXXXX, input = "")
-            val in: WsIn = WsIn.Subscribe(model.symbol)
-            val cmd      = model.ws.map(ws => Cmd.Batch(ws.publish(in.asJson.noSpaces), refocusInput))
-            nm -> cmd.getOrElse(Cmd.None)
-          case None =>
-            disconnected(model)
+      (model.socketId, model.symbol) match
+        case (_, Symbol.XXXXXX) =>
+          model.copy(error = Some("Invalid symbol")) -> Cmd.None
+        case (Some(_), _) =>
+          val nm       = model.copy(sub = Some(model.symbol), symbol = Symbol.XXXXXX, input = "")
+          val in: WsIn = WsIn.Subscribe(model.symbol)
+          val cmd      = model.ws.map(ws => Cmd.Batch(ws.publish(in.asJson.noSpaces), refocusInput))
+          nm -> cmd.getOrElse(Cmd.None)
+        case (None, _) =>
+          disconnected(model)
 
     case Msg.Unsubscribe(symbol) =>
       model.socketId match
