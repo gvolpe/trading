@@ -10,14 +10,14 @@ import cats.effect.kernel.Ref
 import cats.syntax.all.*
 import natchez.Trace
 
+case object DuplicateUser extends NoStackTrace
+type DuplicateUser = DuplicateUser.type
+
 trait UsersDB[F[_]]:
   def get(id: UUID): F[Option[User]]
-  def save(user: User): F[Either[UsersDB.DuplicateUser, Unit]]
+  def save(user: User): F[Either[DuplicateUser, Unit]]
 
 object UsersDB:
-  case object DuplicateUser extends NoStackTrace
-  type DuplicateUser = DuplicateUser.type
-
   def make[F[_]: MonadThrow: Ref.Make: Trace]: F[UsersDB[F]] =
     noTrace[F].map { db =>
       new:

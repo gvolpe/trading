@@ -3,7 +3,7 @@ package http
 
 import java.util.UUID
 
-import demo.tracer.db.UsersDB
+import demo.tracer.db.*
 import trading.lib.GenUUID
 
 import cats.Monad
@@ -33,7 +33,7 @@ final class Routes[F[_]: GenUUID: Monad: Trace](
         GenUUID[F].make[UUID].flatMap { id =>
           Trace[F].put("save-user" -> name) *>
             users.save(User(id, name)).flatMap {
-              case Left(UsersDB.DuplicateUser) =>
+              case Left(DuplicateUser) =>
                 Trace[F].put("conflict" -> name) *> Conflict()
               case Right(_) =>
                 Trace[F].put("ok" -> name) *> Created(id.toString)
