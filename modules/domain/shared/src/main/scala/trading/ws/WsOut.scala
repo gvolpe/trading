@@ -17,3 +17,6 @@ object WsOut:
     case (Notification(x), Notification(y)) => x === y // Eq[Alert] instance
     case _                                  => false
   }
+
+extension (alert: Alert)
+  def wsOut: WsOut = WsOut.Notification(alert)

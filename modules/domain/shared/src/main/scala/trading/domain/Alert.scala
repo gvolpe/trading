@@ -1,7 +1,5 @@
 package trading.domain
 
-import trading.ws.WsOut
-
 import cats.{ Applicative, Eq, Show }
 import cats.derived.*
 import cats.syntax.all.*
@@ -12,7 +10,6 @@ enum Alert derives Codec.AsObject, Show:
   def id: AlertId
   def cid: CorrelationId
   def createdAt: Timestamp
-  def wsOut: WsOut = WsOut.Notification(this)
 
   case TradeAlert(
       id: AlertId,
