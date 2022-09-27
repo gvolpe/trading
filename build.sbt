@@ -16,6 +16,8 @@ Compile / run / fork := true
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 Global / semanticdbEnabled    := true // for metals
+    
+lazy val copyJsFileTask = TaskKey[Unit]("copyJsFileTask")
 
 val commonSettings = List(
   scalacOptions ++= List(),
@@ -168,7 +170,13 @@ lazy val webapp = (project in file("modules/ws-client"))
       Libraries.scalajsTime.value,
       Libraries.tyrian.value,
       Libraries.tyrianIO.value
-    )
+    ),
+    copyJsFileTask := {
+      import java.nio.file.{ Files, StandardCopyOption }
+      val r               = (Compile / fastOptJS).value
+      val destinationPath = file("modules/ws-client/webapp-fastopt.js").toPath
+      Files.copy(r.data.toPath, destinationPath, StandardCopyOption.REPLACE_EXISTING)
+    }
   )
   .dependsOn(domain.js)
 

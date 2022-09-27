@@ -62,31 +62,40 @@ $ xdg-open index.html # or specify browser
 
 ### ScalaJS
 
-There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. First, we need to compile the Scala app to JavaScript.
+There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. First, we need to compile the Scala app to JavaScript and copy the file to the root directory of the `ws-client` module (this last task is only required for `nix run`).
 
 ```console
 $ cd modules/ws-client
-$ sbt webapp/fastOptJS
+$ sbt 'webapp/fastOptJS;webapp/copyJsFileTask'
 ```
 
 You can then run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
 
 ```console
+$ nix run
+Using cache dir: /home/gvolpe/workspace/trading/modules/ws-client/nix-parcel-cache
+Server running at http://localhost:1234
+✨ Built in 7ms
+```
+
+NOTICE: The `nix run` comand will create a directory for the Parcel cache, which needs write permissions.
+
+For development iterations, it may be more convenient to use `yarn` directly.
+
+```console
 $ nix develop
+$ yarn install
+$ yarn build
 $ yarn start
 yarn run v1.22.17
-warning package.json: No license field
 parcel index.html --no-cache --dist-dir dist --log-level info
 Server running at http://localhost:1234
 ✨ Built in 1.82s
 ```
 
-Or without Nix, you need to run these commands before (requires `yarn` and `parcel`).
+However, this is not fully reproducible and can't be guaranteed this will work in the future.
 
-```console
-$ yarn install
-$ yarn build
-```
+Without Nix, you need to install `yarn` and `parcel`, and use `yarn` as shown above.
 
 ## Overview
 

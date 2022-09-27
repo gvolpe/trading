@@ -1,11 +1,15 @@
 {
+  "name": "trading-webapp",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
   "scripts": {
+    "dev": "parcel index.html",
     "start": "parcel index.html --no-cache --dist-dir dist --log-level info",
     "build": "parcel build index.html --dist-dir dist --log-level info",
     "postbuild": "cp -r static/* dist/"
   },
   "devDependencies": {
-    "parcel": "^2.3.2",
+    "parcel": "^2.7.0",
     "process": "^0.11.10"
   }
 }

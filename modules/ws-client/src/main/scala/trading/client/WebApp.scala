@@ -7,7 +7,7 @@ import cats.effect.IO
 import tyrian.*
 
 @JSExportTopLevel("TyrianApp")
-object Main extends TyrianApp[Msg, Model]:
+object WebApp extends TyrianApp[Msg, Model]:
 
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) =
     Model.init -> Cmd.None
