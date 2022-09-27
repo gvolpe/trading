@@ -1,9 +1,9 @@
 package trading.client
 
-import cats.syntax.show.*
-
-import trading.domain.*
 import trading.client.ui.*
+import trading.domain.*
+
+import cats.syntax.show.*
 
 import tyrian.*
 import tyrian.Html.*
