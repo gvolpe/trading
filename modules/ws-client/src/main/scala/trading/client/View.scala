@@ -20,9 +20,9 @@ def render(model: Model): Html[Msg] =
         id     := "symbol-input",
         autoFocus,
         placeholder := "Symbol (e.g. EURUSD)",
-        onInput(s => Msg.SymbolChanged(s)),
+        onInput(s => Msg.SymbolChanged(InputText(s))),
         onKeyDown(subscribeOnEnter),
-        value := model.input
+        value := model.input.value
       ),
       div(`class` := "input-group-append")(
         button(

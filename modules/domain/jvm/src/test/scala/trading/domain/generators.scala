@@ -21,6 +21,7 @@ object arbitraries:
   given Arbitrary[Prices]       = Arbitrary(pricesGen)
   given Arbitrary[Price]        = Arbitrary(priceGen)
   given Arbitrary[Quantity]     = Arbitrary(quantityGen)
+  given Arbitrary[Symbol]       = Arbitrary(symbolWithEmptyGen)
   given Arbitrary[TradeState]   = Arbitrary(tradeStateGen)
   given Arbitrary[Timestamp]    = Arbitrary(timestampGen)
 
@@ -87,6 +88,12 @@ object generators:
     Gen
       .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
       .map(s => Symbol.unsafeFrom(s))
+
+  val symbolWithEmptyGen: Gen[Symbol] =
+    Gen.frequency(
+      1 -> Gen.const(Symbol.XEMPTY),
+      9 -> symbolGen
+    )
 
   val priceGen: Gen[Price] =
     Gen.choose(0.78346, 4.78341).map(x => Price(x))
@@ -380,7 +387,7 @@ object generators:
   val wsAttachedGen: Gen[WsOut] =
     for
       i <- socketIdGen
-      l <- Gen.choose(1L, 500L)
+      l <- Gen.choose(1, 500).map(OnlineUsers(_))
     yield WsOut.Attached(i, l)
 
   val wsNotificationGen: Gen[WsOut] =

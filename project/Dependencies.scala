@@ -82,6 +82,7 @@ object Dependencies {
     val tyrianIO    = Def.setting("io.indigoengine" %%% "tyrian-io" % V.tyrian)
 
     // test
+    val catsLaws         = "org.typelevel"       %% "cats-laws"         % V.cats
     val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle
     val scalacheck       = "org.scalacheck"      %% "scalacheck"        % V.scalacheck
     val weaverCats       = "com.disneystreaming" %% "weaver-cats"       % V.weaver

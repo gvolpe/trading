@@ -7,9 +7,10 @@ import scala.concurrent.duration.FiniteDuration
 
 import trading.*
 
-import cats.{ Eq, Order, Show }
+import cats.{ Eq, Monoid, Order, Show }
 import io.circe.*
 
+export Extensions.*
 export OrphanInstances.given
 
 type PulsarURI = PulsarURI.Type
@@ -74,3 +75,7 @@ type BidPrice = Price
 
 type HighPrice = Price
 type LowPrice  = Price
+
+type OnlineUsers = OnlineUsers.Type
+object OnlineUsers extends Newtype[Int]:
+  given Monoid[OnlineUsers] = derive
