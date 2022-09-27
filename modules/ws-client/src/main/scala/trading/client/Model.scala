@@ -1,11 +1,24 @@
 package trading.client
 
+import trading.Newtype
 import trading.domain.*
 import trading.ws.WsOut
 
+import cats.Monoid
 import cats.effect.IO
+import cats.syntax.all.*
 
 import tyrian.websocket.WebSocket
+
+type InputText = InputText.Type
+object InputText extends Newtype[String]:
+  given Monoid[InputText] = derive
+
+type WsUrl = WsUrl.Type
+object WsUrl extends Newtype[String]
+
+type ElemId = ElemId.Type
+object ElemId extends Newtype[String]
 
 enum WsMsg:
   case Error(msg: String)
@@ -18,21 +31,21 @@ enum WsMsg:
 
 enum Msg:
   case CloseAlerts
-  case SymbolChanged(input: String)
+  case SymbolChanged(input: InputText)
   case Subscribe
   case Unsubscribe(symbol: Symbol)
   case Recv(in: WsOut)
   case ConnStatus(msg: WsMsg)
-  case FocusError(id: String)
+  case FocusError(id: ElemId)
   case NoOp
 
 case class Model(
     symbol: Symbol,
-    input: String,
+    input: InputText,
     ws: Option[WebSocket[IO]],
-    wsUrl: String,
+    wsUrl: WsUrl,
     socketId: Option[SocketId],
-    onlineUsers: Int,
+    onlineUsers: OnlineUsers,
     alerts: Map[Symbol, Alert],
     tradingStatus: TradingStatus,
     sub: Option[Symbol],
@@ -42,12 +55,12 @@ case class Model(
 
 object Model:
   def init = Model(
-    symbol = Symbol.XXXXXX,
-    input = "",
+    symbol = mempty,
+    input = mempty,
     ws = None,
-    wsUrl = "ws://localhost:9000/v1/ws",
+    wsUrl = WsUrl("ws://localhost:9000/v1/ws"),
     socketId = None,
-    onlineUsers = 0,
+    onlineUsers = mempty,
     alerts = Map.empty,
     tradingStatus = TradingStatus.On,
     sub = None,

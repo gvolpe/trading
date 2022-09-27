@@ -45,7 +45,7 @@ object Handler:
         val send: Stream[F, WebSocketFrame] =
           Stream
             .eval(conns.subscribe(sid) *> conns.get)
-            .evalMap(n => encode(WsOut.Attached(sid, n)))
+            .evalMap(n => encode(WsOut.Attached(sid, mempty)))
             .append {
               alerts
                 .evalMap(x => fuze.get *> encode(x.wsOut))

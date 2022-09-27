@@ -16,7 +16,7 @@ Compile / run / fork := true
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 Global / semanticdbEnabled    := true // for metals
-    
+
 lazy val copyJsFileTask = TaskKey[Unit]("copyJsFileTask")
 
 val commonSettings = List(
@@ -43,6 +43,7 @@ val commonSettings = List(
     Libraries.redis4catsEffects,
     Libraries.refinedCore.value,
     Libraries.refinedCats.value,
+    Libraries.catsLaws         % Test,
     Libraries.monocleLaw       % Test,
     Libraries.scalacheck       % Test,
     Libraries.weaverCats       % Test,
