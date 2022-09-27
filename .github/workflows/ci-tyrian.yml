@@ -1,4 +1,4 @@
-name: Scala.js
+name: Tyrian
 
 on:
   pull_request:
