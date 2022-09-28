@@ -19,6 +19,10 @@ type alias WSUrl =
     String
 
 
+type alias OnlineUsers =
+    Int
+
+
 type AlertType
     = Buy
     | Sell
@@ -45,7 +49,7 @@ type Alert
 
 
 type WsIn
-    = Attached SocketId Int
+    = Attached SocketId OnlineUsers
     | CloseConnection
     | ConnectionError String
     | Notification Alert

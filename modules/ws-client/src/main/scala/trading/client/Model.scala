@@ -7,6 +7,7 @@ import trading.ws.WsOut
 import cats.Monoid
 import cats.effect.IO
 import cats.syntax.all.*
+import monocle.{ Focus, Optional }
 
 import tyrian.websocket.WebSocket
 
@@ -20,12 +21,15 @@ object WsUrl extends Newtype[String]
 type ElemId = ElemId.Type
 object ElemId extends Newtype[String]
 
+given Conversion[InputText, String] = _.value
+given Conversion[WsUrl, String]     = _.value
+
 enum WsMsg:
   case Error(msg: String)
   case Connecting
   case Connected(ws: WebSocket[IO])
   case Heartbeat
-  case Disconnected
+  case Disconnected(code: Int, reason: String)
 
   def asMsg: Msg = Msg.ConnStatus(this)
 
@@ -42,9 +46,7 @@ enum Msg:
 case class Model(
     symbol: Symbol,
     input: InputText,
-    ws: Option[WebSocket[IO]],
-    wsUrl: WsUrl,
-    socketId: Option[SocketId],
+    socket: TradingSocket,
     onlineUsers: OnlineUsers,
     alerts: Map[Symbol, Alert],
     tradingStatus: TradingStatus,
@@ -57,9 +59,7 @@ object Model:
   def init = Model(
     symbol = mempty,
     input = mempty,
-    ws = None,
-    wsUrl = WsUrl("ws://localhost:9000/v1/ws"),
-    socketId = None,
+    socket = TradingSocket.init,
     onlineUsers = mempty,
     alerts = Map.empty,
     tradingStatus = TradingStatus.On,
@@ -67,3 +67,8 @@ object Model:
     unsub = None,
     error = None
   )
+
+  val __SocketId: Optional[Model, SocketId] =
+    Focus[Model](_.socket)
+      .andThen(Focus[TradingSocket](_.id))
+      .andThen(monocle.std.option.some)

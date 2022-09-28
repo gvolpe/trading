@@ -4,7 +4,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 
 import cats.effect.IO
 
-import tyrian.*
+import tyrian.{ Cmd, Html, Sub, TyrianApp }
 
 @JSExportTopLevel("TyrianApp")
 object WebApp extends TyrianApp[Msg, Model]:
@@ -13,10 +13,10 @@ object WebApp extends TyrianApp[Msg, Model]:
     Model.init -> Cmd.None
 
   def update(model: Model): Msg => (Model, Cmd[IO, Msg]) =
-    runUpdates(_, model)
+    runUpdates(model)
 
   def view(model: Model): Html[Msg] =
     render(model)
 
   def subscriptions(model: Model): Sub[IO, Msg] =
-    wsSub(model.ws)
+    model.socket.subscribe(Subs.ws)
