@@ -24,8 +24,8 @@ object Dependencies {
     val redis4cats    = "1.2.0"
     val refined       = "0.10.1"
 
-    val scalajsTime = "2.4.0-M1"
-    val tyrian      = "0.5.0"
+    val scalajsTime = "2.4.0"
+    val tyrian      = "0.6.0"
 
     val scalacheck = "1.17.0"
     val weaver     = "0.8.0"

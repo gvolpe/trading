@@ -38,7 +38,7 @@ view model =
             [ div [ class "sid-body" ]
                 [ renderTradeStatus model.tradeStatus
                 , span [] [ text " " ]
-                , renderSocketId model.socketId
+                , renderConnectionDetails model.socketId model.onlineUsers
                 ]
             ]
         , p [] []
@@ -59,11 +59,15 @@ view model =
         ]
 
 
-renderSocketId : Maybe SocketId -> Html Msg
-renderSocketId ma =
+renderConnectionDetails : Maybe SocketId -> OnlineUsers -> Html Msg
+renderConnectionDetails ma users =
     case ma of
         Just sid ->
-            span [ id "socket-id", class "badge badge-pill badge-success" ] [ text ("Socket ID: " ++ sid) ]
+            span []
+                [ span [ id "socket-id", class "badge badge-pill badge-success" ] [ text ("Socket ID: " ++ sid) ]
+                , span [] [ text " " ]
+                , span [ id "online-users", class "badge badge-pill badge-success" ] [ text ("Online: " ++ toString users) ]
+                ]
 
         Nothing ->
             span []

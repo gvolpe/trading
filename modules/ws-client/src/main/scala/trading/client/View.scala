@@ -5,7 +5,7 @@ import trading.domain.*
 
 import cats.syntax.show.*
 
-import tyrian.*
+import tyrian.{ Html, Tyrian }
 import tyrian.Html.*
 
 def render(model: Model): Html[Msg] =
@@ -37,7 +37,7 @@ def render(model: Model): Html[Msg] =
       div(`class` := "sid-body")(
         renderTradeStatus(model.tradingStatus),
         span(" "),
-        renderSocketId(model.socketId)
+        renderConnectionDetails(model.socket.id, model.onlineUsers)
       )
     ),
     p(),
@@ -59,11 +59,15 @@ def render(model: Model): Html[Msg] =
     )
   )
 
-def renderSocketId: Option[SocketId] => Html[Msg] =
-  case Some(sid) =>
-    span(id := "socket-id", `class` := "badge badge-pill badge-success")(text(s"Socket ID: ${sid.show}"))
+def renderConnectionDetails: (Option[SocketId], OnlineUsers) => Html[Msg] =
+  case (Some(sid), users) =>
+    span(
+      span(id := "socket-id", `class` := "badge badge-pill badge-success")(text(s"Socket ID: ${sid.show}")),
+      span(text(" ")),
+      span(id := "online-users", `class` := "badge badge-pill badge-success")(text(s"Online: ${users.show}"))
+    )
 
-  case None =>
+  case (None, users) =>
     span(
       span(id := "socket-id", `class` := "badge badge-pill badge-secondary")(text("<Disconnected>")),
       span(text(" ")),
