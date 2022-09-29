@@ -46,16 +46,20 @@ object HandlerSuite extends SimpleIOSuite with Checkers:
     WsIn.Heartbeat
   ).map(in => Text(in.asJson.noSpaces))
 
-  // a bit simpler without testing in terms of Topic
-  test("WS message handler (alternative)") {
+  val conns: WsConnections[IO] = new:
+    def get: IO[Int]                         = IO.pure(0)
+    def subscriptions: Stream[IO, Int]       = Stream.emit(1)
+    def subscribe(sid: SocketId): IO[Unit]   = IO.unit
+    def unsubscribe(sid: SocketId): IO[Unit] = IO.unit
+
+  test("WS message handler") {
     (
       GenUUID[IO].make[SocketId],          // unique socket id
-      WsConnections.make[IO],              // subscribers
       IO.ref(List.empty[WebSocketFrame]),  // all WsOut messages sent
       IO.deferred[Unit],                   // switch to sync the sending of the WsIn.Close message
       IO.deferred[Either[Throwable, Unit]] // to know when there is an active subscription
     ).tupled
-      .flatMap { (sid, conns, out, switch, connected) =>
+      .flatMap { (sid, out, switch, connected) =>
         Handler.make(sid, conns, Stream.emits(alerts)).flatMap { h =>
           val recv =
             Stream
@@ -72,14 +76,14 @@ object HandlerSuite extends SimpleIOSuite with Checkers:
               .onFinalize(switch.complete(()).void)
 
           Stream(recv, send).parJoin(2).compile.drain
-        } >> (conns.get, out.get).tupled.flatMap {
-          case (n, (Text(x, _) :: xs)) =>
-            // Attached message + 5 alerts for symbol EURUSD (sl1)
+        } >> out.get.flatMap {
+          case Text(x, _) :: Text(y, _) :: xs =>
+            // Attached + OnlineUsers + 5 alerts for symbol EURUSD (sl1)
             NonEmptyList
               .of(
                 expect(x.contains("Attached")),
-                expect.same(xs.size, alerts.size - 1),
-                expect.same(n, 0)
+                expect(y.contains("OnlineUsers")),
+                expect.same(xs.size, alerts.size - 1)
               )
               .reduce
               .pure[IO]

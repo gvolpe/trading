@@ -7,9 +7,9 @@ import trading.ws.WsOut
 import cats.Monoid
 import cats.effect.IO
 import cats.syntax.all.*
-import monocle.{ Focus, Optional }
+import monocle.{ Focus, Lens }
 
-import tyrian.websocket.WebSocket
+//import tyrian.websocket.WebSocket
 
 type InputText = InputText.Type
 object InputText extends Newtype[String]:
@@ -47,7 +47,7 @@ case class Model(
     symbol: Symbol,
     input: InputText,
     socket: TradingSocket,
-    onlineUsers: OnlineUsers,
+    onlineUsers: Int,
     alerts: Map[Symbol, Alert],
     tradingStatus: TradingStatus,
     sub: Option[Symbol],
@@ -68,7 +68,5 @@ object Model:
     error = None
   )
 
-  val __SocketId: Optional[Model, SocketId] =
-    Focus[Model](_.socket)
-      .andThen(Focus[TradingSocket](_.id))
-      .andThen(monocle.std.option.some)
+  val _SocketId: Lens[Model, Option[SocketId]] =
+    Focus[Model](_.socket).andThen(Focus[TradingSocket](_.id))

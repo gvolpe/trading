@@ -384,17 +384,17 @@ object generators:
       t <- timestampGen
     yield Alert.TradeUpdate(i, c, s, t)
 
+  val wsOnlineUsersGen: Gen[WsOut] =
+    Gen.choose(1, 500).map(WsOut.OnlineUsers(_))
+
   val wsAttachedGen: Gen[WsOut] =
-    for
-      i <- socketIdGen
-      l <- Gen.choose(1, 500).map(OnlineUsers(_))
-    yield WsOut.Attached(i, l)
+    socketIdGen.map(WsOut.Attached(_))
 
   val wsNotificationGen: Gen[WsOut] =
     Gen.oneOf(tradeAlertGen, tradeUpdateGen).map(WsOut.Notification(_))
 
   val wsOutGen: Gen[WsOut] =
-    Gen.oneOf(wsAttachedGen, wsNotificationGen)
+    Gen.oneOf(wsAttachedGen, wsNotificationGen, wsOnlineUsersGen)
 
   /* WsIn messages */
 

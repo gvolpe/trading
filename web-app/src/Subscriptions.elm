@@ -78,7 +78,12 @@ notificationDecoder =
 
 attachedDecoder : Decoder WsIn
 attachedDecoder =
-    field "Attached" (map2 Attached (field "sid" string) (field "onlineUsers" int))
+    field "Attached" (map Attached (field "sid" string))
+
+
+onlineUsersDecoder : Decoder WsIn
+onlineUsersDecoder =
+    field "OnlineUsers" (map OnlineUsers (field "n" int))
 
 
 connectionErrorDecoder : Decoder WsIn
@@ -97,6 +102,7 @@ wsInDecoder =
         [ attachedDecoder
         , connectionErrorDecoder
         , notificationDecoder
+        , onlineUsersDecoder
         , socketClosedDecoder
         ]
 

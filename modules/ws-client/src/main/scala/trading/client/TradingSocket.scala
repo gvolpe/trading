@@ -1,6 +1,7 @@
 package trading.client
 
 import trading.domain.SocketId
+import trading.ws.WsIn
 
 import cats.effect.IO
 import cats.syntax.all.*
@@ -8,7 +9,7 @@ import io.circe.Encoder
 import io.circe.syntax.*
 
 import tyrian.{ Cmd, Sub }
-import tyrian.websocket.*
+//import tyrian.websocket.*
 import tyrian.websocket.WebSocketEvent as WSEvent
 
 final case class TradingSocket(
@@ -35,7 +36,7 @@ final case class TradingSocket(
       this.copy(error = s"Connection error: $cause".some) -> Cmd.None
 
     case WsMsg.Heartbeat =>
-      this -> ws.map(_.publish("{ \"Heartbeat\": {} }")).getOrElse(Cmd.None)
+      this -> publish[WsIn](WsIn.Heartbeat)
 
   def publish[A: Encoder](a: A): Cmd[IO, Msg] =
     ws.map(_.publish(a.asJson.noSpaces)).getOrElse(Cmd.None)
