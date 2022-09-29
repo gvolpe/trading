@@ -35,8 +35,12 @@ object WsCodecSuite extends SimpleIOSuite with Checkers:
     |[
     |  {
     |    "Attached" : {
-    |      "sid" : "f74eb2bf-cead-4bad-9bd1-ed5a3aaf32ca",
-    |      "onlineUsers" : 183
+    |      "sid" : "f74eb2bf-cead-4bad-9bd1-ed5a3aaf32ca"
+    |    }
+    |  },
+    |  {
+    |    "OnlineUsers" : {
+    |      "n" : 3
     |    }
     |  },
     |  {
