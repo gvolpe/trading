@@ -81,8 +81,8 @@ object HandlerSuite extends SimpleIOSuite with Checkers:
             // Attached + OnlineUsers + 5 alerts for symbol EURUSD (sl1)
             NonEmptyList
               .of(
-                expect(x.contains("Attached")),
-                expect(y.contains("OnlineUsers")),
+                expect((x + y).contains("Attached")),
+                expect((x + y).contains("OnlineUsers")),
                 expect.same(xs.size, alerts.size - 1)
               )
               .reduce
