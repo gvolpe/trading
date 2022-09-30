@@ -59,12 +59,12 @@ def render(model: Model): Html[Msg] =
     )
   )
 
-def renderConnectionDetails: (Option[SocketId], OnlineUsers) => Html[Msg] =
-  case (Some(sid), users) =>
+def renderConnectionDetails: (Option[SocketId], Int) => Html[Msg] =
+  case (Some(sid), online) =>
     span(
       span(id := "socket-id", `class` := "badge badge-pill badge-success")(text(s"Socket ID: ${sid.show}")),
       span(text(" ")),
-      span(id := "online-users", `class` := "badge badge-pill badge-success")(text(s"Online: ${users.show}"))
+      span(id := "online-users", `class` := "badge badge-pill badge-success")(text(s"Online: ${online.show}"))
     )
 
   case (None, users) =>

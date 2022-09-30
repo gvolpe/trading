@@ -49,10 +49,11 @@ type Alert
 
 
 type WsIn
-    = Attached SocketId OnlineUsers
+    = Attached SocketId
     | CloseConnection
     | ConnectionError String
     | Notification Alert
+    | OnlineUsers Int
     | SocketClosed
     | Unknown String
 

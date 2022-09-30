@@ -59,14 +59,14 @@ view model =
         ]
 
 
-renderConnectionDetails : Maybe SocketId -> OnlineUsers -> Html Msg
-renderConnectionDetails ma users =
+renderConnectionDetails : Maybe SocketId -> Int -> Html Msg
+renderConnectionDetails ma online =
     case ma of
         Just sid ->
             span []
                 [ span [ id "socket-id", class "badge badge-pill badge-success" ] [ text ("Socket ID: " ++ sid) ]
                 , span [] [ text " " ]
-                , span [ id "online-users", class "badge badge-pill badge-success" ] [ text ("Online: " ++ toString users) ]
+                , span [ id "online-users", class "badge badge-pill badge-success" ] [ text ("Online: " ++ toString online) ]
                 ]
 
         Nothing ->

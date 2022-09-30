@@ -42,15 +42,24 @@ object Handler:
           case Text(msg, _) => jsonDecode[WsIn](msg).leftMap(_.getMessage)
           case e            => s">>> [$sid] - Unexpected WS message: $e".asLeft
 
+        val attached =
+          Stream.eval {
+            conns.subscribe(sid) *> encode(WsOut.Attached(sid))
+          }
+
+        val onlineUsers =
+          conns.subscriptions.evalMap { n =>
+            encode(WsOut.OnlineUsers(n))
+          }
+
         val send: Stream[F, WebSocketFrame] =
-          Stream
-            .eval(conns.subscribe(sid) *> conns.get)
-            .evalMap(n => encode(WsOut.Attached(sid, mempty)))
-            .append {
-              alerts
-                .evalMap(x => fuze.get *> encode(x.wsOut))
-                .interruptWhen(switch)
+          onlineUsers
+            .mergeHaltR {
+              attached ++ alerts.evalMap { x =>
+                fuze.get *> encode(x.wsOut)
+              }
             }
+            .interruptWhen(switch)
             .unNone
 
         val close = conns.unsubscribe(sid)

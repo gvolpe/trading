@@ -53,8 +53,15 @@ def runUpdates(model: Model): Msg => (Model, Cmd[IO, Msg]) =
       nm -> Cmd.Batch(model.socket.publish(WsIn.Unsubscribe(symbol)), refocusInput)
     }
 
-  case Msg.Recv(WsOut.Attached(sid, users)) =>
-    __SocketId.replace(sid)(model).copy(onlineUsers = users) -> Cmd.None
+  case Msg.Recv(WsOut.Attached(sid)) =>
+    model.socket.id match
+      case None =>
+        _SocketId.replace(sid.some)(model) -> Cmd.None
+      case Some(_) =>
+        model -> Cmd.None
+
+  case Msg.Recv(WsOut.OnlineUsers(online)) =>
+    model.copy(onlineUsers = online) -> Cmd.None
 
   case Msg.Recv(WsOut.Notification(t: Alert.TradeAlert)) =>
     model.copy(alerts = model.alerts.updated(t.symbol, t)) -> Cmd.None

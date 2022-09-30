@@ -80,8 +80,8 @@ update msg model =
 
         Recv input ->
             case input of
-                Attached sid users ->
-                    ( { model | socketId = Just sid, onlineUsers = users }
+                Attached sid ->
+                    ( { model | socketId = Just sid }
                     , Cmd.none
                     )
 
@@ -106,6 +106,11 @@ update msg model =
                             ( { model | tradeStatus = st }
                             , Cmd.none
                             )
+
+                OnlineUsers n ->
+                    ( { model | onlineUsers = n }
+                    , Cmd.none
+                    )
 
                 SocketClosed ->
                     ( { model | socketId = Nothing }
