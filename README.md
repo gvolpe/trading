@@ -142,11 +142,13 @@ The main difference between these three options is the resulting image size.
 ```console
 $ docker images | rg jdk17
 jdk17-curl                    latest               0ed94a723ce3   10 months ago   422MB
-jdk17-curl-nix                latest               c28f54e42c21   52 years ago    567MB
+jdk17-curl-nix                latest               c28f54e42c21   52 years ago    557MB
 jdk17-curl-slim               latest               dbe24e7a7163   52 years ago    465MB
 ```
 
 Any image is valid. Feel free to pick your preferred method.
+
+NOTE: As of September 2022, the Docker image resulting from `nix build .#docker` is no longer compatible with `sbt-native-packager`, so either go for `nix build` (defaults to the slim image) or build it directly via Docker with the given Dockerfile.
 
 ### Build service images
 

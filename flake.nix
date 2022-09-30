@@ -15,7 +15,8 @@
       forSystem = system:
         let
           dockerOverlay = f: p: with f.dockerTools; {
-            dockerImage = buildLayeredImage {
+            # September 2022: this docker image stopped working with sbt-native-packager
+            noRootDockerImage = buildLayeredImage {
               name = "jdk17-curl";
               tag = "latest";
               contents = [ f.curl f.jre ];
@@ -30,7 +31,7 @@
                 finalImageName = "openjdk";
                 finalImageTag = "17-jdk-slim-buster";
                 os = "linux";
-                arch = "x86_64";
+                arch = "amd64";
               };
               tag = "latest";
               copyToRoot = [ p.curl ];
@@ -63,11 +64,11 @@
           };
 
           packages = {
-            docker = pkgs.dockerImage;
+            docker = pkgs.noRootDockerImage;
             slimDocker = pkgs.slimDockerImage;
           };
 
-          defaultPackage = pkgs.dockerImage;
+          defaultPackage = pkgs.slimDockerImage;
         };
     in
     flake-utils.lib.eachDefaultSystem forSystem;
