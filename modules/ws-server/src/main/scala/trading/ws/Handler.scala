@@ -1,7 +1,5 @@
 package trading.ws
 
-import scala.concurrent.duration.*
-
 import trading.domain.Alert.TradeAlert
 import trading.domain.*
 import trading.lib.*
@@ -56,7 +54,7 @@ object Handler:
 
         val send: Stream[F, WebSocketFrame] =
           onlineUsers
-            .merge {
+            .mergeHaltR {
               attached ++ alerts.evalMap { x =>
                 fuze.get *> encode(x.wsOut)
               }

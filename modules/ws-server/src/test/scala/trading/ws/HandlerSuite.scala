@@ -3,8 +3,6 @@ package trading.ws
 import java.time.Instant
 import java.util.UUID
 
-import scala.concurrent.duration.*
-
 import trading.domain.*
 import trading.lib.*
 import trading.lib.Logger.NoOp.given
