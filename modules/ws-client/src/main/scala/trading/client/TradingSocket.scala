@@ -39,7 +39,7 @@ final case class TradingSocket(
       this -> publish[WsIn](WsIn.Heartbeat)
 
   def publish[A: Encoder](a: A): Cmd[IO, Msg] =
-    ws.map(_.publish(a.asJson.noSpaces)).getOrElse(Cmd.None)
+    ws.fold(Cmd.None)(_.publish(a.asJson.noSpaces))
 
   def subscribe(f: WSEvent => Msg): Sub[IO, Msg] =
     ws.fold(Sub.emit[IO, Msg](Msg.NoOp))(_.subscribe(f))
