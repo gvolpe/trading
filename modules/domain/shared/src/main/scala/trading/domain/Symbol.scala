@@ -14,7 +14,9 @@ object Symbol extends RefNewtype[String, NonEmptyFiniteString[6]]:
   val EURPLN = unsafeFrom("EURPLN")
   val EURUSD = unsafeFrom("EURUSD")
   val GBPUSD = unsafeFrom("GBPUSD")
+  val AUDCAD = unsafeFrom("AUDCAD")
   val USDCAD = unsafeFrom("USDCAD")
+  val CHFGBP = unsafeFrom("CHFGBP")
   val XEMPTY = unsafeFrom("XXXXXX")
 
   given Monoid[Symbol] with

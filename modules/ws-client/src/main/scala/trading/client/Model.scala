@@ -55,13 +55,37 @@ case class Model(
     error: Option[String]
 )
 
+object Dummy:
+  import java.time.Instant
+  import java.util.UUID
+
+  import trading.domain.Alert.TradeAlert
+  import trading.domain.AlertType.*
+  import trading.domain.Symbol.*
+
+  val id  = AlertId(UUID.fromString("7334c008-8089-4b07-8995-118582919b50"))
+  val cid = CorrelationId(UUID.fromString("30454474-e16f-4807-997c-c168854aadda"))
+  val ts  = Timestamp(Instant.parse("2022-10-03T14:00:00.00Z"))
+
+  given Conversion[Double, Price] = Price(_)
+
+  val alerts: Map[Symbol, Alert] =
+    Map(
+      EURUSD -> TradeAlert(id, cid, Sell, EURUSD, 1.287434123, 1.3567576891, 1.4712312454, 1.23545623114, ts),
+      CHFEUR -> TradeAlert(id, cid, Buy, CHFEUR, 1.301236451, 1.4328765419, 1.4789877536, 1.27054836753, ts),
+      CHFGBP -> TradeAlert(id, cid, Buy, CHFEUR, 1.301236451, 1.4328765419, 1.4789877536, 1.27054836753, ts),
+      GBPUSD -> TradeAlert(id, cid, StrongSell, GBPUSD, 2.487465452, 2.7344545629, 2.9983565471, 2.21236312235, ts),
+      EURPLN -> TradeAlert(id, cid, Neutral, EURPLN, 4.691272348, 4.4534524323, 4.8347145275, 3.83476129853, ts),
+      AUDCAD -> TradeAlert(id, cid, StrongBuy, AUDCAD, 10.209676347, 10.3723136644, 10.5430958726, 10.01236543289, ts)
+    )
+
 object Model:
   def init = Model(
     symbol = mempty,
     input = mempty,
     socket = TradingSocket.init,
     onlineUsers = mempty,
-    alerts = Map.empty,
+    alerts = Map.empty, // Dummy.alerts
     tradingStatus = TradingStatus.On,
     sub = None,
     unsub = None,
