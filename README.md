@@ -67,7 +67,7 @@ There is also a replica of the Elm application written in Scala using the [Tyria
 
 ```console
 $ cd modules/ws-client
-$ sbt 'webapp/fastOptJS;webapp/copyJsFileTask'
+$ sbt 'webapp/fastLinkJS;webapp/copyJsFileTask'
 ```
 
 You can then run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).

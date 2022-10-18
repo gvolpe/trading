@@ -43,7 +43,7 @@ enum Msg:
   case FocusError(id: ElemId)
   case NoOp
 
-case class Model(
+final case class Model(
     symbol: Symbol,
     input: InputText,
     socket: TradingSocket,
