@@ -12,7 +12,7 @@ import monocle.{ Focus, Optional }
 // format: off
 final case class TradeState(
     status: TradingStatus,
-    prices: TradeState.SymbolPrices
+    prices: Map[Symbol, Prices]
 ) derives Eq, Show:
 // format: on
 
@@ -42,8 +42,6 @@ final case class TradeState(
           .modify(_.removed(price))(this)
 
 object TradeState:
-  type SymbolPrices = Map[Symbol, Prices]
-
   def empty: TradeState = TradeState(TradingStatus.On, Map.empty)
 
   val _Status = Focus[TradeState](_.status)

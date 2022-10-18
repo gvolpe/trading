@@ -35,7 +35,7 @@
               version = "1.0.0";
               src = pkgs.lib.cleanSourceWith {
                 src = ./.;
-                name = "source";
+                name = "source-${version}";
                 filter = name: type: !(
                   (builtins.elem (toString name) [
                     "dist"
@@ -54,7 +54,7 @@
 
               postInstall = ''
                 substituteInPlace $out/${outDir}/tyrianapp.js \
-                  --replace "./target/scala-3.2.1-RC2/webapp-fastopt.js" "./webapp-fastopt.js"
+                  --replace "./target/scala-3.2.1-RC3/webapp-fastopt/main.js" "./main.js"
               '';
 
               distPhase = "true";

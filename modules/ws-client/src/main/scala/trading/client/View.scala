@@ -63,14 +63,14 @@ def renderConnectionDetails: (Option[SocketId], Int) => Html[Msg] =
   case (Some(sid), online) =>
     span(
       span(id := "socket-id", `class` := "badge badge-pill badge-success")(text(s"Socket ID: ${sid.show}")),
-      span(text(" ")),
+      span(" "),
       span(id := "online-users", `class` := "badge badge-pill badge-success")(text(s"Online: ${online.show}"))
     )
 
   case (None, users) =>
     span(
       span(id := "socket-id", `class` := "badge badge-pill badge-secondary")(text("<Disconnected>")),
-      span(text(" ")),
+      span(" "),
       button(`class` := "badge badge-pill badge-primary", onClick(WsMsg.Connecting.asMsg))(text("Connect"))
     )
 
