@@ -67,7 +67,7 @@ There is also a replica of the Elm application written in Scala using the [Tyria
 
 ```console
 $ cd modules/ws-client
-$ sbt 'webapp/fastLinkJS;webapp/copyJsFileTask'
+$ sbt 'webapp/fullLinkJS;webapp/copyJsFileTask'
 ```
 
 You can then run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
@@ -79,9 +79,11 @@ Server running at http://localhost:1234
 ✨ Built in 7ms
 ```
 
-NOTICE: The `nix run` comand will create a directory for the Parcel cache, which needs write permissions.
+NOTICE: The `nix run` command will create a directory for the Parcel cache, which needs write permissions.
 
-For development iterations, it may be more convenient to use `yarn` directly.
+We use `fullLinkJS` to create a fully optimized JS file. However, we can use `fastLinkJS` for faster iterations, but the `copyJsFileTask` does not work with it.
+
+For such cases, it may be more convenient to use `yarn` directly.
 
 ```console
 $ nix develop

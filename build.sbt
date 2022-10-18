@@ -174,7 +174,7 @@ lazy val webapp = (project in file("modules/ws-client"))
     ),
     copyJsFileTask := {
       import java.nio.file.{ Files, StandardCopyOption }
-      val origin      = file(s"modules/ws-client/target/scala-${scalaVersion.value}/webapp-fastopt/main.js").toPath
+      val origin      = file(s"modules/ws-client/target/scala-${scalaVersion.value}/webapp-opt/main.js").toPath
       val destination = file("modules/ws-client/main.js").toPath
       Files.copy(origin, destination, StandardCopyOption.REPLACE_EXISTING)
     }
