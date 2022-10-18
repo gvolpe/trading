@@ -88,6 +88,11 @@ object Smokey extends IOSuite:
         .use { ws =>
           val recv =
             ws.receiveStream
+              .filterNot {
+                // Filter out OnlineUsers messages to not interfere with the interruption switch
+                case WSFrame.Text(str, _) => str.contains("OnlineUsers")
+                case WSFrame.Binary(_, _) => false
+              }
               .evalMap {
                 case WSFrame.Text(str, _) =>
                   jsonDecode[WsOut](str) match
