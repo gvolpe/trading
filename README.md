@@ -104,7 +104,7 @@ Without Nix, you need to install `yarn` and `parcel`, and use `yarn` as shown ab
 
 Here's an overview of all the components of the system.
 
-![overview](./imgs/system-overview.png)
+![overview](./imgs/overview.png)
 
 - Dotted lines: Pulsar messages such as commands and events.
 - Bold lines: read and writes from / to external components (Redis, Postgres, etc).
