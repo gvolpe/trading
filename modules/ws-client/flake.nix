@@ -54,7 +54,7 @@
 
               postInstall = ''
                 substituteInPlace $out/${outDir}/tyrianapp.js \
-                  --replace "./target/scala-3.2.1-RC4/webapp-fastopt/main.js" "./main.js"
+                  --replace "./target/scala-3.2.2-RC1/webapp-fastopt/main.js" "./main.js"
               '';
 
               distPhase = "true";
