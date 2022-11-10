@@ -42,9 +42,7 @@ object DoobieTxDemo extends IOApp.Simple:
         .mapN { (f, x) =>
           IO.println(s"Using $x") *>
             f(statement) // *> statement) /* uncomment 2nd statement to see rollback */
-              .flatMap { _ =>
-                IO.println("After insert statements")
-              }
+              .productR(IO.println("After insert statements"))
               .onError { e =>
                 IO.println(s"ERROR After 2nd insert: ${e.getMessage}")
               }

@@ -43,6 +43,10 @@ object AppTopic:
     val name: String                    = "author-events"
     def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
 
+  case object OutboxEvents extends AppTopic:
+    val name: String                    = "outbox-events"
+    def make(cfg: Config): Topic.Single = mkPersistent(cfg, name)
+
   private def mkNonPersistent(cfg: Config, name: String): Topic.Single =
     Topic.Builder
       .withName(Topic.Name(name))

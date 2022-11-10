@@ -15,13 +15,6 @@ enum AuthorEvent derives Codec.AsObject:
       cid: CorrelationId,
       authorId: AuthorId,
       authorName: AuthorName,
-      createdAt: Timestamp
-  )
-
-  case NotRegistered(
-      id: EventId,
-      cid: CorrelationId,
-      authorName: AuthorName,
-      reason: Reason,
+      authorWebsite: Option[Website],
       createdAt: Timestamp
   )

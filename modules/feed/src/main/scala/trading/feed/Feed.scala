@@ -58,4 +58,5 @@ object Feed:
         }
       }
 
-    trading &> forecasting
+    ().pure[F]
+    //trading &> forecasting

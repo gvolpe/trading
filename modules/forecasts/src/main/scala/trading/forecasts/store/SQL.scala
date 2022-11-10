@@ -3,10 +3,13 @@ package trading.forecasts.store
 import java.util.UUID
 
 import trading.domain.*
+import trading.events.*
 
 import cats.syntax.show.*
 import doobie.*
 import doobie.implicits.*
+import doobie.implicits.javatimedrivernative.*
+import io.circe.syntax.*
 
 object SQL:
   given Meta[UUID] = Meta[String].imap[UUID](UUID.fromString)(_.toString)
@@ -64,4 +67,21 @@ object SQL:
       UPDATE forecasts
       SET score=COALESCE(score, 0)+${res.asInt}
       WHERE id=${id.show}
+    """.update
+
+  /* ---------------------- outbox table ----------------------- */
+  val insertOutbox: Either[AuthorEvent, ForecastEvent] => Update0 = e => sql"""
+      insert into outbox (event_id, correlation_id, event, created_at)
+      values (
+        ${e.fold(_.id, _.id).value},
+        ${e.fold(_.cid, _.cid).value},
+        ${e.fold(_.asJson, _.asJson).noSpaces},
+        ${e.fold(_.createdAt, _.createdAt).value}
+      )
+    """.update
+
+  /* ---------------------- votes table ----------------------- */
+  val insertVote: ForecastEvent.Voted => Update0 = e => sql"""
+      insert into votes (event_id, fid, result, created_at)
+      values (${e.id.value}, ${e.forecastId.value}, ${e.result.asInt}, ${e.createdAt.value})
     """.update
