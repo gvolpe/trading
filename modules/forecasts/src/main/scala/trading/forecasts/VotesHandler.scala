@@ -14,7 +14,7 @@ import cats.syntax.all.*
 // having the event store as the source of truth, we can just rely on the redelivery mechanism (via nack) to do retries,
 // in case the DB operation fails. Eventually, after many unsuccessful retries, it'll land in the the dead-letter topic
 // (assuming a dead letter policy is in place).
-// from the dead-letter topic, we could have another RegistrationCanceled event be emitted or manually checked.
+// from the dead-letter topic, we could have another VoteCanceled event be emitted or manually checked.
 // we could also have an internal queue and manage retries, but that involves more code for no real benefit.
 // this pattern is also known as "listen-to-yourself", and its pros are high performance, resilience and elasticity,
 // while introducing eventual consistency as one of the cons.

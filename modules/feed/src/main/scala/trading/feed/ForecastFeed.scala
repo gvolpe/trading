@@ -43,6 +43,10 @@ object ForecastFeed:
   def cmd3(fid: ForecastId, cid: CorrelationId) =
     ForecastCommand.Vote(makeCmdId, cid, fid, VoteResult.Up, ts)
 
+  // Simulates a flow of realistic commands and events with matching IDs:
+  // 1. Send random Register command every 2 seconds.
+  // 2. On every Registered event received, send a Publish command.
+  // 3. On every Published event received, send a Vote command.
   def stream(
       fp: Producer[IO, ForecastCommand],
       fc: Consumer[IO, ForecastEvent],

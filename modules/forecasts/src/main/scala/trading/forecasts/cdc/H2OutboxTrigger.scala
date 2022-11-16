@@ -56,9 +56,7 @@ final class H2OutboxTrigger extends Trigger:
       newRow: Array[Object]
   ): Unit =
     parseRow(newRow)
-      .traverse_ { event =>
-        OutboxState.queue.offer(event)
-      }
+      .traverse_(OutboxState.queue.offer)
       .unsafeRunSync()
 
   override def close(): Unit  = ()
