@@ -1,6 +1,7 @@
 package trading.forecasts.store
 
 import trading.domain.*
+import trading.events.AuthorEvent
 import trading.lib.*
 
 import cats.~>
@@ -16,6 +17,7 @@ trait AuthorStore[F[_]]:
 
 trait TxAuthorStore[F[_]]:
   def save(author: Author): F[Unit]
+  def outbox(evt: AuthorEvent): F[Unit]
 
 object AuthorStore:
   def from[F[_]: DoobieTx: MonadCancelThrow](
@@ -33,6 +35,10 @@ object AuthorStore:
   private def transactional[F[_]: MonadCancelThrow](
       fk: ConnectionIO ~> F
   ): TxAuthorStore[F] = new:
+    def outbox(evt: AuthorEvent): F[Unit] = fk {
+      SQL.insertOutbox(evt.asLeft).run.void.onConstraintViolation(DuplicateEventId(evt.id))
+    }
+
     def save(author: Author): F[Unit] =
       val saveAuthor =
         SQL

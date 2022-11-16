@@ -53,27 +53,41 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   class DummyTxForecastStore extends TxForecastStore[IO]:
     def save(aid: AuthorId, fc: Forecast): IO[Unit]          = IO.unit
     def castVote(fid: ForecastId, res: VoteResult): IO[Unit] = IO.unit
+    def registerVote(evt: ForecastEvent.Voted): IO[Unit]     = IO.unit
+    def outbox(evt: ForecastEvent): IO[Unit]                 = IO.unit
 
   class DummyAuthorStore extends AuthorStore[IO]:
     def fetch(id: AuthorId): IO[Option[Author]] = IO.none
     def tx: Resource[IO, TxAuthorStore[IO]]     = Resource.pure(new DummyTxAuthorStore)
 
   class DummyTxAuthorStore extends TxAuthorStore[IO]:
-    def save(author: Author): IO[Unit] = IO.unit
+    def save(author: Author): IO[Unit]     = IO.unit
+    def outbox(evt: AuthorEvent): IO[Unit] = IO.unit
 
-  val okAuthorStore: AuthorStore[IO]     = new DummyAuthorStore
-  val okForecastStore: ForecastStore[IO] = new DummyForecastStore
+  def okAuthorStore(ref: Ref[IO, Option[AuthorEvent]]): AuthorStore[IO] = new DummyAuthorStore:
+    override def tx: Resource[IO, TxAuthorStore[IO]] = Resource.pure {
+      new DummyTxAuthorStore:
+        override def outbox(evt: AuthorEvent): IO[Unit] = ref.set(evt.some)
+    }
+
+  def okForecastStore(ref: Ref[IO, Option[ForecastEvent]]): ForecastStore[IO] = new DummyForecastStore:
+    override def tx: Resource[IO, TxForecastStore[IO]] = Resource.pure {
+      new DummyTxForecastStore:
+        override def outbox(evt: ForecastEvent): IO[Unit] = ref.set(evt.some)
+    }
 
   val failAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
     override def tx: Resource[IO, TxAuthorStore[IO]] = Resource.pure {
       new TxAuthorStore[IO]:
-        def save(author: Author): IO[Unit] = IO.raiseError(DuplicateAuthorError)
+        def save(author: Author): IO[Unit]     = IO.raiseError(DuplicateAuthorError)
+        def outbox(evt: AuthorEvent): IO[Unit] = IO.unit
     }
 
   val unexpectedFailAuthorStore: AuthorStore[IO] = new DummyAuthorStore:
     override def tx: Resource[IO, TxAuthorStore[IO]] = Resource.pure {
       new TxAuthorStore[IO]:
-        def save(author: Author): IO[Unit] = IO.raiseError(new Exception("boom"))
+        def save(author: Author): IO[Unit]     = IO.raiseError(new Exception("boom"))
+        def outbox(evt: AuthorEvent): IO[Unit] = IO.unit
     }
 
   val failForecastStore: ForecastStore[IO] = new DummyForecastStore:
@@ -102,8 +116,8 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   val msgId: MsgId = MsgId.latest
 
   private def baseTest(
-      authorStore: AuthorStore[IO] = okAuthorStore,
-      forecastStore: ForecastStore[IO] = okForecastStore,
+      mkAuthorStore: Ref[IO, Option[AuthorEvent]] => AuthorStore[IO] = okAuthorStore,
+      mkForecastStore: Ref[IO, Option[ForecastEvent]] => ForecastStore[IO] = okForecastStore,
       in: ForecastCommand,
       ex1: Option[AuthorEvent] => Expectations,
       ex2: Option[ForecastEvent] => Expectations
@@ -113,14 +127,14 @@ object EngineSuite extends SimpleIOSuite with Checkers:
       fc <- IO.ref(none[ForecastEvent])
       p1     = Producer.test(at)
       p2     = Producer.test(fc)
-      engine = Engine.make(p1, p2, authorStore, forecastStore, DummyAcker(), Txn.dummy)
+      engine = Engine.make(p2, mkAuthorStore(at), mkForecastStore(fc), DummyAcker())
       _  <- engine.run(in.asMsg)
       ae <- at.get
       fe <- fc.get
     yield ex1(ae) && ex2(fe)
 
   test("Successful author registration") {
-    val out = AuthorEvent.Registered(eventId, cid, authorId, authorName, ts)
+    val out = AuthorEvent.Registered(eventId, cid, authorId, authorName, None, ts)
     baseTest(
       in = ForecastCommand.Register(id, cid, authorName, None, ts),
       ex1 = expect.same(_, Some(out)),
@@ -129,11 +143,10 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   }
 
   test("Fail to register author (duplicate username)") {
-    val out = AuthorEvent.NotRegistered(eventId, cid, authorName, Reason("Duplicate username"), ts)
     baseTest(
-      authorStore = failAuthorStore,
+      mkAuthorStore = _ => failAuthorStore,
       in = ForecastCommand.Register(id, cid, authorName, None, ts),
-      ex1 = expect.same(_, Some(out)),
+      ex1 = expect.same(_, None),
       ex2 = expect.same(_, None)
     )
   }
@@ -148,12 +161,11 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   }
 
   test("Fail to publish forecast (author not found)") {
-    val out = ForecastEvent.NotPublished(eventId, cid, authorId, fid, Reason("Author not found"), ts)
     baseTest(
-      forecastStore = failForecastStore,
+      mkForecastStore = _ => failForecastStore,
       in = ForecastCommand.Publish(id, cid, authorId, symbol, desc, tag, ts),
       ex1 = expect.same(_, None),
-      ex2 = expect.same(_, Some(out))
+      ex2 = expect.same(_, None)
     )
   }
 
@@ -166,21 +178,12 @@ object EngineSuite extends SimpleIOSuite with Checkers:
     )
   }
 
-  test("Fail to vote (forecast not found)") {
-    val out = ForecastEvent.NotVoted(eventId, cid, fid, Reason("Forecast not found"), ts)
-    baseTest(
-      forecastStore = voteFailForecastStore,
-      in = ForecastCommand.Vote(id, cid, fid, VoteResult.Up, ts),
-      ex1 = expect.same(_, None),
-      ex2 = expect.same(_, Some(out))
-    )
-  }
-
   test("Fail to register author (unexpected error); nack message") {
     for
       ref <- IO.ref(none[Consumer.MsgId])
+      fc  <- IO.ref(none[ForecastEvent])
       acker  = mkNAcker(ref)
-      engine = Engine.make(Producer.dummy, Producer.dummy, unexpectedFailAuthorStore, okForecastStore, acker, Txn.dummy)
+      engine = Engine.make(Producer.dummy, unexpectedFailAuthorStore, okForecastStore(fc), acker)
       _    <- engine.run(ForecastCommand.Register(id, cid, authorName, None, ts).asMsg)
       nack <- ref.get
     yield expect.same(nack, Some(msgId))

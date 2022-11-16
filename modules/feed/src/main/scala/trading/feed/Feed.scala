@@ -48,6 +48,8 @@ object Feed:
         }
       }
 
+    // This implementation is quite random, generating a lot of AuthorNotFound errors downstream
+    // Prefer the ForecastFeed implementation (running directly from Main) for a more realistic simulation
     val forecasting: F[Unit] =
       forecastCommandListGen.replicateA(2).flatten.traverse_ { cmd =>
         import ForecastCommand.*
@@ -58,4 +60,4 @@ object Feed:
         }
       }
 
-    trading &> forecasting
+    trading // &> forecasting

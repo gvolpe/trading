@@ -4,6 +4,8 @@ import java.sql.SQLException
 
 import scala.util.control.NoStackTrace
 
+import trading.domain.EventId
+
 import cats.{ MonadThrow, ~> }
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
@@ -20,6 +22,8 @@ type DuplicateAuthorError = DuplicateAuthorError.type
 
 case object ForecastNotFound extends NoStackTrace
 type ForecastNotFound = ForecastNotFound.type
+
+case class DuplicateEventId(eid: EventId) extends NoStackTrace
 
 extension [F[_]: MonadThrow, A](fa: F[A])
   /* duplicate key violates unique constraint */

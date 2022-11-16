@@ -16,57 +16,52 @@ trait Engine[F[_]]:
 
 object Engine:
   def make[F[_]: GenUUID: Logger: MonadCancelThrow: Time](
-      authors: Producer[F, AuthorEvent],
-      forecasts: Producer[F, ForecastEvent],
+      producer: Producer[F, ForecastEvent],
       atStore: AuthorStore[F],
       fcStore: ForecastStore[F],
-      acker: Acker[F, ForecastCommand],
-      pulsarTx: Resource[F, Txn]
+      acker: Acker[F, ForecastCommand]
   ): Engine[F] = new:
-
-    private def atomically[T](
-        pgTx: Resource[F, T],
-        pulsarTx: Resource[F, Txn],
-        msgId: Consumer.MsgId
-    )(body: (T, Txn) => F[Unit]): F[Unit] =
-      (pgTx, pulsarTx)
-        .mapN(body)
-        .use(identity)
-        .handleErrorWith(e => Logger[F].error(e.getMessage) *> acker.nack(msgId))
-
     def run: Msg[ForecastCommand] => F[Unit] =
       case Msg(msgId, _, cmd) =>
+        extension (fa: F[Unit])
+          def handleNack: F[Unit] =
+            fa.handleErrorWith {
+              case DuplicateEventId(eid) =>
+                Logger[F].error(s"Ignoring duplicate event id: ${eid.show}") *> acker.ack(msgId)
+              case e =>
+                Logger[F].error(s"Unexpected error: ${e.getMessage}") *> acker.nack(msgId)
+            }
+
         (GenUUID[F].make[EventId], Time[F].timestamp).tupled.flatMap { (eid, ts) =>
           cmd match
+            case ForecastCommand.Register(_, cid, name, site, _) =>
+              GenUUID[F].make[AuthorId].flatMap { aid =>
+                atStore.tx
+                  .use { db =>
+                    db.save(Author(aid, name, site, Set.empty)) *>
+                      db.outbox(AuthorEvent.Registered(eid, cid, aid, name, site, ts))
+                  }
+                  .productR(acker.ack(msgId))
+                  .recoverWith { case DuplicateAuthorError =>
+                    Logger[F].error(s"Author name $name already registered!") *> acker.ack(msgId)
+                  }
+                  .handleNack
+              }
+
             case ForecastCommand.Publish(_, cid, aid, symbol, desc, tag, _) =>
               GenUUID[F].make[ForecastId].flatMap { fid =>
-                atomically(fcStore.tx, pulsarTx, msgId) { (db, px) =>
-                  db.save(aid, Forecast(fid, symbol, tag, desc, ForecastScore(0)))
-                    .as(ForecastEvent.Published(eid, cid, aid, fid, symbol, ts))
-                    .recover { case AuthorNotFound =>
-                      ForecastEvent.NotPublished(eid, cid, aid, fid, Reason("Author not found"), ts)
-                    }
-                    .flatMap(e => forecasts.send(e, px) *> acker.ack(msgId, px))
-                }
-              }
-            case ForecastCommand.Register(_, cid, name, website, _) =>
-              GenUUID[F].make[AuthorId].flatMap { aid =>
-                atomically(atStore.tx, pulsarTx, msgId) { (db, px) =>
-                  db.save(Author(aid, name, website, Set.empty))
-                    .as(AuthorEvent.Registered(eid, cid, aid, name, ts))
-                    .recover { case DuplicateAuthorError =>
-                      AuthorEvent.NotRegistered(eid, cid, name, Reason("Duplicate username"), ts)
-                    }
-                    .flatMap(e => authors.send(e, px) *> acker.ack(msgId, px))
-                }
-              }
-            case ForecastCommand.Vote(_, cid, fid, res, _) =>
-              atomically(fcStore.tx, pulsarTx, msgId) { (db, px) =>
-                db.castVote(fid, res)
-                  .as(ForecastEvent.Voted(eid, cid, fid, res, ts))
-                  .recover { case ForecastNotFound =>
-                    ForecastEvent.NotVoted(eid, cid, fid, Reason("Forecast not found"), ts)
+                fcStore.tx
+                  .use { db =>
+                    db.save(aid, Forecast(fid, symbol, tag, desc, ForecastScore(0))) *>
+                      db.outbox(ForecastEvent.Published(eid, cid, aid, fid, symbol, ts))
                   }
-                  .flatMap(ev => (forecasts.send(ev) *> acker.ack(msgId, px)))
+                  .productR(acker.ack(msgId))
+                  .recoverWith { case AuthorNotFound =>
+                    Logger[F].error(s"Author not found: $aid") *> acker.ack(msgId)
+                  }
+                  .handleNack
               }
+
+            case ForecastCommand.Vote(_, cid, fid, res, _) =>
+              producer.send(ForecastEvent.Voted(eid, cid, fid, res, ts)) *> acker.ack(msgId)
         }

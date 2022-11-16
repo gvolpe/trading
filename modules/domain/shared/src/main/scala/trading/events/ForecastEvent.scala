@@ -20,27 +20,10 @@ enum ForecastEvent derives Codec.AsObject:
       createdAt: Timestamp
   )
 
-  case NotPublished(
-      id: EventId,
-      cid: CorrelationId,
-      authorId: AuthorId,
-      forecastId: ForecastId,
-      reason: Reason,
-      createdAt: Timestamp
-  )
-
   case Voted(
       id: EventId,
       cid: CorrelationId,
       forecastId: ForecastId,
       result: VoteResult,
-      createdAt: Timestamp
-  )
-
-  case NotVoted(
-      id: EventId,
-      cid: CorrelationId,
-      forecastId: ForecastId,
-      reason: Reason,
       createdAt: Timestamp
   )
