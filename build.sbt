@@ -1,6 +1,6 @@
 import Dependencies._
 
-ThisBuild / scalaVersion     := "3.2.2-RC1"
+ThisBuild / scalaVersion     := "3.2.1"
 ThisBuild / version          := "0.1.0"
 ThisBuild / organization     := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
@@ -24,23 +24,17 @@ val commonSettings = List(
   scalafmtOnCompile := false, // recommended in Scala 3
   testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
   libraryDependencies ++= Seq(
-    Libraries.cats,
-    Libraries.catsEffect,
+    Libraries.cats.value,
+    Libraries.catsEffect.value,
     Libraries.circeCore.value,
     Libraries.circeParser.value,
     Libraries.circeRefined.value,
-    Libraries.cirisCore,
-    Libraries.cirisRefined,
-    Libraries.fs2Core,
-    Libraries.fs2Kafka,
-    Libraries.http4sDsl,
-    Libraries.http4sMetrics,
-    Libraries.http4sServer,
-    Libraries.kittens,
+    Libraries.cirisCore.value,
+    Libraries.cirisRefined.value,
+    Libraries.fs2Core.value,
+    Libraries.kittens.value,
+    Libraries.ip4sCore.value,
     Libraries.monocleCore.value,
-    Libraries.neutronCore,
-    Libraries.odin,
-    Libraries.redis4catsEffects,
     Libraries.refinedCore.value,
     Libraries.refinedCats.value,
     Libraries.catsLaws         % Test,
@@ -49,6 +43,18 @@ val commonSettings = List(
     Libraries.weaverCats       % Test,
     Libraries.weaverDiscipline % Test,
     Libraries.weaverScalaCheck % Test
+  )
+)
+
+val commonJvmSettings = List(
+  libraryDependencies ++= List(
+    Libraries.fs2Kafka,
+    Libraries.http4sDsl,
+    Libraries.http4sMetrics,
+    Libraries.http4sServer,
+    Libraries.neutronCore,
+    Libraries.odin,
+    Libraries.redis4catsEffects
   )
 )
 
@@ -69,6 +75,7 @@ lazy val root = (project in file("."))
 lazy val domain = crossProject(JSPlatform, JVMPlatform)
   .in(file("modules/domain"))
   .settings(commonSettings: _*)
+  .jvmSettings(commonJvmSettings)
   .jsSettings(
     test := {},
     scalacOptions ++= List("-scalajs")

@@ -4,8 +4,8 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Dependencies {
 
   object V {
-    val cats          = "2.8.0"
-    val catsEffect    = "3.4.0-RC2"
+    val cats          = "2.9.0"
+    val catsEffect    = "3.4.0"
     val circe         = "0.14.3"
     val ciris         = "3.0.0"
     val doobie        = "1.0.0-RC2"
@@ -15,6 +15,7 @@ object Dependencies {
     val http4s        = "1.0.0-M37"
     val http4sMetrics = "1.0.0-M35"
     val http4sWs      = "1.0.0-M3"
+    val ip4s          = "3.2.0"
     val kittens       = "3.0.0"
     val monocle       = "3.1.0"
     val natchez       = "0.1.6"
@@ -38,13 +39,13 @@ object Dependencies {
 
     def http4s(artifact: String): ModuleID = "org.http4s" %% s"http4s-$artifact" % V.http4s
 
-    val cats       = "org.typelevel" %% "cats-core"   % V.cats
-    val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
-    val fs2Core    = "co.fs2"        %% "fs2-core"    % V.fs2Core
-    val kittens    = "org.typelevel" %% "kittens"     % V.kittens
+    val cats       = Def.setting("org.typelevel" %%% "cats-core" % V.cats)
+    val catsEffect = Def.setting("org.typelevel" %%% "cats-effect" % V.catsEffect)
+    val fs2Core    = Def.setting("co.fs2" %%% "fs2-core" % V.fs2Core)
+    val kittens    = Def.setting("org.typelevel" %%% "kittens" % V.kittens)
 
-    val cirisCore    = "is.cir" %% "ciris"         % V.ciris
-    val cirisRefined = "is.cir" %% "ciris-refined" % V.ciris
+    val cirisCore    = Def.setting("is.cir" %%% "ciris" % V.ciris)
+    val cirisRefined = Def.setting("is.cir" %%% "ciris-refined" % V.ciris)
 
     val circeCore    = circe("core")
     val circeParser  = circe("parser")
@@ -61,6 +62,8 @@ object Dependencies {
 
     val http4sJdkWs   = "org.http4s" %% "http4s-jdk-http-client"    % V.http4sWs
     val http4sMetrics = "org.http4s" %% "http4s-prometheus-metrics" % V.http4sMetrics
+
+    val ip4sCore = Def.setting("com.comcast" %%% "ip4s-core" % V.ip4s)
 
     val natchezCore      = "org.tpolecat" %% "natchez-core"      % V.natchez
     val natchezHoneycomb = "org.tpolecat" %% "natchez-honeycomb" % V.natchez
