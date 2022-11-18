@@ -20,10 +20,10 @@ Global / semanticdbEnabled    := true // for metals
 lazy val copyJsFileTask = TaskKey[Unit]("copyJsFileTask")
 
 val commonSettings = List(
-  scalacOptions ++= List(),
   scalafmtOnCompile := false, // recommended in Scala 3
   testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
-  libraryDependencies ++= Seq(
+  libraryDependencies ++= List(
+    CompilerPlugins.zerowaste,
     Libraries.cats.value,
     Libraries.catsEffect.value,
     Libraries.circeCore.value,
@@ -78,7 +78,7 @@ lazy val domain = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(commonJvmSettings)
   .jsSettings(
     test := {},
-    scalacOptions ++= List("-scalajs")
+    scalacOptions := List("-scalajs")
   )
 
 lazy val lib = (project in file("modules/lib"))
@@ -166,9 +166,9 @@ lazy val webapp = (project in file("modules/ws-client"))
   .enablePlugins(ScalaJSPlugin)
   .settings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-    scalacOptions ++= Seq("-scalajs"),
+    scalacOptions ++= List("-scalajs"),
     scalafmtOnCompile := false,
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= List(
       Libraries.circeCore.value,
       Libraries.circeParser.value,
       Libraries.circeRefined.value,
