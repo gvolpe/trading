@@ -99,4 +99,8 @@ object Dependencies {
     val organizeImports = "com.github.liancheng" %% "organize-imports" % V.organizeImports
   }
 
+  object CompilerPlugins {
+    val zerowaste = compilerPlugin("com.github.ghik" % "zerowaste" % "0.2.1" cross CrossVersion.full)
+  }
+
 }
