@@ -12,6 +12,7 @@ import dev.profunktor.redis4cats.data.RedisCodec
 import dev.profunktor.redis4cats.effect.{ Log, MkRedis }
 import dev.profunktor.redis4cats.{ Redis, RedisCommands }
 import io.circe.parser.decode as jsonDecode
+import io.github.iltotore.iron.*
 
 trait SnapshotReader[F[_]]:
   def latest: F[Option[(TradeState, Consumer.MsgId)]]
@@ -39,8 +40,9 @@ object SnapshotReader:
 
             Either
               .catchNonFatal(key.split("-").apply(1)) // get symbol
+              .flatMap(_.refineEither[SymbolR].map(Symbol(_)))
               .toOption
-              .map(Symbol.unsafeFrom(_) -> Prices(ask.toMap, bid.toMap, high, low))
+              .map(_ -> Prices(ask.toMap, bid.toMap, high, low))
           }
         }.map {
           case Nil => None

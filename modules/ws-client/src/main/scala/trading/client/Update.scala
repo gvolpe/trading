@@ -32,7 +32,7 @@ def runUpdates(model: Model): Msg => (Model, Cmd[IO, Msg]) =
     model.copy(error = None, sub = None, unsub = None) -> refocusInput
 
   case Msg.SymbolChanged(in) if in.length == 6 =>
-    model.copy(symbol = Symbol.unsafeFrom(in), input = in) -> Cmd.None
+    model.copy(symbol = Symbol(in), input = in) -> Cmd.None
 
   case Msg.SymbolChanged(in) =>
     model.copy(input = in) -> Cmd.None

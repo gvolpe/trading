@@ -28,15 +28,12 @@ val commonSettings = List(
     Libraries.catsEffect.value,
     Libraries.circeCore.value,
     Libraries.circeParser.value,
-    Libraries.circeRefined.value,
     Libraries.cirisCore.value,
     Libraries.cirisRefined.value,
     Libraries.fs2Core.value,
     Libraries.kittens.value,
     Libraries.ip4sCore.value,
     Libraries.monocleCore.value,
-    Libraries.refinedCore.value,
-    Libraries.refinedCats.value,
     Libraries.catsLaws         % Test,
     Libraries.monocleLaw       % Test,
     Libraries.scalacheck       % Test,
@@ -52,6 +49,8 @@ val commonJvmSettings = List(
     Libraries.http4sDsl,
     Libraries.http4sMetrics,
     Libraries.http4sServer,
+    Libraries.ironCore.value,
+    Libraries.ironCirce.value,
     Libraries.neutronCore,
     Libraries.odin,
     Libraries.redis4catsEffects
@@ -212,8 +211,11 @@ lazy val demo = (project in file("modules/x-demo"))
   .dependsOn(domain.jvm % "compile->compile;compile->test")
   .settings(
     libraryDependencies ++= List(
+      Libraries.circeRefined.value,
       Libraries.doobiePg,
-      Libraries.natchezHttp4s
+      Libraries.natchezHttp4s,
+      Libraries.refinedCore.value,
+      Libraries.refinedCats.value,
     )
   )
 
