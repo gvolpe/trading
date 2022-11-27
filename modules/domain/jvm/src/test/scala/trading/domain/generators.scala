@@ -11,6 +11,7 @@ import trading.ws.*
 
 import cats.Order
 import cats.syntax.all.*
+import io.github.iltotore.iron.*
 import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
 object arbitraries:
@@ -87,7 +88,7 @@ object generators:
   val symbolGen: Gen[Symbol] =
     Gen
       .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
-      .map(s => Symbol.unsafeFrom(s))
+      .map(s => Symbol(s.refine))
 
   val symbolWithEmptyGen: Gen[Symbol] =
     Gen.frequency(

@@ -10,6 +10,7 @@ import doobie.*
 import doobie.implicits.*
 import doobie.implicits.javatimedrivernative.*
 import io.circe.syntax.*
+import io.github.iltotore.iron.*
 
 object SQL:
   given Meta[UUID] = Meta[String].imap[UUID](UUID.fromString)(_.toString)
@@ -19,7 +20,7 @@ object SQL:
   }
 
   given Read[Forecast] = Read[(UUID, String, String, String, Int)].map { (id, sl, tag, desc, sc) =>
-    Forecast(ForecastId(id), Symbol.unsafeFrom(sl), ForecastTag.from(tag), ForecastDescription(desc), ForecastScore(sc))
+    Forecast(ForecastId(id), Symbol(sl.refine), ForecastTag.from(tag), ForecastDescription(desc), ForecastScore(sc))
   }
 
   extension (res: VoteResult)

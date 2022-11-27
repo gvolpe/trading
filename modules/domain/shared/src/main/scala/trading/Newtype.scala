@@ -2,19 +2,19 @@ package trading
 
 import java.util.UUID
 
-import scala.language.adhocExtensions // for RefinedTypeOps
-
 import trading.domain.OrphanInstances.given
 
 import cats.{ Eq, Order, Show }
-import eu.timepit.refined.api.{ Refined, RefinedType, RefinedTypeOps }
 import io.circe.{ Decoder, Encoder }
 import monocle.Iso
 
+// this can be used for simple newtypes without pre-defined typeclass derivations
 abstract class Newt[A]:
   opaque type Type = A
   inline def apply(a: A): Type            = a
   extension (t: Type) inline def value: A = t
+
+  protected inline final def derive[F[_]](using ev: F[A]): F[Type] = ev
 
 abstract class Newtype[A](using
     eqv: Eq[A],
@@ -45,18 +45,6 @@ abstract class Newtype[A](using
 abstract class IdNewtype extends Newtype[UUID]:
   given IsUUID[Type]                = derive[IsUUID]
   def unsafeFrom(str: String): Type = apply(UUID.fromString(str))
-
-abstract class RefNewtype[T, RT](using
-    eqv: Eq[RT],
-    ord: Order[RT],
-    shw: Show[RT],
-    enc: Encoder[RT],
-    dec: Decoder[RT],
-    rt: RefinedType.AuxT[RT, T]
-) extends Newtype[RT]:
-  object Ops extends RefinedTypeOps[RT, T]
-  def from(t: T): Either[String, Type] = Ops.from(t).map(apply(_))
-  def unsafeFrom(t: T): Type           = apply(Ops.unsafeFrom(t))
 
 abstract class NumNewtype[A](using
     eqv: Eq[A],
