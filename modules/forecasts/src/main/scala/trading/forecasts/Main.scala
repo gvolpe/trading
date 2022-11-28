@@ -45,7 +45,10 @@ object Main extends IOApp.Simple:
       .build
 
   // With Postgres, this would be part of the Pulsar-CDC connector
-  def cdcResources(pulsar: Pulsar.T, topic: Topic.Single) =
+  def cdcResources(
+      pulsar: Pulsar.T,
+      topic: Topic.Single
+  ): Resource[IO, Stream[IO, Unit]] =
     Producer.pulsar[IO, OutboxEvent](pulsar, topic, settings("outbox")).map { p =>
       OutboxProducer.make(p).stream
     }
