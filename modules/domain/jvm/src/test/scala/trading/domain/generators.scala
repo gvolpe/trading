@@ -190,6 +190,25 @@ object generators:
       t <- timestampGen
     yield ForecastCommand.Vote(i, c, f, v, t)
 
+  def registerCommandGen_(
+      _id: CommandId
+  ): Gen[ForecastCommand.Register] =
+    registerCommandGen.map(_.copy(id = _id))
+
+  def publishCommandGen_(
+      _id: CommandId,
+      _cid: CorrelationId,
+      _aid: AuthorId
+  ): Gen[ForecastCommand.Publish] =
+    publishCommandGen.map(_.copy(id = _id, cid = _cid, authorId = _aid))
+
+  def voteCommandGen_(
+      _id: CommandId,
+      _cid: CorrelationId,
+      _fid: ForecastId
+  ): Gen[ForecastCommand.Vote] =
+    voteCommandGen.map(_.copy(id = _id, cid = _cid, forecastId = _fid))
+
   val forecastCommandGen: Gen[ForecastCommand] =
     Gen.oneOf(publishCommandGen, registerCommandGen, voteCommandGen)
 
