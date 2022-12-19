@@ -50,6 +50,7 @@ val commonJvmSettings = List(
     Libraries.http4sMetrics,
     Libraries.http4sServer,
     Libraries.ironCore.value,
+    Libraries.ironCats.value,
     Libraries.ironCirce.value,
     Libraries.neutronCore,
     Libraries.odin,
@@ -76,7 +77,7 @@ lazy val domain = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings: _*)
   .jvmSettings(commonJvmSettings)
   .jsSettings(
-    test := {},
+    test          := {},
     scalacOptions := List("-scalajs")
   )
 
@@ -215,7 +216,7 @@ lazy val demo = (project in file("modules/x-demo"))
       Libraries.doobiePg,
       Libraries.natchezHttp4s,
       Libraries.refinedCore.value,
-      Libraries.refinedCats.value,
+      Libraries.refinedCats.value
     )
   )
 

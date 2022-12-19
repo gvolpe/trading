@@ -1,20 +1,15 @@
 package demo
 
-import trading.domain.IronCatsInstances.given
-
 import cats.*
 import cats.data.EitherNel
 import cats.derived.*
 import cats.syntax.all.*
 import io.circe.*
 import io.circe.syntax.*
-import io.github.iltotore.iron.{ given, * }
-import io.github.iltotore.iron.circeSupport.given
-import io.github.iltotore.iron.constraint.any.DescribedAs
-import io.github.iltotore.iron.constraint.numeric.given
-import io.github.iltotore.iron.constraint.numeric.{ Greater, Less }
-import io.github.iltotore.iron.constraint.string.given
-import io.github.iltotore.iron.constraint.string.{ Alphanumeric, MaxLength, MinLength }
+import io.github.iltotore.iron.*
+import io.github.iltotore.iron.cats.{ given, * }
+import io.github.iltotore.iron.circe.given
+import io.github.iltotore.iron.constraint.all.*
 
 type AgeR = DescribedAs[
   Greater[0] & Less[151],
@@ -33,11 +28,6 @@ case class Alien(
 ) derives Codec.AsObject, Eq, Show
 // format: on
 
-// TODO: Remove this once this PR lands: https://github.com/Iltotore/iron/pull/68
-extension [A](value: A)
-  inline def refineNel[B](using inline constraint: Constraint[A, B]): EitherNel[String, A :| B] =
-    Either.cond(constraint.test(value), value.asInstanceOf[A :| B], constraint.message).toEitherNel
-
 object Alien:
   def make(
       name: String,
@@ -47,6 +37,24 @@ object Alien:
       name.refineNel[NameR],
       age.refineNel[AgeR]
     ).parMapN(Alien.apply)
+
+case class Pet2 private (
+    name: String
+)
+object Pet2:
+  val pet2 = Pet2("")
+
+sealed abstract case class Pet(
+    name: String
+)
+
+val pet = new Pet("") {}
+
+//def foo(pet: Pet2): Pet2 = pet.copy(_.name = "")
+
+// compile error: value copy is not a member of Pet
+//def tryMe(pet: Pet): Pet =
+//pet.copy(name = "By-pass?")
 
 @main def ironDemo =
   val alien = Alien("Bob", 120)

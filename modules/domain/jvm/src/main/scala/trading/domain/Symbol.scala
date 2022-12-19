@@ -2,13 +2,12 @@ package trading.domain
 
 import trading.Newtype
 
-import IronCatsInstances.given
-
 import cats.*
 import cats.derived.*
 import io.circe.*
 import io.github.iltotore.iron.*
-import io.github.iltotore.iron.circeSupport.given
+import io.github.iltotore.iron.cats.given
+import io.github.iltotore.iron.circe.given
 import io.github.iltotore.iron.constraint.any.DescribedAs
 import io.github.iltotore.iron.constraint.string.Match
 
