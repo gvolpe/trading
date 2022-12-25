@@ -1,14 +1,4 @@
-{ nixpkgs ? (
-    fetchTarball {
-      name   = "nixos-unstable-2021-09-02";
-      url    = "https://github.com/NixOS/nixpkgs/archive/8a2ec31e224.tar.gz";
-      sha256 = "0w8sl1dwmvng2bd03byiaz8j9a9hlvv8n16641m8m5dd06dyqli7";
-    }
-  )
-, config ? {}
-}:
-
-with (import nixpkgs config);
+{ lib, stdenv, elmPackages, nodePackages }:
 
 let
   mkDerivation =
@@ -16,27 +6,28 @@ let
     , src
     , name
     , srcdir ? "./src"
-    , targets ? []
+    , targets ? [ ]
     , registryDat ? ./registry.dat
     , outputJavaScript ? false
     }:
-      stdenv.mkDerivation {
-        inherit name src;
+    stdenv.mkDerivation {
+      inherit name src;
 
-        buildInputs = [ elmPackages.elm ]
+      buildInputs = [ elmPackages.elm ]
         ++ lib.optional outputJavaScript nodePackages.uglify-js;
 
-        buildPhase = pkgs.elmPackages.fetchElmDeps {
-          elmPackages = import srcs;
-          elmVersion = "0.19.1";
-          inherit registryDat;
-        };
+      buildPhase = elmPackages.fetchElmDeps {
+        elmPackages = import srcs;
+        elmVersion = "0.19.1";
+        inherit registryDat;
+      };
 
-        installPhase = let
+      installPhase =
+        let
           elmfile = module: "${srcdir}/${builtins.replaceStrings [ "." ] [ "/" ] module}.elm";
           extension = if outputJavaScript then "js" else "html";
         in
-          ''
+        ''
             mkdir -p $out/share/doc
             cp ${src}/index.html $out/index.html
             cp -r ${src}/assets $out/
@@ -54,8 +45,8 @@ let
               ''
             ) targets
           )}
-          '';
-      };
+        '';
+    };
 in
 mkDerivation {
   name = "web-app-0.1.0";
