@@ -30,4 +30,4 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: "Build Tyrian (Scala.js) webapp 🚀"
-        run: cd modules/ws-client && nix build
+        run: nix build .#webapp.tyrian

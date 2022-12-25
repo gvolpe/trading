@@ -41,16 +41,17 @@ The web application allows users to subscribe/unsubscribe to/from symbol alerts 
 It is written in [Elm](https://elm-lang.org/) and can be built as follows.
 
 ```shell
-$ cd web-app && nix-build
-$ xdg-open result/index.html # or specify browser
+$ nix build .#webapp.elm
+$ open result/index.html # or specify browser
 ```
 
-There's also a `shell.nix` handy for local development.
+There's also a development shell handy for local development.
 
 ```shell
-$ cd web-app && nix-shell
+$ nix develop .#elm
+$ cd web-app
 $ elm make src/Main.elm --output=Main.js
-$ xdg-open index.html # or specify browser
+$ open index.html # or specify browser
 ```
 
 If Nix is not your jam, you can install Elm by following the [official instructions](https://guide.elm-lang.org/install/elm.html) and then compile as usual.
@@ -66,14 +67,13 @@ $ xdg-open index.html # or specify browser
 There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. First, we need to compile the Scala app to JavaScript and copy the file to the root directory of the `ws-client` module (this last task is only required for `nix run`).
 
 ```console
-$ cd modules/ws-client
 $ sbt 'webapp/fullLinkJS;webapp/copyJsFileTask'
 ```
 
 You can then run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
 
 ```console
-$ nix run
+$ nix run .#tyrian-webapp
 Using cache dir: /home/gvolpe/workspace/trading/modules/ws-client/nix-parcel-cache
 Server running at http://localhost:1234
 ✨ Built in 7ms
@@ -86,7 +86,7 @@ We use `fullLinkJS` to create a fully optimized JS file. However, we can use `fa
 For such cases, it may be more convenient to use `yarn` directly.
 
 ```console
-$ nix develop
+$ nix develop .#tyrian
 $ yarn install
 $ yarn build
 $ yarn start
