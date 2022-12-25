@@ -24,4 +24,4 @@ jobs:
         uses: cachix/install-nix-action@v18
 
       - name: "Build web-app 🚀"
-        run: cd web-app && nix build
+        run: nix build .#webapp.elm

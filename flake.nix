@@ -41,26 +41,64 @@
           inherit system;
           overlays = [ dockerOverlay jreOverlay ];
         };
+
+        elm-webapp = pkgs.callPackage ./web-app/app.nix { };
+        tyrian = pkgs.callPackage ./modules/ws-client/app.nix { };
       in
       {
-        devShell = pkgs.mkShell {
-          name = "scala-dev-shell";
-          buildInputs = with pkgs; [
-            coursier
-            envsubst
-            jre
-            kubectl
-            minikube
-            sbt
-          ];
-          shellHook = ''
-            JAVA_HOME="${pkgs.jre}"
-          '';
+        devShells = rec {
+          default = scala;
+
+          elm = pkgs.mkShell {
+            name = "elm-dev-shell";
+
+            buildInputs = with pkgs.elmPackages; [
+              pkgs.elmPackages.elm
+              elm-format
+              elm-language-server
+              elm-review
+              elm-test
+            ];
+          };
+
+          scala = pkgs.mkShell {
+            name = "scala-dev-shell";
+
+            buildInputs = with pkgs; [
+              coursier
+              envsubst
+              jre
+              kubectl
+              minikube
+              sbt
+            ];
+
+            shellHook = ''
+              JAVA_HOME="${pkgs.jre}"
+            '';
+          };
+
+          tyrian = pkgs.mkShell {
+            name = "tyrian-dev-shell";
+            buildInputs = with pkgs; [
+              yarn
+              yarn2nix
+            ];
+          };
+        };
+
+        apps.tyrian-webapp = {
+          type = "app";
+          program = "${tyrian.webserver}/bin/trading-webserver";
         };
 
         packages = {
           docker = pkgs.noRootDockerImage;
           slimDocker = pkgs.slimDockerImage;
+          webapp = {
+            elm = elm-webapp;
+            tyrian = tyrian.webapp;
+          };
         };
 
         defaultPackage = pkgs.slimDockerImage;
