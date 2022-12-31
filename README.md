@@ -87,6 +87,7 @@ For such cases, it may be more convenient to use `yarn` directly.
 
 ```console
 $ nix develop .#tyrian
+$ cd modules/ws-client
 $ yarn install
 $ yarn build
 $ yarn start
