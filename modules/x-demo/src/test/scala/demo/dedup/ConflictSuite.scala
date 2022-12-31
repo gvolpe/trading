@@ -1,4 +1,4 @@
-package trading.core
+package demo.dedup
 
 import java.time.Instant
 import java.util.UUID
@@ -10,6 +10,7 @@ import trading.domain.*
 import trading.state.*
 
 import cats.data.NonEmptyList
+import cats.syntax.all.*
 import weaver.FunSuite
 import weaver.scalacheck.Checkers
 
@@ -48,13 +49,11 @@ object ConflictsSuite extends FunSuite with Checkers:
     val st4 = Conflicts.update(st2)(TradeCommand.Create(id2, cid, s, TradeAction.Bid, p1, q1, "test", ts0), ts0)
     val ex4 = DedupState(Set(IdRegistry(id0, ts0), IdRegistry(id2, ts0)))
 
-    NonEmptyList
-      .of(
-        expect.same(st1, ex1),
-        expect.same(st2, ex2),
-        expect.same(rs2, rx2),
-        expect.same(rs3, rx3),
-        expect.same(st4, ex4)
-      )
-      .reduce
+    List(
+      expect.same(st1, ex1),
+      expect.same(st2, ex2),
+      expect.same(rs2, rx2),
+      expect.same(rs3, rx3),
+      expect.same(st4, ex4)
+    ).foldMap(identity)
   }

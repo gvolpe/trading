@@ -1,4 +1,4 @@
-package trading.core
+package demo.dedup
 
 import trading.commands.TradeCommand
 import trading.domain.Timestamp
@@ -17,3 +17,4 @@ object Conflicts:
 
   def updateMany(ds: DedupState)(commands: List[TradeCommand], ts: Timestamp): DedupState =
     DedupState(ds.removeOld(ts) ++ commands.map(c => IdRegistry(c.id, ts)).toSet)
+

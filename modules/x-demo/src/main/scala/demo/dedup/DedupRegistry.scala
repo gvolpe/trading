@@ -1,4 +1,4 @@
-package trading.core.dedup
+package demo.dedup
 
 import trading.domain.*
 import trading.lib.Time
@@ -64,3 +64,4 @@ object DedupRegistry:
       exp: KeyExpiration
   ): Resource[F, DedupRegistry[F]] =
     RedisClient[F].from(uri.value).flatMap(fromClient[F](_, appId, exp))
+
