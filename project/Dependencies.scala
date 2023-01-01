@@ -16,7 +16,7 @@ object Dependencies {
     val http4sMetrics = "1.0.0-M35"
     val http4sWs      = "1.0.0-M3"
     val ip4s          = "3.2.0"
-    val iron          = "2.0.0-RC1-21-38acc8-DIRTY12775d8a-SNAPSHOT"
+    val iron          = "2.0.0-RC2"
     val kittens       = "3.0.0"
     val monocle       = "3.1.0"
     val natchez       = "0.2.2"
