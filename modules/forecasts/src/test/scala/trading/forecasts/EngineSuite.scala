@@ -38,7 +38,7 @@ object EngineSuite extends SimpleIOSuite with Checkers:
   val desc   = ForecastDescription("test")
   val tag    = ForecastTag.Short
 
-  val eventId = EventId(genId)
+  val eventId = EventId(id.value)
 
   given GenUUID[IO] with
     def make[A: IsUUID]: IO[A] = IO.pure(IsUUID[A].iso.get(genId))

@@ -32,7 +32,10 @@ object Engine:
                 Logger[F].error(s"Unexpected error: ${e.getMessage}") *> acker.nack(msgId)
             }
 
-        (GenUUID[F].make[EventId], Time[F].timestamp).tupled.flatMap { (eid, ts) =>
+        // we reuse the :ommandId's UUID for the event to avoid duplicates
+        val eid = EventId(cmd.id.value)
+
+        Time[F].timestamp.flatMap { ts =>
           cmd match
             case ForecastCommand.Register(_, cid, name, site, _) =>
               GenUUID[F].make[AuthorId].flatMap { aid =>
