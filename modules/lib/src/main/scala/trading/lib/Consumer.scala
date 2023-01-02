@@ -11,7 +11,7 @@ import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, * }
 import dev.profunktor.pulsar.transactions.Tx
 import fs2.Stream
-import fs2.kafka.{ ConsumerSettings, KafkaConsumer }
+import fs2.kafka.{ CommittableOffset, CommittableOffsetBatch, ConsumerSettings, KafkaConsumer }
 import io.circe.{ Decoder, Encoder }
 import io.circe.parser.decode as jsonDecode
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
@@ -100,13 +100,11 @@ object Consumer:
         def nack(id: MsgId): F[Unit]         = c.nack(id.getPulsar)
     }
 
-  type KafkaOffset = Map[TopicPartition, OffsetAndMetadata]
-
   def kafka[F[_]: Async, A](
       settings: ConsumerSettings[F, String, A],
       topic: String
   ): Resource[F, Consumer[F, A]] =
-    Resource.eval(Ref.of[F, KafkaOffset](Map.empty)).flatMap { ref =>
+    Resource.eval(Ref.of[F, List[CommittableOffset[F]]](List.empty)).flatMap { ref =>
       KafkaConsumer
         .resource[F, String, A](settings.withEnableAutoCommit(false))
         .evalTap(_.subscribeTo(topic))
@@ -114,14 +112,24 @@ object Consumer:
           new:
             def receiveM: Stream[F, Msg[A]] =
               c.stream.evalMap { c =>
-                ref.set(c.offset.offsets).as(Msg(MsgId.Dummy, Map.empty, c.record.value))
+                ref.update(_ :+ c.offset).as(Msg(MsgId.Dummy, Map.empty, c.record.value))
               }
+
             def receiveM(id: MsgId): Stream[F, Consumer.Msg[A]] = receiveM
-            def receive: Stream[F, A]            = c.stream.evalMap(c => c.offset.commit.as(c.record.value))
+
+            def receive: Stream[F, A] = c.stream.flatMap { s =>
+              Stream
+                .emit(s.offset)
+                .through(fs2.kafka.commitBatchWithin[F](500, 10.seconds))
+                .as(s.record.value)
+            }
+
+            def ack(ids: Set[MsgId]): F[Unit] =
+              ref.get.flatMap(CommittableOffsetBatch.fromFoldable(_).commit)
+
             def lastMsgId: F[Option[MsgId]]      = none.pure[F]
-            def ack(id: MsgId): F[Unit]          = ref.get >>= c.commitAsync
-            def ack(ids: Set[MsgId]): F[Unit]    = ref.get >>= c.commitAsync
-            def ack(id: MsgId, tx: Txn): F[Unit] = ack(id)
+            def ack(id: MsgId): F[Unit]          = ack(Set(id))
+            def ack(id: MsgId, tx: Txn): F[Unit] = ack(Set(id))
             def nack(id: MsgId): F[Unit]         = Applicative[F].unit
         }
     }
