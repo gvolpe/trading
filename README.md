@@ -169,7 +169,7 @@ $ docker-compose up -d pulsar redis
 
 ![pulsar](./imgs/pulsar.png)
 
-To run the Kafka Demo (see more below in [X Demo](#x-demo)), only Zookeeper and Kafka are needed.
+To run the Kafka Demo (see more below in [X Demo](#x-demo)), `kafka.yml` should be used instead.
 
 ```shell
 $ docker-compose -f kafka.yml up
@@ -215,7 +215,8 @@ modules
 ├── tracing
 ├── ws-client
 ├── ws-server
-└── x-demo
+├── x-demo
+└── x-qa
 ```
 
 ![backend](./imgs/dev.png)
