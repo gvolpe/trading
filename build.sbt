@@ -1,4 +1,5 @@
 import Dependencies._
+import sbtwelcome._
 
 ThisBuild / scalaVersion     := "3.2.1"
 ThisBuild / version          := "0.1.0"
@@ -18,6 +19,23 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 Global / semanticdbEnabled    := true // for metals
 
 lazy val copyJsFileTask = TaskKey[Unit]("copyJsFileTask")
+
+logo :=
+  s"""
+   |${scala.Console.YELLOW}░█▀▀░█░█░█▀█░█▀▀░▀█▀░▀█▀░█▀█░█▀█░█▀█░█░░░░░█▀▀░█░█░█▀▀░█▀█░▀█▀░░░░░█▀▄░█▀▄░▀█▀░█░█░█▀▀░█▀█░░░█▀█░█▀▄░█▀▀░█░█░▀█▀░▀█▀░█▀▀░█▀▀░▀█▀░█░█░█▀▄░█▀▀
+   |${scala.Console.RED}░█▀▀░█░█░█░█░█░░░░█░░░█░░█░█░█░█░█▀█░█░░░░░█▀▀░▀▄▀░█▀▀░█░█░░█░░▄▄▄░█░█░█▀▄░░█░░▀▄▀░█▀▀░█░█░░░█▀█░█▀▄░█░░░█▀█░░█░░░█░░█▀▀░█░░░░█░░█░█░█▀▄░█▀▀
+   |${scala.Console.CYAN}░▀░░░▀▀▀░▀░▀░▀▀▀░░▀░░▀▀▀░▀▀▀░▀░▀░▀░▀░▀▀▀░░░▀▀▀░░▀░░▀▀▀░▀░▀░░▀░░░░░░▀▀░░▀░▀░▀▀▀░░▀░░▀▀▀░▀░▀░░░▀░▀░▀░▀░▀▀▀░▀░▀░▀▀▀░░▀░░▀▀▀░▀▀▀░░▀░░▀▀▀░▀░▀░▀▀▀
+   |
+   |Powered by ${scala.Console.YELLOW}Scala ${scalaVersion.value}${scala.Console.RESET}
+   |
+   |Get the book at: ${scala.Console.YELLOW} https://leanpub.com/feda${scala.Console.RESET}
+  """.stripMargin
+
+usefulTasks := Seq(
+  UsefulTask("a", "lint", "Run scalafix OrganizeImports rule"),
+  UsefulTask("b", "smoke-test", "Run smoke tests"),
+  UsefulTask("c", "webapp-build", "Build Scala.js web client"),
+)
 
 val commonSettings = List(
   scalafmtOnCompile := false, // recommended in Scala 3
@@ -220,4 +238,6 @@ lazy val demo = (project in file("modules/x-demo"))
     )
   )
 
-addCommandAlias("runLinter", ";scalafixAll --rules OrganizeImports")
+addCommandAlias("lint", ";scalafixAll --rules OrganizeImports")
+addCommandAlias("smoke-test", "smokey/test")
+addCommandAlias("webapp-build", "webapp/fullLinkJS; webapp/copyJsFileTask")
