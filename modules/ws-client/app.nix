@@ -36,8 +36,8 @@ rec {
     yarnNix = ./yarn.nix;
 
     postInstall = ''
-      substituteInPlace $out/${outDir}/tyrianapp.js \
-        --replace "./target/scala-3.2.2-RC1/webapp-fastopt/main.js" "./main.js"
+      substituteInPlace $out/${outDir}/target/scala-3.2.1/webapp-opt/main.js \
+        --replace "assets/icons/" "static/assets/icons/"
     '';
 
     distPhase = "true";

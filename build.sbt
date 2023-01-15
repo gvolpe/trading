@@ -20,25 +20,30 @@ Global / semanticdbEnabled    := true // for metals
 
 lazy val copyJsFileTask = TaskKey[Unit]("copyJsFileTask")
 
-logo :=
+def fedaLogo(scalaVersion: String, project: String) =
   s"""
    |${scala.Console.YELLOW}░█▀▀░█░█░█▀█░█▀▀░▀█▀░▀█▀░█▀█░█▀█░█▀█░█░░░░░█▀▀░█░█░█▀▀░█▀█░▀█▀░░░░░█▀▄░█▀▄░▀█▀░█░█░█▀▀░█▀█░░░█▀█░█▀▄░█▀▀░█░█░▀█▀░▀█▀░█▀▀░█▀▀░▀█▀░█░█░█▀▄░█▀▀
    |${scala.Console.RED}░█▀▀░█░█░█░█░█░░░░█░░░█░░█░█░█░█░█▀█░█░░░░░█▀▀░▀▄▀░█▀▀░█░█░░█░░▄▄▄░█░█░█▀▄░░█░░▀▄▀░█▀▀░█░█░░░█▀█░█▀▄░█░░░█▀█░░█░░░█░░█▀▀░█░░░░█░░█░█░█▀▄░█▀▀
    |${scala.Console.CYAN}░▀░░░▀▀▀░▀░▀░▀▀▀░░▀░░▀▀▀░▀▀▀░▀░▀░▀░▀░▀▀▀░░░▀▀▀░░▀░░▀▀▀░▀░▀░░▀░░░░░░▀▀░░▀░▀░▀▀▀░░▀░░▀▀▀░▀░▀░░░▀░▀░▀░▀░▀▀▀░▀░▀░▀▀▀░░▀░░▀▀▀░▀▀▀░░▀░░▀▀▀░▀░▀░▀▀▀
    |
-   |Powered by ${scala.Console.YELLOW}Scala ${scalaVersion.value}${scala.Console.RESET}
+   |Powered by ${scala.Console.YELLOW}Scala ${scalaVersion}${scala.Console.RESET}
    |
    |Get the book at: ${scala.Console.YELLOW} https://leanpub.com/feda${scala.Console.RESET}
+   |
+   |Project: ${scala.Console.CYAN}$project ${scala.Console.RESET}
   """.stripMargin
 
-usefulTasks := Seq(
+logo := fedaLogo(scalaVersion.value, "root")
+
+usefulTasks := List(
   UsefulTask("a", "lint", "Run scalafix OrganizeImports rule"),
   UsefulTask("b", "smoke-test", "Run smoke tests"),
-  UsefulTask("c", "webapp-build", "Build Scala.js web client"),
+  UsefulTask("c", "webapp-build", "Build Scala.js web client")
 )
 
 val commonSettings = List(
   scalafmtOnCompile := false, // recommended in Scala 3
+  logo              := fedaLogo(scalaVersion.value, name.value),
   testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
   libraryDependencies ++= List(
     CompilerPlugins.zerowaste,
@@ -202,7 +207,8 @@ lazy val webapp = (project in file("modules/ws-client"))
       val origin      = file(s"modules/ws-client/target/scala-${scalaVersion.value}/webapp-opt/main.js").toPath
       val destination = file("modules/ws-client/main.js").toPath
       Files.copy(origin, destination, StandardCopyOption.REPLACE_EXISTING)
-    }
+    },
+    logo := fedaLogo(scalaVersion.value, name.value)
   )
   .dependsOn(domain.js)
 
