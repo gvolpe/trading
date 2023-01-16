@@ -9,7 +9,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import monocle.{ Focus, Lens }
 
-//import tyrian.websocket.WebSocket
+import tyrian.websocket.WebSocket
 
 type InputText = InputText.Type
 object InputText extends Newtype[String]:
@@ -85,7 +85,7 @@ object Model:
     input = mempty,
     socket = TradingSocket.init,
     onlineUsers = mempty,
-    alerts = Map.empty, // Dummy.alerts
+    alerts = Map.empty, //Dummy.alerts,
     tradingStatus = TradingStatus.On,
     sub = None,
     unsub = None,

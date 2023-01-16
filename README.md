@@ -64,13 +64,13 @@ $ xdg-open index.html # or specify browser
 
 ### ScalaJS
 
-There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework. First, we need to compile the Scala app to JavaScript and copy the file to the root directory of the `ws-client` module (this last task is only required for `nix run`).
+There is also a replica of the Elm application written in Scala using the [Tyrian](https://tyrian.indigoengine.io/) framework that can be built as follows.
 
 ```console
-$ sbt 'webapp/fullLinkJS;webapp/copyJsFileTask'
+$ sbt 'webapp/fullLinkJS'
 ```
 
-You can then run it via Nix as follows (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
+You can then run it via Nix as shown below (it requires [flakes](https://nixos.wiki/wiki/Flakes)).
 
 ```console
 $ nix run .#tyrian-webapp
@@ -81,7 +81,7 @@ Server running at http://localhost:1234
 
 NOTICE: The `nix run` command will create a directory for the Parcel cache, which needs write permissions.
 
-We use `fullLinkJS` to create a fully optimized JS file. However, we can use `fastLinkJS` for faster iterations, but the `copyJsFileTask` does not work with it.
+We use `fullLinkJS` to create a fully optimized JS file. However, we can use `fastLinkJS` for faster iterations.
 
 For such cases, it may be more convenient to use `yarn` directly.
 

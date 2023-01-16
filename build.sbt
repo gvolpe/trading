@@ -37,8 +37,7 @@ logo := fedaLogo(scalaVersion.value, "root")
 
 usefulTasks := List(
   UsefulTask("a", "lint", "Run scalafix OrganizeImports rule"),
-  UsefulTask("b", "smoke-test", "Run smoke tests"),
-  UsefulTask("c", "webapp-build", "Build Scala.js web client")
+  UsefulTask("b", "smoke-test", "Run smoke tests")
 )
 
 val commonSettings = List(
@@ -202,12 +201,6 @@ lazy val webapp = (project in file("modules/ws-client"))
       Libraries.tyrian.value,
       Libraries.tyrianIO.value
     ),
-    copyJsFileTask := {
-      import java.nio.file.{ Files, StandardCopyOption }
-      val origin      = file(s"modules/ws-client/target/scala-${scalaVersion.value}/webapp-opt/main.js").toPath
-      val destination = file("modules/ws-client/main.js").toPath
-      Files.copy(origin, destination, StandardCopyOption.REPLACE_EXISTING)
-    },
     logo := fedaLogo(scalaVersion.value, name.value)
   )
   .dependsOn(domain.js)
@@ -246,4 +239,3 @@ lazy val demo = (project in file("modules/x-demo"))
 
 addCommandAlias("lint", ";scalafixAll --rules OrganizeImports")
 addCommandAlias("smoke-test", "smokey/test")
-addCommandAlias("webapp-build", "webapp/fullLinkJS; webapp/copyJsFileTask")

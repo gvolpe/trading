@@ -9,7 +9,7 @@ import io.circe.Encoder
 import io.circe.syntax.*
 
 import tyrian.{ Cmd, Sub }
-//import tyrian.websocket.*
+import tyrian.websocket.*
 import tyrian.websocket.WebSocketEvent as WSEvent
 
 final case class TradingSocket(
