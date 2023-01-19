@@ -104,7 +104,7 @@ object Dependencies {
   }
 
   object CompilerPlugins {
-    val zerowaste = compilerPlugin("com.github.ghik" % "zerowaste" % "0.2.1" cross CrossVersion.full)
+    val zerowaste = compilerPlugin("com.github.ghik" % "zerowaste" % "0.2.2" cross CrossVersion.full)
   }
 
 }
