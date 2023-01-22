@@ -7,11 +7,12 @@ import trading.events.SwitchEvent
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ MessageKey, ShardKey }
 
-/** A compaction key corresponds to the (partitioning) `key` of a Pulsar `Message`, which is used for topic compaction
-  * as well as for routing messages when the `orderingKey` is absent.
-  *
-  * For `KeyShared` subscriptions, see the [[Shard]] typeclass.
-  */
+/**
+ * A compaction key corresponds to the (partitioning) `key` of a Pulsar `Message`, which is used for topic compaction
+ * as well as for routing messages when the `orderingKey` is absent.
+ *
+ * For `KeyShared` subscriptions, see the [[Shard]] typeclass.
+ */
 trait Compaction[A]:
   def key: A => MessageKey
 

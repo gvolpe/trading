@@ -8,7 +8,7 @@ import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
 import trading.domain.Alert
 import trading.events.*
-import trading.lib.{ given, * }
+import trading.lib.{ *, given }
 import trading.trace.fsm.*
 import trading.trace.tracer.*
 

@@ -5,7 +5,7 @@ import trading.core.http.Ember
 import trading.core.snapshots.SnapshotReader
 import trading.domain.{ Alert, AppId, PriceUpdate }
 import trading.events.*
-import trading.lib.{ given, * }
+import trading.lib.{ *, given }
 import trading.state.TradeState
 
 import cats.effect.*

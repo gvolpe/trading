@@ -9,7 +9,7 @@ import demo.tracer.http.*
 export demo.tracer.NT.syntax.*
 
 import trading.core.http.Ember
-import trading.lib.{ given, * }
+import trading.lib.{ *, given }
 import trading.lib.Consumer.Msg
 import trading.trace.tracer.Honeycomb
 
@@ -103,7 +103,8 @@ object TraceApp extends IOApp.Simple:
             val runner =
               names(
                 nameConsumer,
-                (msg, sp) => Engine.one[Eff](userProducer, db, id => Kleisli.liftF(nameConsumer.ack(id))).apply(msg).run(sp)
+                (msg, sp) =>
+                  Engine.one[Eff](userProducer, db, id => Kleisli.liftF(nameConsumer.ack(id))).apply(msg).run(sp)
               )
 
             Stream(

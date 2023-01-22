@@ -4,7 +4,7 @@ import java.util.UUID
 
 import scala.concurrent.duration.*
 
-import trading.domain.{ given, * }
+import trading.domain.{ *, given }
 import trading.lib.GenUUID
 
 import cats.effect.kernel.Async

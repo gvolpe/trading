@@ -17,4 +17,3 @@ object Conflicts:
 
   def updateMany(ds: DedupState)(commands: List[TradeCommand], ts: Timestamp): DedupState =
     DedupState(ds.removeOld(ts) ++ commands.map(c => IdRegistry(c.id, ts)).toSet)
-

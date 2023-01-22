@@ -3,9 +3,9 @@ package http
 
 import java.util.UUID
 
-import demo.tracer.db.*
 import trading.lib.GenUUID
 
+import demo.tracer.db.*
 import cats.Monad
 import cats.syntax.all.*
 import natchez.Trace

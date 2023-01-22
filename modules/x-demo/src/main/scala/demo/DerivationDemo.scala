@@ -13,7 +13,7 @@ import io.circe.syntax.*
 
 @main def jsonDerivationDemo =
   val address = Address("Baker", 221, Some("B"))
-  val json = address.asJson.spaces2
+  val json    = address.asJson.spaces2
   println(json)
   assert(jsonDecode[Address](json) == Right(address))
 

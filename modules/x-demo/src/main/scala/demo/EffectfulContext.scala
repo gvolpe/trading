@@ -21,11 +21,12 @@ object EffectfulContext extends IOApp.Simple:
       log: Log
   )
 
-  private val mkCtx = for
-    id <- Resource.eval(IO(UUID.randomUUID()))
-    sp <- Supervisor[IO]
-    lg <- Resource.eval(Ref.of[IO, List[String]](List.empty))
-  yield Ctx(id, sp, Log(lg))
+  private val mkCtx =
+    for
+      id <- Resource.eval(IO(UUID.randomUUID()))
+      sp <- Supervisor[IO]
+      lg <- Resource.eval(Ref.of[IO, List[String]](List.empty))
+    yield Ctx(id, sp, Log(lg))
 
   def withCtx(f: Ctx ?=> IO[Unit]): IO[Unit] =
     mkCtx.use { ctx =>

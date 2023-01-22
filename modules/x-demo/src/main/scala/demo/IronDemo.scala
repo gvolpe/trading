@@ -7,7 +7,7 @@ import cats.syntax.all.*
 import io.circe.*
 import io.circe.syntax.*
 import io.github.iltotore.iron.*
-import io.github.iltotore.iron.cats.{ given, * }
+import io.github.iltotore.iron.cats.{ *, given }
 import io.github.iltotore.iron.circe.given
 import io.github.iltotore.iron.constraint.all.*
 

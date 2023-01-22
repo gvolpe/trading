@@ -7,7 +7,7 @@ import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
 import trading.core.{ AppTopic, TradeEngine }
 import trading.domain.AppId
 import trading.events.{ SwitchEvent, TradeEvent }
-import trading.lib.{ given, * }
+import trading.lib.{ *, given }
 import trading.lib.Consumer.{ Msg, MsgId }
 import trading.state.TradeState
 

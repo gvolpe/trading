@@ -38,9 +38,10 @@ val _cat = Graph.make[String](List.empty)
 val _dog = Graph.make[Int](Vector.empty)
 val _fox = Graph.make[Long](Set.empty)
 
-/** the following does not compile as we do not declare a match type for Long
-  *
-  * [error] dotty.tools.dotc.core.TypeError: Match type reduction failed since selector Long [error] matches none of the
-  * cases [error] [error] case String => List[String] [error] case Int => Vector[Int]
-  */
+/**
+ * the following does not compile as we do not declare a match type for Long
+ *
+ * [error] dotty.tools.dotc.core.TypeError: Match type reduction failed since selector Long [error] matches none of the
+ * cases [error] [error] case String => List[String] [error] case Int => Vector[Int]
+ */
 //val nope = Graph.make[Long]

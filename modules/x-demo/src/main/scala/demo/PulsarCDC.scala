@@ -7,7 +7,7 @@ import scala.concurrent.duration.*
 
 import trading.domain.*
 import trading.lib.{ Consumer, Logger }
-import trading.lib.Logger.NoOp.given // comment this line if you'd like to see the incoming Pulsar messages
+import trading.lib.Logger.NoOp.given
 
 import cats.effect.*
 import cats.effect.syntax.all.*
@@ -21,8 +21,11 @@ import doobie.postgres.implicits.*
 import fs2.Stream
 import io.circe.Codec
 
-/* A little application that inserts three different records in the authors table,
+/*
+ * A little application that inserts three different records in the authors table,
  * and a Pulsar consumer receiving data from the Debezium Postgres connector.
+ *
+ * Comment out the `Logger.NoOp.given` import to see incoming Pulsar messages.
  */
 object PulsarCDC extends IOApp.Simple:
   def run: IO[Unit] =
@@ -51,7 +54,7 @@ object PulsarCDC extends IOApp.Simple:
 
   val config = PulsarConfig.Builder.default
 
-  //FORMAT: persistent://public/default/${database.server.name}.${schema}.${table}
+  // FORMAT: persistent://public/default/${database.server.name}.${schema}.${table}
   val topic =
     Topic.Builder
       .withName(Topic.Name("dbserver.public.authors"))

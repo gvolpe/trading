@@ -9,11 +9,12 @@ import trading.events.TradeEvent
 import cats.syntax.all.*
 import dev.profunktor.pulsar.ShardKey
 
-/** A shard corresponds to the `orderingKey` of a Pulsar `Message`, which is used for routing in `KeyShared`
-  * subscriptions.
-  *
-  * For topic compaction, see the [[Compaction]] typeclass.
-  */
+/**
+ * A shard corresponds to the `orderingKey` of a Pulsar `Message`, which is used for routing in `KeyShared`
+ * subscriptions.
+ *
+ * For topic compaction, see the [[Compaction]] typeclass.
+ */
 trait Shard[A]:
   def key: A => ShardKey
 

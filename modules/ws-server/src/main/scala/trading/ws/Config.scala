@@ -1,6 +1,6 @@
 package trading.ws
 
-import trading.domain.{*, given}
+import trading.domain.{ *, given }
 
 import cats.effect.kernel.Async
 import cats.syntax.all.*
