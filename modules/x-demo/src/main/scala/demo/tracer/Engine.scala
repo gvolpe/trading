@@ -2,11 +2,10 @@ package demo.tracer
 
 import java.util.UUID
 
-import demo.tracer.db.*
-
 import trading.lib.Consumer.{ Msg, MsgId }
 import trading.lib.{ GenUUID, Producer }
 
+import demo.tracer.db.*
 import cats.Monad
 import cats.syntax.all.*
 import natchez.Trace

@@ -42,51 +42,53 @@ extension [F[_], A, B, C](src: Stream[F, Either[Either[Msg[A], Msg[B]], Msg[C]]]
     }
 
 extension [F[_]: MonadThrow, A <: Matchable](fa: F[A])
-  /** Lift an F[A] into an F[Either[E, A]] where E can be an union type.
-    *
-    * Guarantees that:
-    *
-    * {{{
-    * val fa: F[A] = ???
-    * fa <-> fa.lift[E].rethrow
-    * }}}
-    *
-    * Example:
-    *
-    * {{{
-    * case class Err1() extends NoStackTrace
-    * case class Err2() extends NoStackTrace
-    *
-    * val f: IO[Unit] = IO.raiseError(Err1())
-    * val g: IO[Either[Err1, Unit]] = f.lift
-    * val h: IO[Either[Err1 | Err2, Unit]] = f.lift
-    * val i: IO[Unit] = h.rethrow
-    * }}}
-    */
+  /**
+   * Lift an F[A] into an F[Either[E, A]] where E can be an union type.
+   *
+   * Guarantees that:
+   *
+   * {{{
+   * val fa: F[A] = ???
+   * fa <-> fa.lift[E].rethrow
+   * }}}
+   *
+   * Example:
+   *
+   * {{{
+   * case class Err1() extends NoStackTrace
+   * case class Err2() extends NoStackTrace
+   *
+   * val f: IO[Unit] = IO.raiseError(Err1())
+   * val g: IO[Either[Err1, Unit]] = f.lift
+   * val h: IO[Either[Err1 | Err2, Unit]] = f.lift
+   * val i: IO[Unit] = h.rethrow
+   * }}}
+   */
   def lift[E <: Throwable: ClassTag]: F[Either[E, A]] =
     fa.attemptNarrow
 
-  /** Same as `lift`, excepts the resulting type uses `E | A` instead of `Either[E, A]`.
-    *
-    * Guarantees that:
-    *
-    * {{{
-    * val fa: F[A] = ???
-    * fa <-> fa.liftU[E].rethrow
-    * }}}
-    *
-    * Example:
-    *
-    * {{{
-    * case class Err1() extends NoStackTrace
-    * case class Err2() extends NoStackTrace
-    *
-    * val f: IO[Unit] = IO.raiseError(Err1())
-    * val g: IO[Err1 | Unit] = f.liftU
-    * val h: IO[Err1 | Err2 | Unit] = f.liftU
-    * val i: IO[Unit] = h.rethrow
-    * }}}
-    */
+  /**
+   * Same as `lift`, excepts the resulting type uses `E | A` instead of `Either[E, A]`.
+   *
+   * Guarantees that:
+   *
+   * {{{
+   * val fa: F[A] = ???
+   * fa <-> fa.liftU[E].rethrow
+   * }}}
+   *
+   * Example:
+   *
+   * {{{
+   * case class Err1() extends NoStackTrace
+   * case class Err2() extends NoStackTrace
+   *
+   * val f: IO[Unit] = IO.raiseError(Err1())
+   * val g: IO[Err1 | Unit] = f.liftU
+   * val h: IO[Err1 | Err2 | Unit] = f.liftU
+   * val i: IO[Unit] = h.rethrow
+   * }}}
+   */
   def liftU[E <: Throwable: ClassTag]: F[E | A] =
     lift.map(eitherUnionIso[E, A].get)
 

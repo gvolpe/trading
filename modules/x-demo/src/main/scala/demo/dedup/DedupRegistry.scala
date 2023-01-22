@@ -18,17 +18,18 @@ trait DedupRegistry[F[_]]:
   def get: F[DedupState]
   def save(state: DedupState): F[Unit]
 
-/** Registry of processed ids per application.
-  *
-  * The `get` function returns the union of all the sets of command ids that have been processed by all the instances of
-  * the app (service).
-  *
-  * The `save` function persists the processed command ids of the current app instance, uniquely identified by its name
-  * and id.
-  *
-  * Upon reading the keys, we reset all the ids' timestamp to make things easier, as we can avoid persisting everything
-  * since these are short-lived and will expire either way.
-  */
+/**
+ * Registry of processed ids per application.
+ *
+ * The `get` function returns the union of all the sets of command ids that have been processed by all the instances of
+ * the app (service).
+ *
+ * The `save` function persists the processed command ids of the current app instance, uniquely identified by its name
+ * and id.
+ *
+ * Upon reading the keys, we reset all the ids' timestamp to make things easier, as we can avoid persisting everything
+ * since these are short-lived and will expire either way.
+ */
 object DedupRegistry:
   def from[F[_]: MonadThrow: Time](
       redis: RedisCommands[F, String, String],
@@ -64,4 +65,3 @@ object DedupRegistry:
       exp: KeyExpiration
   ): Resource[F, DedupRegistry[F]] =
     RedisClient[F].from(uri.value).flatMap(fromClient[F](_, appId, exp))
-

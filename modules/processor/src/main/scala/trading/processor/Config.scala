@@ -2,7 +2,7 @@ package trading.processor
 
 import java.util.UUID
 
-import trading.domain.{ given, * }
+import trading.domain.{ *, given }
 import trading.lib.GenUUID
 
 import cats.effect.kernel.Async

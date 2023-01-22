@@ -10,7 +10,7 @@ import trading.core.AppTopic
 import trading.domain.*
 import trading.domain.generators.*
 import trading.events.*
-import trading.lib.{ given, * }
+import trading.lib.{ *, given }
 
 import cats.effect.*
 import cats.effect.syntax.all.*

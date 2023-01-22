@@ -25,7 +25,7 @@ trait Consumer[F[_], A] extends Acker[F, A]:
   def lastMsgId: F[Option[Consumer.MsgId]]
 
 object Consumer:
-  //Pulsar: MessageId(ledgerId: Long, entryId: Long, partitionIndex: Int)
+  // Pulsar: MessageId(ledgerId: Long, entryId: Long, partitionIndex: Int)
   enum MsgId:
     case Pulsar(id: MessageId)
     case Dummy

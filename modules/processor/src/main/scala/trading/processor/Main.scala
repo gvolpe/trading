@@ -9,7 +9,7 @@ import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.domain.AppId
 import trading.events.*
-import trading.lib.{ given, * }
+import trading.lib.{ *, given }
 import trading.state.TradeState
 
 import cats.effect.*
