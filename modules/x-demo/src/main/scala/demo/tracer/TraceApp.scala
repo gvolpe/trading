@@ -41,14 +41,14 @@ object TraceApp extends IOApp.Simple:
             .evalMap { name =>
               ep.root("random-root").use { sp =>
                 sp.put("random-name" -> name) *> sp.kernel.flatMap { k =>
-                  p.send(name, k.toHeaders)
+                  p.send(name, k.headers)
                 }
               }
             }
 
         val users: Consumer[IO, User] => Stream[IO, Unit] = c =>
           c.receiveM.evalMap { case Msg(id, props, user) =>
-            val k = Kernel(props)
+            val k = props.toKernel
             ep.continue("ok", k).orElse(ep.continue("duplicate", k)).use { sp =>
               sp.span("user-consumer").use { sp1 =>
                 sp1.put("user" -> user.name) *>
@@ -59,7 +59,7 @@ object TraceApp extends IOApp.Simple:
 
         def names(c: Consumer[IO, String], f: (Msg[String], Span[IO]) => IO[Unit]): Stream[IO, Unit] =
           c.receiveM.evalMap { case msg @ Msg(_, props, _) =>
-            ep.continue("random-name", Kernel(props)).use(f(msg, _))
+            ep.continue("random-name", props.toKernel).use(f(msg, _))
           }
 
         programZero(ep, random, users, names)

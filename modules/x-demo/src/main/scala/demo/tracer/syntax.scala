@@ -7,7 +7,15 @@ import cats.syntax.all.*
 import natchez.{ EntryPoint, Kernel, Span, Trace }
 import natchez.http4s.syntax.EntryPointOps.ExcludedHeaders
 import org.http4s.{ HttpRoutes, Request, Response }
-import org.typelevel.ci.CIString
+import org.typelevel.ci.*
+
+extension (kv: Map[String, String])
+  def toKernel: Kernel = Kernel(kv.map { (k, v) => ci"$k" -> v })
+
+extension (k: Kernel)
+  def headers: Map[String, String] = k.toHeaders.map {
+    (k, v) => k.show -> v
+  }
 
 extension (ep: EntryPoint[IO])
   def liftRoutes(f: Trace[IO] ?=> HttpRoutes[IO]): HttpRoutes[IO] =
@@ -15,7 +23,7 @@ extension (ep: EntryPoint[IO])
       val isKernelHeader: CIString => Boolean = name => !ExcludedHeaders.contains(name)
 
       val kernelHeaders = req.headers.headers.collect {
-        case header if isKernelHeader(header.name) => header.name.toString -> header.value
+        case header if isKernelHeader(header.name) => ci"${header.name}" -> header.value
       }.toMap
 
       val kernel = Kernel(kernelHeaders)

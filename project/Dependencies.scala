@@ -19,7 +19,7 @@ object Dependencies {
     val iron          = "2.0.0-RC3-DIRTY12775d8a"
     val kittens       = "3.0.0"
     val monocle       = "3.2.0"
-    val natchez       = "0.2.2"
+    val natchez       = "0.3.0"
     val natchezHttp4s = "0.5.0"
     val neutron       = "0.7.1"
     val odin          = "0.13.0"
