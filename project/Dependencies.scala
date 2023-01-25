@@ -1,9 +1,9 @@
-import sbt._
-import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import sbt.*
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.*
 
-object Dependencies {
+object Dependencies:
 
-  object V {
+  object V:
     val cats          = "2.9.0"
     val catsEffect    = "3.4.5"
     val circe         = "0.14.3"
@@ -12,8 +12,8 @@ object Dependencies {
     val flyway        = "8.5.13"
     val fs2Core       = "3.5.0"
     val fs2Kafka      = "3.0.0-M9"
-    val http4s        = "1.0.0-M38"
-    val http4sMetrics = "1.0.0-M38"
+    val http4s        = "1.0.0-M39"
+    val http4sMetrics = "1.0.0-M39"
     val http4sWs      = "1.0.0-M3"
     val ip4s          = "3.2.0"
     val iron          = "2.0.0-RC4"
@@ -33,9 +33,8 @@ object Dependencies {
     val weaver     = "0.8.1"
 
     val organizeImports = "0.6.0"
-  }
 
-  object Libraries {
+  object Libraries:
     def circe(artifact: String) = Def.setting("io.circe" %%% s"circe-$artifact" % V.circe)
 
     def http4s(artifact: String): ModuleID = "org.http4s" %% s"http4s-$artifact" % V.http4s
@@ -101,10 +100,6 @@ object Dependencies {
 
     // scalafix rules
     val organizeImports = "com.github.liancheng" %% "organize-imports" % V.organizeImports
-  }
 
-  object CompilerPlugins {
+  object CompilerPlugins:
     val zerowaste = compilerPlugin("com.github.ghik" % "zerowaste" % "0.2.2" cross CrossVersion.full)
-  }
-
-}
