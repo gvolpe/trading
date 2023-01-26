@@ -36,8 +36,8 @@ def fedaLogo(scalaVersion: String, project: String) =
 logo := fedaLogo(scalaVersion.value, "root")
 
 usefulTasks := List(
-  UsefulTask("a", "lint", "Run scalafix OrganizeImports rule"),
-  UsefulTask("b", "smoke-test", "Run smoke tests")
+  UsefulTask("lint", "Run scalafmtAll and scalafix OrganizeImports rule"),
+  UsefulTask("smoke", "Run smoke tests (smokey)")
 )
 
 val commonSettings = List(
@@ -237,5 +237,5 @@ lazy val demo = (project in file("modules/x-demo"))
     )
   )
 
-addCommandAlias("lint", ";scalafixAll --rules OrganizeImports")
-addCommandAlias("smoke-test", "smokey/test")
+addCommandAlias("lint", ";scalafmtAll ;scalafixAll --rules OrganizeImports")
+addCommandAlias("smoke", "smokey/test")

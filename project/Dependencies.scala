@@ -12,7 +12,7 @@ object Dependencies {
     val flyway        = "8.5.13"
     val fs2Core       = "3.5.0"
     val fs2Kafka      = "3.0.0-M9"
-    val http4s        = "1.0.0-M38"
+    val http4s        = "1.0.0-M39"
     val http4sMetrics = "1.0.0-M38"
     val http4sWs      = "1.0.0-M3"
     val ip4s          = "3.2.0"
@@ -33,6 +33,7 @@ object Dependencies {
     val weaver     = "0.8.1"
 
     val organizeImports = "0.6.0"
+    val zerowaste       = "0.2.3"
   }
 
   object Libraries {
@@ -104,7 +105,7 @@ object Dependencies {
   }
 
   object CompilerPlugins {
-    val zerowaste = compilerPlugin("com.github.ghik" % "zerowaste" % "0.2.2" cross CrossVersion.full)
+    val zerowaste = compilerPlugin("com.github.ghik" % "zerowaste" % V.zerowaste cross CrossVersion.full)
   }
 
 }
