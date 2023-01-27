@@ -188,7 +188,6 @@ lazy val webapp = (project in file("modules/ws-client"))
   .enablePlugins(ScalaJSPlugin)
   .settings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-    scalacOptions ++= List("-scalajs"),
     scalafmtOnCompile := false,
     libraryDependencies ++= List(
       Libraries.circeCore.value,
