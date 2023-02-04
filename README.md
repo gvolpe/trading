@@ -41,7 +41,7 @@ The web application allows users to subscribe/unsubscribe to/from symbol alerts 
 It is written in [Elm](https://elm-lang.org/) and can be built as follows.
 
 ```shell
-$ nix build .#webapp.elm
+$ nix build .#elm-webapp
 $ open result/index.html # or specify browser
 ```
 

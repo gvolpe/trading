@@ -93,12 +93,10 @@
         };
 
         packages = {
+          inherit elm-webapp;
+          tyrian-webapp = tyrian.webapp;
           docker = pkgs.noRootDockerImage;
           slimDocker = pkgs.slimDockerImage;
-          webapp = {
-            elm = elm-webapp;
-            tyrian = tyrian.webapp;
-          };
         };
 
         defaultPackage = pkgs.slimDockerImage;
