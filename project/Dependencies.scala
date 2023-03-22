@@ -24,7 +24,7 @@ object Dependencies {
     val neutron       = "0.7.2"
     val odin          = "0.13.0"
     val redis4cats    = "1.4.0"
-    val refined       = "0.10.1"
+    val refined       = "0.10.3"
 
     val scalajsTime = "2.4.0"
     val tyrian      = "0.6.1"
