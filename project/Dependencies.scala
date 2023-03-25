@@ -30,7 +30,7 @@ object Dependencies {
     val tyrian      = "0.6.1"
 
     val scalacheck = "1.17.0"
-    val weaver     = "0.8.1"
+    val weaver     = "0.8.2"
 
     val organizeImports = "0.6.0"
     val zerowaste       = "0.2.5"
