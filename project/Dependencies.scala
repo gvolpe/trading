@@ -26,7 +26,7 @@ object Dependencies {
     val redis4cats    = "1.4.1"
     val refined       = "0.10.3"
 
-    val scalajsTime = "2.4.0"
+    val scalajsTime = "2.5.0"
     val tyrian      = "0.6.1"
 
     val scalacheck = "1.17.0"
@@ -88,12 +88,12 @@ object Dependencies {
     val tyrianIO    = Def.setting("io.indigoengine" %%% "tyrian-io" % V.tyrian)
 
     // test
-    val catsLaws         = "org.typelevel"       %% "cats-laws"         % V.cats
-    val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle
-    val scalacheck       = "org.scalacheck"      %% "scalacheck"        % V.scalacheck
-    val weaverCats       = "com.disneystreaming" %% "weaver-cats"       % V.weaver
-    val weaverDiscipline = "com.disneystreaming" %% "weaver-discipline" % V.weaver
-    val weaverScalaCheck = "com.disneystreaming" %% "weaver-scalacheck" % V.weaver
+    val catsLaws         = Def.setting("org.typelevel"       %%% "cats-laws"         % V.cats)
+    val monocleLaw       = Def.setting("dev.optics"          %%% "monocle-law"       % V.monocle)
+    val scalacheck       = Def.setting("org.scalacheck"      %%% "scalacheck"        % V.scalacheck)
+    val weaverCats       = Def.setting("com.disneystreaming" %%% "weaver-cats"       % V.weaver)
+    val weaverDiscipline = Def.setting("com.disneystreaming" %%% "weaver-discipline" % V.weaver)
+    val weaverScalaCheck = Def.setting("com.disneystreaming" %%% "weaver-scalacheck" % V.weaver)
 
     // only for demo
     val fs2Kafka    = "com.github.fd4s" %% "fs2-kafka" % V.fs2Kafka

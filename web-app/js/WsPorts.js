@@ -5,7 +5,7 @@ function wsPortsHook(app) {
 
     function keepAlive() {
       var timeout = 20000;
-      if (socket.readyState == socket.OPEN) {
+      if (socket.readyState === socket.OPEN) {
         console.log('[info] Sending heartbeat 💓');
         socket.send('{ "Heartbeat": {} }');
       }
@@ -52,7 +52,7 @@ function wsPortsHook(app) {
     socket.onerror = function(error) {
       console.log(`[error] ${error.message}, ws status: ${socket.readyState}`);
 
-      if (socket.readyState == socket.CLOSED) {
+      if (socket.readyState === socket.CLOSED) {
         if ( error != null && error.message != null) {
           app.ports.connectionError.send(error.message);
         } else {

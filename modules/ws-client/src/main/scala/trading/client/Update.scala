@@ -1,13 +1,12 @@
 package trading.client
 
+import cats.effect.IO
+import cats.syntax.all.*
+import io.github.iltotore.iron.*
+import org.scalajs.dom
 import trading.client.Model.*
 import trading.domain.*
 import trading.ws.{ WsIn, WsOut }
-
-import cats.effect.IO
-import cats.syntax.all.*
-
-import org.scalajs.dom
 import tyrian.*
 import tyrian.cmds.Dom
 
@@ -32,7 +31,9 @@ def runUpdates(model: Model): Msg => (Model, Cmd[IO, Msg]) =
     model.copy(error = None, sub = None, unsub = None) -> refocusInput
 
   case Msg.SymbolChanged(in) if in.length == 6 =>
-    model.copy(symbol = Symbol(in), input = in) -> Cmd.None
+    in.trim.refineEither[SymbolR].map(Symbol(_)).toOption.fold(model -> Cmd.None) { sym =>
+      model.copy(symbol = sym, input = in) -> Cmd.None
+    }
 
   case Msg.SymbolChanged(in) =>
     model.copy(input = in) -> Cmd.None

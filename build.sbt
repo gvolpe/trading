@@ -56,12 +56,15 @@ val commonSettings = List(
     Libraries.kittens.value,
     Libraries.ip4sCore.value,
     Libraries.monocleCore.value,
-    Libraries.catsLaws         % Test,
-    Libraries.monocleLaw       % Test,
-    Libraries.scalacheck       % Test,
-    Libraries.weaverCats       % Test,
-    Libraries.weaverDiscipline % Test,
-    Libraries.weaverScalaCheck % Test
+    Libraries.ironCore.value,
+    Libraries.ironCats.value,
+    Libraries.ironCirce.value,
+    Libraries.catsLaws.value         % Test,
+    Libraries.monocleLaw.value       % Test,
+    Libraries.scalacheck.value       % Test,
+    Libraries.weaverCats.value       % Test,
+    Libraries.weaverDiscipline.value % Test,
+    Libraries.weaverScalaCheck.value % Test
   )
 )
 
@@ -71,9 +74,6 @@ val commonJvmSettings = List(
     Libraries.http4sDsl,
     Libraries.http4sMetrics,
     Libraries.http4sServer,
-    Libraries.ironCore.value,
-    Libraries.ironCats.value,
-    Libraries.ironCirce.value,
     Libraries.neutronCore,
     Libraries.odin,
     Libraries.redis4catsEffects
@@ -99,7 +99,7 @@ lazy val domain = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings: _*)
   .jvmSettings(commonJvmSettings)
   .jsSettings(
-    test          := {},
+    libraryDependencies += Libraries.scalajsTime.value,
     scalacOptions := List("-scalajs")
   )
 
@@ -124,7 +124,7 @@ lazy val feed = (project in file("modules/feed"))
   .settings(commonSettings: _*)
   .settings(dockerSettings("feed"))
   .settings(
-    libraryDependencies += Libraries.scalacheck
+    libraryDependencies += Libraries.scalacheck.value
   )
   .dependsOn(core)
   .dependsOn(domain.jvm % "compile->compile;compile->test")
