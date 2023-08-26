@@ -4,7 +4,7 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Dependencies {
 
   object V {
-    val cats          = "2.9.0"
+    val cats          = "2.10.0"
     val catsEffect    = "3.4.8"
     val circe         = "0.14.4"
     val ciris         = "3.0.0"
