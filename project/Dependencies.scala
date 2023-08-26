@@ -33,7 +33,7 @@ object Dependencies {
     val weaver     = "0.8.2"
 
     val organizeImports = "0.6.0"
-    val zerowaste       = "0.2.5"
+    val zerowaste       = "0.2.12"
   }
 
   object Libraries {
