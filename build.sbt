@@ -1,7 +1,7 @@
 import Dependencies._
 import sbtwelcome._
 
-ThisBuild / scalaVersion     := "3.2.2"
+ThisBuild / scalaVersion     := "3.3.0"
 ThisBuild / version          := "0.1.0"
 ThisBuild / organization     := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
