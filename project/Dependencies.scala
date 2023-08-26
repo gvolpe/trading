@@ -8,7 +8,7 @@ object Dependencies {
     val catsEffect    = "3.4.8"
     val circe         = "0.14.4"
     val ciris         = "3.0.0"
-    val doobie        = "1.0.0-RC2"
+    val doobie        = "1.0.0-RC4"
     val flyway        = "8.5.13"
     val fs2Core       = "3.6.1"
     val fs2Kafka      = "3.0.0-M9"
