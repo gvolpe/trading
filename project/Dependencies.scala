@@ -12,7 +12,7 @@ object Dependencies {
     val flyway        = "8.5.13"
     val fs2Core       = "3.6.1"
     val fs2Kafka      = "3.0.0-M9"
-    val http4s        = "1.0.0-M39"
+    val http4s        = "1.0.0-M40"
     val http4sMetrics = "1.0.0-M38"
     val http4sWs      = "1.0.0-M3"
     val ip4s          = "3.3.0"
