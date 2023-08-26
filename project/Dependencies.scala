@@ -23,7 +23,7 @@ object Dependencies {
     val natchezHttp4s = "0.5.0"
     val neutron       = "0.7.2"
     val odin          = "0.13.0"
-    val redis4cats    = "1.4.1"
+    val redis4cats    = "1.4.3"
     val refined       = "0.10.3"
 
     val scalajsTime = "2.4.0"
