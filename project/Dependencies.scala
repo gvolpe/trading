@@ -4,27 +4,27 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Dependencies {
 
   object V {
-    val cats          = "2.9.0"
-    val catsEffect    = "3.4.8"
-    val circe         = "0.14.4"
-    val ciris         = "3.0.0"
-    val doobie        = "1.0.0-RC2"
+    val cats          = "2.10.0"
+    val catsEffect    = "3.4.11"
+    val circe         = "0.14.6"
+    val ciris         = "3.2.0"
+    val doobie        = "1.0.0-RC4"
     val flyway        = "8.5.13"
-    val fs2Core       = "3.6.1"
-    val fs2Kafka      = "3.0.0-M9"
+    val fs2Core       = "3.9.1"
+    val fs2Kafka      = "3.0.1"
     val http4s        = "1.0.0-M39"
     val http4sMetrics = "1.0.0-M38"
     val http4sWs      = "1.0.0-M3"
     val ip4s          = "3.3.0"
-    val iron          = "2.0.0"
+    val iron          = "2.2.1"
     val kittens       = "3.0.0"
     val monocle       = "3.2.0"
-    val natchez       = "0.3.1"
+    val natchez       = "0.3.3"
     val natchezHttp4s = "0.5.0"
     val neutron       = "0.7.2"
     val odin          = "0.13.0"
-    val redis4cats    = "1.4.1"
-    val refined       = "0.10.3"
+    val redis4cats    = "1.4.3"
+    val refined       = "0.11.0"
 
     val scalajsTime = "2.4.0"
     val tyrian      = "0.6.1"
@@ -33,7 +33,7 @@ object Dependencies {
     val weaver     = "0.8.2"
 
     val organizeImports = "0.6.0"
-    val zerowaste       = "0.2.5"
+    val zerowaste       = "0.2.12"
   }
 
   object Libraries {
