@@ -14,6 +14,7 @@ import trading.lib.{ Producer, Shard }
 import trading.ws.*
 
 import cats.effect.*
+import cats.effect.syntax.*
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Config, Producer as PulsarProducer, Pulsar }
 import fs2.Stream
@@ -31,7 +32,7 @@ object Smokey extends IOSuite:
   val connectReq = WSRequest(uri"ws://localhost:9000/v1/ws")
 
   override def sharedResource: Resource[IO, Res] =
-    (Pulsar.make[IO](pulsarCfg.url), JdkWSClient.simple[IO]).tupled
+    (Pulsar.make[IO](pulsarCfg.url), JdkWSClient.simple[IO].toResource).tupled
 
   val symbols1: List[WsIn] = List(EURUSD, USDCAD, GBPUSD).map(WsIn.Subscribe(_))
   val symbols2: List[WsIn] = List(EURPLN, CHFEUR).map(WsIn.Subscribe(_))
