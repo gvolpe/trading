@@ -15,13 +15,13 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2.3.2
 
       - name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v18
+        uses: cachix/install-nix-action@v22
 
       - name: "Build web-app 🚀"
         run: nix build .#elm-webapp
