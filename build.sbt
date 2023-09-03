@@ -7,7 +7,6 @@ ThisBuild / organization     := "dev.profunktor"
 ThisBuild / organizationName := "ProfunKtor"
 
 ThisBuild / evictionErrorLevel := Level.Warn
-ThisBuild / scalafixDependencies += Libraries.organizeImports
 
 ThisBuild / resolvers := Resolver.sonatypeOssRepos("snapshots")
 

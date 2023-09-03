@@ -103,9 +103,6 @@ object Dependencies {
     val fs2Kafka    = "com.github.fd4s" %% "fs2-kafka" % V.fs2Kafka
     val refinedCore = Def.setting("eu.timepit" %%% "refined" % V.refined)
     val refinedCats = Def.setting("eu.timepit" %%% "refined-cats" % V.refined)
-
-    // scalafix rules
-    val organizeImports = "com.github.liancheng" %% "organize-imports" % V.organizeImports
   }
 
   object CompilerPlugins {
