@@ -1,6 +1,6 @@
 package trading.ws
 
-import trading.domain.{ Alert, SocketId }
+import trading.domain.SocketId
 import trading.lib.{ GenUUID, Logger }
 
 import cats.Monad

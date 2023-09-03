@@ -1,13 +1,11 @@
 package trading.domain
 
 import java.time.Instant
-import java.util.UUID
 
 import scala.concurrent.duration.{ Duration, FiniteDuration }
 
 import cats.*
 import cats.syntax.all.*
-import com.comcast.ip4s.*
 import io.circe.{ Decoder, Encoder }
 
 object OrphanInstances:

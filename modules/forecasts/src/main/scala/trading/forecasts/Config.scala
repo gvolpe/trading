@@ -1,7 +1,5 @@
 package trading.forecasts
 
-import scala.concurrent.duration.*
-
 import trading.domain.{ *, given }
 
 import cats.effect.kernel.Async

@@ -13,7 +13,7 @@ import trading.lib.Logger.NoOp.given
 import trading.state.*
 
 import cats.data.NonEmptyList
-import cats.effect.{ IO, Ref, Resource }
+import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
 import weaver.SimpleIOSuite
 import weaver.scalacheck.Checkers

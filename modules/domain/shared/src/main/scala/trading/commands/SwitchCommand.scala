@@ -1,6 +1,6 @@
 package trading.commands
 
-import trading.domain.{ *, given }
+import trading.domain.*
 
 import cats.{ Applicative, Eq, Show }
 import cats.derived.*

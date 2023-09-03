@@ -5,11 +5,10 @@ import trading.domain.*
 import trading.events.{ AuthorEvent, ForecastEvent }
 import trading.forecasts.store.*
 import trading.lib.*
-import trading.lib.Consumer.{ Msg, MsgId }
+import trading.lib.Consumer.Msg
 
-import cats.effect.kernel.{ MonadCancelThrow, Resource }
+import cats.effect.kernel.MonadCancelThrow
 import cats.syntax.all.*
-import fs2.Stream
 
 trait Engine[F[_]]:
   def run: Msg[ForecastCommand] => F[Unit]

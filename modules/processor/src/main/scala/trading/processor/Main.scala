@@ -1,21 +1,16 @@
 package trading.processor
 
-import java.util.UUID
-
-import scala.concurrent.duration.*
-
 import trading.commands.*
 import trading.core.AppTopic
 import trading.core.http.Ember
 import trading.domain.AppId
 import trading.events.*
-import trading.lib.{ *, given }
+import trading.lib.*
 import trading.state.TradeState
 
 import cats.effect.*
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Config as _, Consumer as PulsarConsumer, Producer as PulsarProducer, * }
-import dev.profunktor.pulsar.transactions.PulsarTx
 import fs2.Stream
 
 object Main extends IOApp.Simple:

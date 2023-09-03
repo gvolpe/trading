@@ -3,7 +3,6 @@ package trading.lib
 import scala.concurrent.duration.*
 
 import trading.domain.AppId
-import trading.lib.Logger
 
 import cats.effect.kernel.{ Resource, Temporal }
 import cats.syntax.all.*

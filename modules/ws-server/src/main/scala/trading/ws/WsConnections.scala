@@ -2,7 +2,6 @@ package trading.ws
 
 import trading.domain.SocketId
 
-import cats.Functor
 import cats.effect.kernel.Concurrent
 import cats.syntax.functor.*
 import fs2.Stream

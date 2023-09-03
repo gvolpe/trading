@@ -9,23 +9,20 @@ import demo.tracer.http.*
 export demo.tracer.NT.syntax.*
 
 import trading.core.http.Ember
-import trading.lib.{ *, given }
+import trading.lib.*
 import trading.lib.Consumer.Msg
 import trading.trace.tracer.Honeycomb
 
-import cats.~>
 import cats.data.Kleisli
 import cats.effect.*
 import cats.syntax.all.*
 import com.comcast.ip4s.*
-import dev.profunktor.pulsar.{ Config as PulsarConfig, Pulsar }
+import dev.profunktor.pulsar.Pulsar
 import fs2.Stream
 import io.circe.Codec
-import org.http4s.HttpRoutes
 import org.http4s.server.Server
 import natchez.{ EntryPoint, Span, Trace }
 import natchez.http4s.syntax.entrypoint.*
-import natchez.Kernel
 
 case class User(id: UUID, name: String) derives Codec.AsObject
 

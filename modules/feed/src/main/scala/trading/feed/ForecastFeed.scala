@@ -1,38 +1,20 @@
 package trading.feed
 
-import java.time.Instant
 import java.util.UUID
 
 import scala.concurrent.duration.*
 
 import trading.commands.ForecastCommand
-import trading.core.AppTopic
 import trading.domain.*
 import trading.domain.generators.*
 import trading.events.*
-import trading.lib.{ *, given }
+import trading.lib.*
 
 import cats.effect.*
-import cats.effect.syntax.all.*
 import cats.syntax.all.*
-import dev.profunktor.pulsar.{ Producer as PulsarProducer, Pulsar, Subscription, Topic }
 import fs2.Stream
 
 object ForecastFeed:
-  private val sub =
-    Subscription.Builder
-      .withName("forecasts-gen")
-      .withType(Subscription.Type.Exclusive)
-      .build
-
-  private def settings[A: Shard](name: String) =
-    PulsarProducer
-      .Settings[IO, A]()
-      .withDeduplication
-      .withName(s"forecast-gen-$name-command")
-      .withShardKey(Shard[A].key)
-      .some
-
   // The randomness of randomUUID() seems better than that of Gen.uuid
   def makeCmdId = CommandId(UUID.randomUUID())
 

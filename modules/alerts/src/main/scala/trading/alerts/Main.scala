@@ -10,13 +10,7 @@ import trading.state.TradeState
 
 import cats.effect.*
 import cats.syntax.all.*
-import dev.profunktor.pulsar.{
-  Consumer as PulsarConsumer,
-  Producer as PulsarProducer,
-  Pulsar,
-  SeqIdMaker,
-  Subscription
-}
+import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, Producer as PulsarProducer, Pulsar, Subscription }
 import fs2.Stream
 
 object Main extends IOApp.Simple:

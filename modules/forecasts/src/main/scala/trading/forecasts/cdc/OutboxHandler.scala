@@ -1,7 +1,5 @@
 package trading.forecasts.cdc
 
-import scala.concurrent.duration.*
-
 import trading.domain.*
 import trading.events.*
 import trading.lib.*

@@ -1,12 +1,11 @@
 package demo.tracer
 
-import cats.~>
 import cats.data.{ Kleisli, OptionT }
-import cats.effect.{ IO, Resource }
+import cats.effect.IO
 import cats.syntax.all.*
-import natchez.{ EntryPoint, Kernel, Span, Trace }
+import natchez.{ EntryPoint, Kernel, Trace }
 import natchez.http4s.syntax.EntryPointOps.ExcludedHeaders
-import org.http4s.{ HttpRoutes, Request, Response }
+import org.http4s.HttpRoutes
 import org.typelevel.ci.*
 
 extension (kv: Map[String, String])

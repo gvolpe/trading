@@ -9,11 +9,9 @@ import trading.commands.*
 import trading.domain.*
 import trading.events.*
 import trading.lib.{ FSM, Logger, Time }
-import trading.trace.tracer.TradingTracer
 
-import cats.{ Applicative, Monad }
+import cats.Monad
 import cats.syntax.all.*
-import natchez.Kernel
 
 type MatchingIds = Map[CorrelationId, (Timestamp, Option[CmdKernel], Option[EvtKernel])]
 type Tick        = Unit

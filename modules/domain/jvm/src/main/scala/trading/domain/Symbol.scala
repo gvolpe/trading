@@ -3,7 +3,6 @@ package trading.domain
 import trading.Newtype
 
 import cats.*
-import cats.derived.*
 import io.circe.*
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.cats.given

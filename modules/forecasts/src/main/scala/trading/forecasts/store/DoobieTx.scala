@@ -6,7 +6,6 @@ import cats.~>
 import cats.arrow.FunctionK
 import cats.effect.kernel.{ Async, Resource }
 import cats.effect.kernel.Resource.ExitCase.*
-import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import doobie.{ ConnectionIO, Transactor, WeakAsync }
 import doobie.free.connection.setAutoCommit

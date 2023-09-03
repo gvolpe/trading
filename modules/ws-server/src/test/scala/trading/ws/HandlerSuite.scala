@@ -11,10 +11,9 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import fs2.Stream
-import fs2.concurrent.Topic
 import io.circe.syntax.*
 import org.http4s.websocket.WebSocketFrame
-import org.http4s.websocket.WebSocketFrame.{ Close, Text }
+import org.http4s.websocket.WebSocketFrame.Text
 import weaver.SimpleIOSuite
 import weaver.scalacheck.Checkers
 
@@ -57,7 +56,7 @@ object HandlerSuite extends SimpleIOSuite with Checkers:
       IO.deferred[Unit],                   // switch to sync the sending of the WsIn.Close message
       IO.deferred[Either[Throwable, Unit]] // to know when there is an active subscription
     ).tupled
-      .flatMap { (sid, out, switch, connected) =>
+      .flatMap { (sid, out, switch, _) =>
         Handler.make(sid, conns, Stream.emits(alerts)).flatMap { h =>
           val recv =
             Stream

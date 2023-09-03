@@ -5,16 +5,13 @@ import java.util.UUID
 
 import trading.IsUUID
 import trading.commands.ForecastCommand
-import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.*
 import trading.forecasts.store.*
 import trading.lib.*
 import trading.lib.Consumer.{ Msg, MsgId }
 import trading.lib.Logger.NoOp.given
-import trading.state.*
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.kernel.{ Ref, Resource }
 import cats.syntax.all.*

@@ -1,7 +1,5 @@
 package trading.trace
 
-import scala.concurrent.duration.*
-
 import trading.domain.{ *, given }
 import trading.Newtype
 

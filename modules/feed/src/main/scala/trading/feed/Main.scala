@@ -3,7 +3,6 @@ package trading.feed
 import trading.commands.*
 import trading.core.AppTopic
 import trading.core.http.Ember
-import trading.domain.CommandId
 import trading.events.*
 import trading.lib.*
 

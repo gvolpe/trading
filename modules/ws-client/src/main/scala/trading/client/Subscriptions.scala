@@ -2,10 +2,8 @@ package trading.client
 
 import trading.ws.WsOut
 
-import cats.effect.IO
 import io.circe.parser.decode as jsonDecode
 
-import tyrian.Sub
 import tyrian.websocket.WebSocketEvent as WSEvent
 
 object Subs:

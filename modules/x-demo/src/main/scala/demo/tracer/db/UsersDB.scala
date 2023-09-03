@@ -5,7 +5,7 @@ import java.util.UUID
 
 import scala.util.control.NoStackTrace
 
-import cats.{ Monad, MonadThrow }
+import cats.MonadThrow
 import cats.effect.kernel.Ref
 import cats.syntax.all.*
 import natchez.Trace
