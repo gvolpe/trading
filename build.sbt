@@ -55,6 +55,7 @@ val commonSettings = List(
     Libraries.fs2Core.value,
     Libraries.kittens.value,
     Libraries.ip4sCore.value,
+    Libraries.log4catsNoop,
     Libraries.monocleCore.value,
     Libraries.catsLaws         % Test,
     Libraries.monocleLaw       % Test,
