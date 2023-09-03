@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: Tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.2
 
@@ -18,10 +18,10 @@ jobs:
         uses: coursier/cache-action@v4.1
 
       - name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v16
+        uses: cachix/install-nix-action@v22
 
       - name: "Install Cachix ❄️"
-        uses: cachix/cachix-action@v10
+        uses: cachix/cachix-action@v12
         with:
           name: feda
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
