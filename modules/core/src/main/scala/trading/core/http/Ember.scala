@@ -4,6 +4,7 @@ import cats.effect.kernel.{ Async, Resource }
 import cats.effect.std.Console
 import cats.syntax.all.*
 import com.comcast.ip4s.*
+import fs2.io.net.Network
 import org.http4s.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits.*
@@ -12,12 +13,15 @@ import org.http4s.server.Server
 import org.http4s.server.middleware.Metrics
 import org.http4s.server.defaults.Banner
 import org.http4s.server.websocket.WebSocketBuilder
+import org.typelevel.log4cats.LoggerFactory
+import org.typelevel.log4cats.noop.NoOpFactory
 
 object Ember:
   private def showBanner[F[_]: Console](s: Server): F[Unit] =
     Console[F].println(s"\n${Banner.mkString("\n")}\nHTTP Server started at ${s.address}")
 
-  private def make[F[_]: Async](port: Port) =
+  private def make[F[_]: Async: Network](port: Port) =
+    given LoggerFactory[F] = NoOpFactory[F]
     EmberServerBuilder
       .default[F]
       .withHost(host"0.0.0.0")
@@ -29,7 +33,7 @@ object Ember:
       ops <- Prometheus.metricsOps[F](prt.collectorRegistry)
     yield rts => Metrics[F](ops)(prt.routes <+> rts)
 
-  def websocket[F[_]: Async: Console](
+  def websocket[F[_]: Async: Console: Network](
       port: Port,
       f: WebSocketBuilder[F] => HttpRoutes[F]
   ): Resource[F, Server] =
@@ -42,7 +46,7 @@ object Ember:
         .evalTap(showBanner[F])
     }
 
-  def routes[F[_]: Async: Console](
+  def routes[F[_]: Async: Console: Network](
       port: Port,
       routes: HttpRoutes[F]
   ): Resource[F, Server] =
@@ -53,7 +57,9 @@ object Ember:
         .evalTap(showBanner[F])
     }
 
-  def default[F[_]: Async: Console](port: Port): Resource[F, Server] =
+  def default[F[_]: Async: Console: Network](
+      port: Port
+  ): Resource[F, Server] =
     metrics[F].flatMap { mid =>
       make[F](port)
         .withHttpApp(mid(HealthRoutes[F].routes).orNotFound)
