@@ -3,7 +3,6 @@ package trading.forecasts
 import java.time.Instant
 import java.util.UUID
 
-import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.*
 import trading.forecasts.store.*
