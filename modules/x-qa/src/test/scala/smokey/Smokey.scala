@@ -14,7 +14,6 @@ import trading.lib.{ Producer, Shard }
 import trading.ws.*
 
 import cats.effect.*
-import cats.effect.syntax.*
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Config, Producer as PulsarProducer, Pulsar }
 import fs2.Stream
@@ -23,7 +22,7 @@ import io.circe.syntax.*
 import org.http4s.client.websocket.{ WSClient, WSDataFrame, WSFrame, WSRequest }
 import org.http4s.implicits.*
 import org.http4s.jdkhttpclient.JdkWSClient
-import weaver.{ Expectations, IOSuite }
+import weaver.IOSuite
 
 object Smokey extends IOSuite:
   type Res = (Pulsar.T, WSClient[IO])
