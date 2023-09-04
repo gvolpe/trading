@@ -2,12 +2,14 @@ package demo
 
 import scala.util.control.NoStackTrace
 import scala.util.Random
+import scala.annotation.nowarn
 
 import trading.lib.*
 
 import cats.effect.*
 import cats.syntax.all.*
 
+@nowarn
 object ErrorLifting extends IOApp.Simple:
 
   case class Err1() extends NoStackTrace

@@ -1,6 +1,5 @@
 package trading.events
 
-import trading.commands.ForecastCommand
 import trading.domain.*
 
 import io.circe.Codec

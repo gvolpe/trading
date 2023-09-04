@@ -1,7 +1,5 @@
 package trading.forecasts
 
-import scala.concurrent.duration.*
-
 import trading.domain.*
 import trading.events.ForecastEvent
 import trading.forecasts.store.*

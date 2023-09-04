@@ -1,6 +1,5 @@
 package demo
 
-import java.nio.charset.StandardCharsets.UTF_8
 import java.util.UUID
 
 import scala.concurrent.duration.*
@@ -10,9 +9,7 @@ import trading.lib.{ Consumer, Logger }
 import trading.lib.Logger.NoOp.given
 
 import cats.effect.*
-import cats.effect.syntax.all.*
-import cats.syntax.all.*
-import dev.profunktor.pulsar.{ Config as PulsarConfig, Producer as PulsarProducer, Pulsar, Subscription, Topic }
+import dev.profunktor.pulsar.{ Config as PulsarConfig, Pulsar, Subscription, Topic }
 import doobie.Transactor
 import doobie.*
 import doobie.implicits.*

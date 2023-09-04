@@ -1,10 +1,8 @@
 package trading.alerts
 
-import trading.commands.TradeCommand
 import trading.core.TradeEngine
 import trading.domain.Alert.{ TradeAlert, TradeUpdate }
 import trading.domain.AlertType.*
-import trading.domain.TradingStatus.*
 import trading.domain.*
 import trading.events.*
 import trading.lib.*

@@ -166,7 +166,7 @@ object TradingFSMSuite extends SimpleIOSuite with Checkers:
         alt <- tradeAlertGen
       yield (cid, cmd, evt, alt)
 
-    forall(gen) { (cid, cmd, evt, alt) =>
+    forall(gen) { (_, cmd, evt, _) =>
       for
         cmds <- IO.ref(Map.empty[CorrelationId, TradeCommand])
         evts <- IO.ref(Map.empty[CorrelationId, TradeEvent])

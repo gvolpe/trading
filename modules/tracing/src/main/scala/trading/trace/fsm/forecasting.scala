@@ -1,17 +1,12 @@
 package trading.trace
 package fsm
 
-import java.time.Instant
-
-import scala.concurrent.duration.*
-
 import trading.commands.*
 import trading.domain.*
 import trading.events.*
-import trading.lib.{ FSM, Logger, Time }
-import trading.trace.tracer.ForecastingTracer
+import trading.lib.{ FSM, Logger }
 
-import cats.{ Applicative, Monad }
+import cats.Applicative
 import cats.syntax.all.*
 
 type ForecastState = (List[AuthorEvent], List[ForecastEvent], List[ForecastCommand])

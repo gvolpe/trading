@@ -1,7 +1,6 @@
 package trading.events
 
-import trading.commands.SwitchCommand
-import trading.domain.{ *, given }
+import trading.domain.*
 
 import cats.{ Applicative, Show }
 import cats.derived.*

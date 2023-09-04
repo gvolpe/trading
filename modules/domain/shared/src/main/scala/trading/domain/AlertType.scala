@@ -3,7 +3,7 @@ package trading.domain
 import cats.{ Eq, Show }
 import cats.derived.*
 import cats.syntax.all.*
-import io.circe.{ Decoder, Encoder, Json }
+import io.circe.{ Decoder, Encoder }
 
 enum AlertType derives Eq, Show:
   case StrongBuy, StrongSell, Neutral, Buy, Sell

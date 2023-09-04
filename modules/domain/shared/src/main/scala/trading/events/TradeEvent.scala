@@ -1,7 +1,7 @@
 package trading.events
 
 import trading.commands.TradeCommand
-import trading.domain.{ *, given }
+import trading.domain.*
 
 import cats.{ Applicative, Eq, Show }
 import cats.derived.*

@@ -4,7 +4,7 @@ import scala.concurrent.duration.*
 
 import trading.core.http.Ember
 import trading.core.snapshots.{ SnapshotReader, SnapshotWriter }
-import trading.core.{ AppTopic, TradeEngine }
+import trading.core.AppTopic
 import trading.domain.AppId
 import trading.events.{ SwitchEvent, TradeEvent }
 import trading.lib.{ *, given }

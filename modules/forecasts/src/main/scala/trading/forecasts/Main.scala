@@ -6,10 +6,9 @@ import trading.core.http.Ember
 import trading.events.*
 import trading.forecasts.cdc.*
 import trading.forecasts.store.*
-import trading.lib.{ *, given }
+import trading.lib.*
 
 import cats.effect.*
-import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Producer as PulsarProducer, Pulsar, Subscription, Topic }
 import fs2.Stream

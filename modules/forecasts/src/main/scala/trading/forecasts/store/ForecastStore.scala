@@ -2,13 +2,11 @@ package trading.forecasts.store
 
 import trading.domain.*
 import trading.events.ForecastEvent
-import trading.lib.*
 
 import cats.~>
 import cats.effect.kernel.{ MonadCancelThrow, Resource }
 import cats.syntax.all.*
 import doobie.{ ConnectionIO, Transactor }
-import doobie.h2.*
 import doobie.implicits.*
 
 trait ForecastStore[F[_]]:

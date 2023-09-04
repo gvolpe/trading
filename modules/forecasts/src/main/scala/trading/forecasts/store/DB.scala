@@ -1,7 +1,6 @@
 package trading.forecasts.store
 
 import cats.effect.kernel.{ Async, Resource }
-import cats.syntax.all.*
 import doobie.ExecutionContexts
 import doobie.h2.H2Transactor
 import org.flywaydb.core.Flyway

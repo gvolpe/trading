@@ -2,11 +2,10 @@ package trading.lib
 
 import java.nio.charset.StandardCharsets.UTF_8
 
-import cats.Eq
 import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.Queue
 import cats.syntax.all.*
-import cats.{ Applicative, Parallel, Show }
+import cats.{ Applicative, Parallel }
 import dev.profunktor.pulsar.{ Producer as PulsarProducer, * }
 import fs2.kafka.{ KafkaProducer, ProducerSettings }
 import io.circe.Encoder
@@ -44,7 +43,7 @@ object Producer:
   def test[F[_]: Applicative, A](ref: Ref[F, Option[A]]): Producer[F, A] = new Dummy[F, A]:
     override def send(a: A): F[Unit] = ref.set(Some(a))
 
-  private def dummySeqIdMaker[F[_]: Applicative, A]: SeqIdMaker[F, A] = new:
+  def dummySeqIdMaker[F[_]: Applicative, A]: SeqIdMaker[F, A] = new:
     def make(lastSeqId: Long, currentMsg: A): F[Long] = Applicative[F].pure(0L)
 
   def pulsar[F[_]: Async: Logger: Parallel, A: Encoder](

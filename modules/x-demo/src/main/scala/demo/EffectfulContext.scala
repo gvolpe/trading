@@ -5,7 +5,7 @@ import java.util.UUID
 import scala.concurrent.duration.*
 
 import cats.effect.*
-import cats.effect.std.{ Console, Supervisor }
+import cats.effect.std.Supervisor
 import cats.syntax.all.*
 
 // https://docs.scala-lang.org/scala3/reference/contextual/context-functions.html
@@ -34,7 +34,6 @@ object EffectfulContext extends IOApp.Simple:
     }
 
   val p1: Ctx ?=> IO[Unit] =
-    val ctx = summon[Ctx]
     IO.println("Running program #1") *> p2
 
   def p2(using ctx: Ctx): IO[Unit] =

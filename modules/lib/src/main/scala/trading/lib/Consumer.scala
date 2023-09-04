@@ -9,13 +9,10 @@ import cats.effect.kernel.{ Async, Ref, Resource }
 import cats.effect.std.Queue
 import cats.syntax.all.*
 import dev.profunktor.pulsar.{ Consumer as PulsarConsumer, * }
-import dev.profunktor.pulsar.transactions.Tx
 import fs2.Stream
 import fs2.kafka.{ CommittableOffset, CommittableOffsetBatch, ConsumerSettings, KafkaConsumer }
 import io.circe.{ Decoder, Encoder }
 import io.circe.parser.decode as jsonDecode
-import org.apache.kafka.clients.consumer.OffsetAndMetadata
-import org.apache.kafka.common.TopicPartition
 import org.apache.pulsar.client.api.{ DeadLetterPolicy, MessageId }
 
 trait Consumer[F[_], A] extends Acker[F, A]:

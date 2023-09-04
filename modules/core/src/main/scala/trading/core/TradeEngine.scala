@@ -11,8 +11,6 @@ import trading.events.TradeEvent.{ CommandExecuted, CommandRejected }
 import trading.lib.FSM
 import trading.state.TradeState
 
-import cats.Id
-
 object TradeEngine:
   // Event generation and trading switch
   val fsm = FSM.id[TradeState, TradeCommand | SwitchCommand, (EventId, Timestamp) => TradeEvent | SwitchEvent] {

@@ -2,8 +2,6 @@ package trading.lib
 
 import scala.concurrent.duration.*
 
-import trading.lib.Logger
-
 import cats.effect.{ IO, Resource }
 import dev.profunktor.pulsar.Pulsar
 import dev.profunktor.pulsar.transactions.{ PulsarTx, Tx }

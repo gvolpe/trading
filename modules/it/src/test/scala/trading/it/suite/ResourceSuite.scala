@@ -3,7 +3,7 @@ package trading.it.suite
 import cats.effect.*
 import cats.syntax.flatMap.*
 import weaver.scalacheck.{ CheckConfig, Checkers }
-import weaver.{ Expectations, IOSuite }
+import weaver.IOSuite
 
 abstract class ResourceSuite extends IOSuite with Checkers:
   // For it:tests, one is enough

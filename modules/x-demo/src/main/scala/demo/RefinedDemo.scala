@@ -1,9 +1,6 @@
 package demo
 
 import eu.timepit.refined.*
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.PosInt
 
 @main def refinedDemo =

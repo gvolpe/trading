@@ -9,7 +9,6 @@ import trading.commands.TradeCommand
 import trading.domain.*
 import trading.state.*
 
-import cats.data.NonEmptyList
 import cats.syntax.all.*
 import weaver.FunSuite
 import weaver.scalacheck.Checkers

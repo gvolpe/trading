@@ -6,16 +6,10 @@ import trading.lib.Logger
 import trading.forecasts.store.*
 import trading.forecasts.store.{ DB, DoobieTx }
 
-import cats.~>
 import cats.effect.*
 import cats.effect.kernel.Resource.ExitCase
-import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import doobie.*
-import doobie.ExecutionContexts
-import doobie.h2.*
-import doobie.hi.connection.{ commit, rollback }
-import doobie.free.connection.setAutoCommit
 import doobie.implicits.*
 
 object DoobieTxDemo extends IOApp.Simple:

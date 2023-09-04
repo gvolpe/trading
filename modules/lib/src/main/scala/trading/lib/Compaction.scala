@@ -5,7 +5,7 @@ import trading.domain.{ Alert, PriceUpdate }
 import trading.events.SwitchEvent
 
 import cats.syntax.all.*
-import dev.profunktor.pulsar.{ MessageKey, ShardKey }
+import dev.profunktor.pulsar.MessageKey
 
 /**
  * A compaction key corresponds to the (partitioning) `key` of a Pulsar `Message`, which is used for topic compaction

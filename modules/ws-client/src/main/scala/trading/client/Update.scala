@@ -7,7 +7,6 @@ import trading.ws.{ WsIn, WsOut }
 import cats.effect.IO
 import cats.syntax.all.*
 
-import org.scalajs.dom
 import tyrian.*
 import tyrian.cmds.Dom
 

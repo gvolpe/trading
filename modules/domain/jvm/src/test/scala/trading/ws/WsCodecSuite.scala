@@ -4,7 +4,6 @@ import trading.domain.*
 import trading.domain.generators.*
 
 import cats.effect.IO
-import cats.syntax.all.*
 import io.circe.parser.decode as jsonDecode
 import io.circe.syntax.*
 import org.scalacheck.Gen

@@ -1,8 +1,5 @@
 package trading.snapshots
 
-import java.util.UUID
-
-import trading.commands.*
 import trading.core.snapshots.SnapshotWriter
 import trading.domain.*
 import trading.domain.generators.*
@@ -16,7 +13,6 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.syntax.all.*
-import fs2.Stream
 import org.scalacheck.Gen
 import weaver.{ Expectations, SimpleIOSuite }
 import weaver.scalacheck.Checkers
