@@ -2,17 +2,13 @@ package trading.it
 
 import scala.concurrent.duration.*
 
-import java.util.UUID
-
 import trading.core.snapshots.*
-import trading.domain.{ AppId, KeyExpiration, TradingStatus }
+import trading.domain.{ KeyExpiration, TradingStatus }
 import trading.domain.generators.*
-import trading.forecasts.store.*
 import trading.lib.{ given, * }
 import trading.lib.Consumer.MsgId
 import trading.lib.Logger.NoOp.given
 import trading.it.suite.ResourceSuite
-import trading.state.Prices
 
 import cats.data.NonEmptyList
 import cats.effect.*
