@@ -10,7 +10,7 @@ object Dependencies {
     val ciris         = "3.2.0"
     val doobie        = "1.0.0-RC4"
     val flyway        = "8.5.13"
-    val fs2Core       = "3.9.2"
+    val fs2Core       = "3.9.1"
     val fs2Kafka      = "3.0.1"
     val http4s        = "1.0.0-M40"
     val http4sMetrics = "1.0.0-M38"
