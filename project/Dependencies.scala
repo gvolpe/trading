@@ -10,21 +10,21 @@ object Dependencies {
     val ciris         = "3.2.0"
     val doobie        = "1.0.0-RC4"
     val flyway        = "8.5.13"
-    val fs2Core       = "3.9.1"
-    val fs2Kafka      = "3.0.1"
+    val fs2Core       = "3.9.2"
+    val fs2Kafka      = "3.1.0"
     val http4s        = "1.0.0-M40"
     val http4sMetrics = "1.0.0-M38"
     val http4sWs      = "1.0.0-M9"
     val ip4s          = "3.3.0"
-    val iron          = "2.2.1"
+    val iron          = "2.3.0"
     val kittens       = "3.0.0"
     val log4cats      = "2.6.0"
     val monocle       = "3.2.0"
-    val natchez       = "0.3.3"
+    val natchez       = "0.3.4"
     val natchezHttp4s = "0.5.0"
     val neutron       = "0.8.0"
     val odin          = "0.13.0"
-    val redis4cats    = "1.5.0"
+    val redis4cats    = "1.5.2"
     val refined       = "0.11.0"
 
     val scalajsTime = "2.4.0"
@@ -34,7 +34,7 @@ object Dependencies {
     val weaver     = "0.8.3"
 
     val organizeImports = "0.6.0"
-    val zerowaste       = "0.2.14"
+    val zerowaste       = "0.2.15"
   }
 
   object Libraries {
