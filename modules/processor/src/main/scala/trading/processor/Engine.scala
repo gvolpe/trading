@@ -2,7 +2,7 @@ package trading.processor
 
 import trading.commands.*
 import trading.core.TradeEngine
-import trading.domain.{ EventId, Timestamp }
+import trading.domain.EventId
 import trading.events.*
 import trading.lib.*
 import trading.state.TradeState
