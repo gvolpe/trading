@@ -20,7 +20,7 @@ object Dependencies {
     val kittens       = "3.3.0"
     val log4cats      = "2.7.0"
     val monocle       = "3.2.0"
-    val natchez       = "0.3.5"
+    val natchez       = "0.3.6"
     val natchezHttp4s = "0.5.0"
     val neutron       = "0.8.0"
     val odin          = "0.13.0"
