@@ -23,7 +23,7 @@ object Dependencies {
     val natchez       = "0.3.5"
     val natchezHttp4s = "0.5.0"
     val neutron       = "0.8.0"
-    val odin          = "0.13.0"
+    val odin          = "0.15.0"
     val redis4cats    = "1.7.1"
     val refined       = "0.11.1"
 
@@ -81,7 +81,7 @@ object Dependencies {
 
     val monocleCore = Def.setting("dev.optics" %%% "monocle-core" % V.monocle)
 
-    val odin = "com.github.valskalla" %% "odin-core" % V.odin
+    val odin = "dev.scalafreaks" %% "odin-core" % V.odin
 
     // only for ember
     val log4catsNoop = "org.typelevel" %% "log4cats-noop" % V.log4cats
