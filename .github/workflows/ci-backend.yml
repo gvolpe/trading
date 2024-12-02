@@ -32,7 +32,7 @@ jobs:
           extraSbtFiles: 'tmp/remote-cache/**'
 
       - name: "Starting up Redis 🐳"
-        run: docker-compose up -d redis
+        run: docker compose up -d redis
 
       - name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v22
@@ -47,4 +47,4 @@ jobs:
         run: nix develop -c sbt 'pullRemoteCache;test;it/test;webapp/fastLinkJS;pushRemoteCache'
 
       - name: "Shutting down Redis 🐳"
-        run: docker-compose down
+        run: docker compose down
