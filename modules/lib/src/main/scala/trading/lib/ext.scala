@@ -2,7 +2,7 @@ package trading.lib
 
 import scala.reflect.ClassTag
 
-import trading.lib.Consumer.{ Msg, MsgId }
+import trading.lib.Consumer.Msg
 
 import cats.{ Monad, MonadThrow }
 import cats.effect.kernel.Deferred

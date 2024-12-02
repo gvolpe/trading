@@ -20,7 +20,13 @@ object SQL:
   }
 
   given Read[Forecast] = Read[(UUID, String, String, String, Int)].map { (id, sl, tag, desc, sc) =>
-    Forecast(ForecastId(id), Symbol(sl.refine), ForecastTag.from(tag), ForecastDescription(desc), ForecastScore(sc))
+    Forecast(
+      ForecastId(id),
+      Symbol(sl.refineUnsafe),
+      ForecastTag.from(tag),
+      ForecastDescription(desc),
+      ForecastScore(sc)
+    )
   }
 
   extension (res: VoteResult)

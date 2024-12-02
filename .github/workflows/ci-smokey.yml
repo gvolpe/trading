@@ -43,13 +43,13 @@ jobs:
           docker tag ghcr.io/gvolpe/trading-ws trading-ws:latest
 
       - name: "Starting up Pulsar & Redis 🐳"
-        run: docker-compose up -d pulsar redis
+        run: docker compose up -d pulsar redis
 
       - name: "Starting up trading core services 🐳"
-        run: docker-compose up -d processor alerts ws-server
+        run: docker compose up -d processor alerts ws-server
 
       - name: "Run smokey tests 🚀"
         run: nix develop -c sbt 'smokey/test'
 
       - name: "Shutting down containers 🐳"
-        run: docker-compose down
+        run: docker compose down

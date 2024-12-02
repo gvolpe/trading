@@ -10,7 +10,6 @@ import trading.lib.Logger.NoOp.given
 
 import cats.effect.*
 import dev.profunktor.pulsar.{ Config as PulsarConfig, Pulsar, Subscription, Topic }
-import doobie.Transactor
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*

@@ -9,7 +9,7 @@ import trading.domain.*
 import trading.events.*
 import trading.forecasts.store.*
 import trading.lib.*
-import trading.lib.Consumer.{ Msg, MsgId }
+import trading.lib.Consumer.MsgId
 import trading.lib.Logger.NoOp.given
 
 import cats.effect.IO
