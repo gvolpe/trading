@@ -88,7 +88,7 @@ object generators:
   val symbolGen: Gen[Symbol] =
     Gen
       .oneOf("EURPLN", "GBPUSD", "CADUSD", "EURUSD", "CHFUSD", "CHFEUR")
-      .map(s => Symbol(s.refine))
+      .map(s => Symbol(s.refineUnsafe))
 
   val symbolWithEmptyGen: Gen[Symbol] =
     Gen.frequency(

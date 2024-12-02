@@ -4,37 +4,38 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Dependencies {
 
   object V {
-    val cats          = "2.10.0"
-    val catsEffect    = "3.5.4"
-    val circe         = "0.14.6"
-    val ciris         = "3.2.0"
-    val doobie        = "1.0.0-RC4"
+    val cats          = "2.12.0"
+    val catsEffect    = "3.5.7"
+    val circe         = "0.14.10"
+    val circeRefined  = "0.15.1"
+    val ciris         = "3.6.0"
+    val doobie        = "1.0.0-RC6"
     val flyway        = "8.5.13"
-    val fs2Core       = "3.9.4"
-    val fs2Kafka      = "3.4.0"
-    val http4s        = "1.0.0-M41"
+    val fs2Core       = "3.11.0"
+    val fs2Kafka      = "3.6.0"
+    val http4s        = "1.0.0-M43"
     val http4sMetrics = "1.0.0-M38"
     val http4sWs      = "1.0.0-M9"
-    val ip4s          = "3.4.0"
+    val ip4s          = "3.6.0"
     val iron          = "2.6.0"
-    val kittens       = "3.3.0"
+    val kittens       = "3.4.0"
     val log4cats      = "2.7.0"
-    val monocle       = "3.2.0"
-    val natchez       = "0.3.5"
-    val natchezHttp4s = "0.5.0"
+    val monocle       = "3.3.0"
+    val natchez       = "0.3.7"
+    val natchezHttp4s = "0.6.0"
     val neutron       = "0.8.0"
-    val odin          = "0.13.0"
+    val odin          = "0.15.0"
     val redis4cats    = "1.7.1"
-    val refined       = "0.11.1"
+    val refined       = "0.11.2"
 
     val scalajsTime = "2.4.0"
     val tyrian      = "0.6.1"
 
-    val scalacheck = "1.18.0"
+    val scalacheck = "1.18.1"
     val weaver     = "0.8.4"
 
     val organizeImports = "0.6.0"
-    val zerowaste       = "0.2.21"
+    val zerowaste       = "0.2.27"
   }
 
   object Libraries {
@@ -52,7 +53,8 @@ object Dependencies {
 
     val circeCore    = circe("core")
     val circeParser  = circe("parser")
-    val circeRefined = circe("refined")
+
+    val circeRefined = Def.setting("io.circe" %%% "circe-refined" % V.circeRefined)
 
     val doobieH2 = "org.tpolecat" %% "doobie-h2"       % V.doobie
     val doobiePg = "org.tpolecat" %% "doobie-postgres" % V.doobie
@@ -81,7 +83,7 @@ object Dependencies {
 
     val monocleCore = Def.setting("dev.optics" %%% "monocle-core" % V.monocle)
 
-    val odin = "com.github.valskalla" %% "odin-core" % V.odin
+    val odin = "dev.scalafreaks" %% "odin-core" % V.odin
 
     // only for ember
     val log4catsNoop = "org.typelevel" %% "log4cats-noop" % V.log4cats

@@ -6,7 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 
 import trading.*
 
-import cats.{ Eq, Monoid, Order, Show }
+import cats.{ Monoid, Show }
 import io.circe.*
 
 export Extensions.*
