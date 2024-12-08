@@ -8,7 +8,7 @@ object Dependencies {
     val catsEffect    = "3.5.7"
     val circe         = "0.14.10"
     val circeRefined  = "0.15.1"
-    val ciris         = "3.6.0"
+    val ciris         = "3.7.0"
     val doobie        = "1.0.0-RC6"
     val flyway        = "8.5.13"
     val fs2Core       = "3.11.0"
@@ -51,8 +51,8 @@ object Dependencies {
     val cirisCore    = Def.setting("is.cir" %%% "ciris" % V.ciris)
     val cirisRefined = Def.setting("is.cir" %%% "ciris-refined" % V.ciris)
 
-    val circeCore    = circe("core")
-    val circeParser  = circe("parser")
+    val circeCore   = circe("core")
+    val circeParser = circe("parser")
 
     val circeRefined = Def.setting("io.circe" %%% "circe-refined" % V.circeRefined)
 
