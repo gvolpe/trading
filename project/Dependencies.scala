@@ -13,7 +13,7 @@ object Dependencies {
     val flyway        = "8.5.13"
     val fs2Core       = "3.11.0"
     val fs2Kafka      = "3.6.0"
-    val http4s        = "1.0.0-M43"
+    val http4s        = "1.0.0-M44"
     val http4sMetrics = "1.0.0-M38"
     val http4sWs      = "1.0.0-M9"
     val ip4s          = "3.6.0"
@@ -51,8 +51,8 @@ object Dependencies {
     val cirisCore    = Def.setting("is.cir" %%% "ciris" % V.ciris)
     val cirisRefined = Def.setting("is.cir" %%% "ciris-refined" % V.ciris)
 
-    val circeCore    = circe("core")
-    val circeParser  = circe("parser")
+    val circeCore   = circe("core")
+    val circeParser = circe("parser")
 
     val circeRefined = Def.setting("io.circe" %%% "circe-refined" % V.circeRefined)
 
