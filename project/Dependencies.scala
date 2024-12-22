@@ -25,7 +25,7 @@ object Dependencies {
     val natchezHttp4s = "0.6.0"
     val neutron       = "0.8.0"
     val odin          = "0.15.0"
-    val redis4cats    = "1.7.1"
+    val redis4cats    = "1.7.2"
     val refined       = "0.11.2"
 
     val scalajsTime = "2.4.0"
@@ -51,8 +51,8 @@ object Dependencies {
     val cirisCore    = Def.setting("is.cir" %%% "ciris" % V.ciris)
     val cirisRefined = Def.setting("is.cir" %%% "ciris-refined" % V.ciris)
 
-    val circeCore    = circe("core")
-    val circeParser  = circe("parser")
+    val circeCore   = circe("core")
+    val circeParser = circe("parser")
 
     val circeRefined = Def.setting("io.circe" %%% "circe-refined" % V.circeRefined)
 
