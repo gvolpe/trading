@@ -35,7 +35,7 @@ object Dependencies {
     val weaver     = "0.8.4"
 
     val organizeImports = "0.6.0"
-    val zerowaste       = "0.2.27"
+    val zerowaste       = "0.2.28"
   }
 
   object Libraries {
@@ -51,8 +51,8 @@ object Dependencies {
     val cirisCore    = Def.setting("is.cir" %%% "ciris" % V.ciris)
     val cirisRefined = Def.setting("is.cir" %%% "ciris-refined" % V.ciris)
 
-    val circeCore    = circe("core")
-    val circeParser  = circe("parser")
+    val circeCore   = circe("core")
+    val circeParser = circe("parser")
 
     val circeRefined = Def.setting("io.circe" %%% "circe-refined" % V.circeRefined)
 
