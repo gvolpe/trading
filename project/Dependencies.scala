@@ -8,7 +8,7 @@ object Dependencies {
     val catsEffect    = "3.5.7"
     val circe         = "0.14.10"
     val circeRefined  = "0.15.1"
-    val ciris         = "3.6.0"
+    val ciris         = "3.8.0"
     val doobie        = "1.0.0-RC6"
     val flyway        = "8.5.13"
     val fs2Core       = "3.11.0"
