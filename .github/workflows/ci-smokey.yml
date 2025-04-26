@@ -12,16 +12,16 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.2
+      - uses: actions/checkout@v4
 
       - name: "Cache for sbt & coursier ♨️"
-        uses: coursier/cache-action@v4.1
+        uses: coursier/cache-action@v6
 
       - name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v31.2.0
 
       - name: "Install Cachix ❄️"
-        uses: cachix/cachix-action@v12
+        uses: cachix/cachix-action@v16
         with:
           name: feda
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
@@ -49,7 +49,7 @@ jobs:
         run: docker compose up -d processor alerts ws-server
 
       - name: "Run smokey tests 🚀"
-        run: nix develop -c sbt 'smokey/test'
+        run: nix run .#sbt -- 'smokey/test'
 
       - name: "Shutting down containers 🐳"
         run: docker compose down

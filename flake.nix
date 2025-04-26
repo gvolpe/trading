@@ -46,8 +46,8 @@
         tyrian = pkgs.callPackage ./modules/ws-client/app.nix { };
       in
       {
-        devShells = rec {
-          default = scala;
+        devShells = {
+          default = self.devShells.${system}.scala;
 
           elm = pkgs.mkShell {
             name = "elm-dev-shell";
@@ -94,6 +94,7 @@
 
         packages = {
           inherit elm-webapp;
+          inherit (pkgs) sbt;
           tyrian-webapp = tyrian.webapp;
           docker = pkgs.noRootDockerImage;
           slimDocker = pkgs.slimDockerImage;
