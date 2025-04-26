@@ -5,11 +5,11 @@ object Dependencies {
 
   object V {
     val cats          = "2.12.0"
-    val catsEffect    = "3.5.7"
+    val catsEffect    = "3.6.1"
     val circe         = "0.14.10"
     val circeRefined  = "0.15.1"
-    val ciris         = "3.6.0"
-    val doobie        = "1.0.0-RC6"
+    val ciris         = "3.8.0"
+    val doobie        = "1.0.0-RC8"
     val flyway        = "8.5.13"
     val fs2Core       = "3.12.0"
     val fs2Kafka      = "3.6.0"

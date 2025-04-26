@@ -24,10 +24,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.2
+      - uses: actions/checkout@v4
 
       - name: "Cache for sbt & coursier ♨️"
-        uses: coursier/cache-action@v4.1
+        uses: coursier/cache-action@v6
         with:
           extraSbtFiles: 'tmp/remote-cache/**'
 
@@ -35,16 +35,16 @@ jobs:
         run: docker compose up -d redis
 
       - name: "Install Nix ❄️"
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v31.2.0
 
       - name: "Install Cachix ❄️"
-        uses: cachix/cachix-action@v12
+        uses: cachix/cachix-action@v16
         with:
           name: feda
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: "Run trading tests 🚀"
-        run: nix develop -c sbt 'pullRemoteCache;test;it/test;webapp/fastLinkJS;pushRemoteCache'
+        run: nix run .#sbt -- 'pullRemoteCache;test;it/test;webapp/fastLinkJS;pushRemoteCache'
 
       - name: "Shutting down Redis 🐳"
         run: docker compose down
