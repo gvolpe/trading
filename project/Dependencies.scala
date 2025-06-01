@@ -19,7 +19,7 @@ object Dependencies {
     val ip4s          = "3.7.0"
     val iron          = "2.6.0"
     val kittens       = "3.4.0"
-    val log4cats      = "2.7.0"
+    val log4cats      = "2.7.1"
     val monocle       = "3.3.0"
     val natchez       = "0.3.7"
     val natchezHttp4s = "0.6.0"
