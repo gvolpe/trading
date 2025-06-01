@@ -32,7 +32,7 @@ object Dependencies {
     val tyrian      = "0.6.1"
 
     val scalacheck = "1.18.1"
-    val weaver     = "0.8.4"
+    val weaver     = "0.9.0"
 
     val organizeImports = "0.6.0"
     val zerowaste       = "0.2.27"
@@ -94,12 +94,12 @@ object Dependencies {
     val tyrianIO    = Def.setting("io.indigoengine" %%% "tyrian-io" % V.tyrian)
 
     // test
-    val catsLaws         = "org.typelevel"       %% "cats-laws"         % V.cats
-    val monocleLaw       = "dev.optics"          %% "monocle-law"       % V.monocle
-    val scalacheck       = "org.scalacheck"      %% "scalacheck"        % V.scalacheck
-    val weaverCats       = "com.disneystreaming" %% "weaver-cats"       % V.weaver
-    val weaverDiscipline = "com.disneystreaming" %% "weaver-discipline" % V.weaver
-    val weaverScalaCheck = "com.disneystreaming" %% "weaver-scalacheck" % V.weaver
+    val catsLaws         = "org.typelevel"  %% "cats-laws"         % V.cats
+    val monocleLaw       = "dev.optics"     %% "monocle-law"       % V.monocle
+    val scalacheck       = "org.scalacheck" %% "scalacheck"        % V.scalacheck
+    val weaverCats       = "org.typelevel"  %% "weaver-cats"       % V.weaver
+    val weaverDiscipline = "org.typelevel"  %% "weaver-discipline" % V.weaver
+    val weaverScalaCheck = "org.typelevel"  %% "weaver-scalacheck" % V.weaver
 
     // only for demo
     val fs2Kafka    = "com.github.fd4s" %% "fs2-kafka" % V.fs2Kafka
